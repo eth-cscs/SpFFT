@@ -1,3 +1,5 @@
+[![Documentation](https://readthedocs.org/projects/spfft/badge/?version=latest)](https://spfft.readthedocs.io/en/latest/?badge=latest)
+
 # SpFFT
 SpFFT is a library for the computation 3D FFTs with sparse frequency domain data written in C++ with support for MPI, OpenMP, CUDA and ROCm.
 
@@ -21,7 +23,7 @@ To allow for pre-allocation and reuse of memory, the design is based on two clas
 The user provides memory for storing the sparse frequency domain data, while a *Transform* provides memory for the space domain data. This implies, that executing a *Transform* will override the space domain data of all other *Transforms* associated to the same *Grid*.
 
 ## Documentation
-Documentation can be found HERE (TODO).
+Documentation can be found [here](https://spfft.readthedocs.io/en/latest/).
 
 ## Requirements
 - C++ Compiler with C++11 support

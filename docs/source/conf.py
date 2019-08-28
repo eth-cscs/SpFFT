@@ -30,7 +30,7 @@ html_theme_path = []
 project = u'SpFFT'
 copyright = u'2019, ETH Zurich'
 author = u'ETH Zurich, Simon Frasch'
-breathe_projects = { 'SpFFT': '../build/xml' }
+breathe_projects = { 'SpFFT': '../xml' }
 highlight_language = 'c++'
 
 # The short X.Y version
@@ -76,6 +76,7 @@ language = None
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+html_extra_path = ['../build/html']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None

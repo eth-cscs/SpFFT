@@ -1,5 +1,5 @@
 PROJECT_NAME      = "SpFFT"
-XML_OUTPUT        = build/xml
+XML_OUTPUT        = xml
 INPUT             = ../include
 INCLUDE_PATH      = ../include ../src
 GENERATE_LATEX    = NO

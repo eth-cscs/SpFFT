@@ -80,7 +80,7 @@ Parameters::Parameters(const MPICommunicatorHandle& comm, const SpfftTransformTy
   const SizeType numLocalZSticks = stickIndicesPerRank_[comm.rank()].size();
 
   TransposeParameter paramLocal =
-      TransposeParameter{dimX, dimY, dimZ, numLocalXYPlanes, numLocalZSticks};
+      TransposeParameter{dimX, dimY, dimZ, numLocalXYPlanes, numLocalZSticks, numLocalElements};
 
   // exchange local parameters
   MPIDatatypeHandle parameterType = MPIDatatypeHandle::create_contiguous(

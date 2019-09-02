@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR) # 3.8 added CUDA language support without FindCUDA
-project(SpFFT LANGUAGES CXX VERSION 0.9.1)
+project(SpFFT LANGUAGES CXX VERSION 0.9.2)
 
 # allow {module}_ROOT variables to be set
 if(POLICY CMP0074)

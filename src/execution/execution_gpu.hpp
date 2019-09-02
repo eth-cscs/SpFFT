@@ -35,6 +35,7 @@
 #include "fft/transform_interface.hpp"
 #include "gpu_util/gpu_fft_api.hpp"
 #include "gpu_util/gpu_stream_handle.hpp"
+#include "gpu_util/gpu_event_handle.hpp"
 #include "memory/gpu_array.hpp"
 #include "memory/gpu_array_view.hpp"
 #include "memory/host_array.hpp"
@@ -96,6 +97,7 @@ public:
 
 private:
   GPUStreamHandle stream_;
+  GPUEventHandle event_;
   int numThreads_;
   T scalingFactor_;
   std::unique_ptr<TransformGPU> transformZ_;

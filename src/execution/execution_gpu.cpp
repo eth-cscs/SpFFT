@@ -50,6 +50,7 @@ ExecutionGPU<T>::ExecutionGPU(const int numThreads, std::shared_ptr<Parameters> 
                               GPUArray<typename gpu::fft::ComplexType<T>::type>& gpuArray2,
                               const std::shared_ptr<GPUArray<char>>& fftWorkBuffer)
     : stream_(false),
+      event_(false),
       numThreads_(numThreads),
       scalingFactor_(static_cast<T>(
           1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))),
@@ -120,6 +121,7 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
                               GPUArray<typename gpu::fft::ComplexType<T>::type>& gpuArray2,
                               const std::shared_ptr<GPUArray<char>>& fftWorkBuffer)
     : stream_(false),
+      event_(false),
       numThreads_(numThreads),
       scalingFactor_(static_cast<T>(
           1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))),
@@ -253,6 +255,10 @@ auto ExecutionGPU<T>::forward_xy(const SpfftProcessingUnitType inputLocation) ->
 
   // XY
   if (transformXY_) {
+    // Add explicit default stream synchronization
+    event_.record(nullptr);
+    event_.stream_wait(stream_.get());
+
     if (inputLocation == SpfftProcessingUnitType::SPFFT_PU_HOST) {
       copy_to_gpu_async(stream_, spaceDomainDataExternalHost_, spaceDomainDataExternalGPU_);
     }
@@ -271,7 +277,6 @@ auto ExecutionGPU<T>::forward_exchange(const bool nonBlockingExchange) -> void {
 
 template <typename T>
 auto ExecutionGPU<T>::forward_z(T* output, const SpfftScalingType scalingType) -> void {
-
   HOST_TIMING_START("exechange_fininalize");
   transpose_->exchange_forward_finalize();
   HOST_TIMING_STOP("exechange_fininalize");
@@ -308,7 +313,6 @@ auto ExecutionGPU<T>::forward_z(T* output, const SpfftScalingType scalingType) -
 
 template <typename T>
 auto ExecutionGPU<T>::backward_z(const T* input) -> void {
-
   // Check for any preceding errors before starting execution
   if (gpu::get_last_error() != gpu::status::Success) {
     throw GPUPrecedingError();
@@ -319,6 +323,10 @@ auto ExecutionGPU<T>::backward_z(const T* input) -> void {
     const T* inputPtrHost = nullptr;
     const T* inputPtrGPU = nullptr;
     std::tie(inputPtrHost, inputPtrGPU) = translate_gpu_pointer(input);
+
+    // Add explicit default stream synchronization
+    event_.record(nullptr);
+    event_.stream_wait(stream_.get());
 
     if (inputPtrGPU == nullptr) {
       // input on HOST
@@ -351,7 +359,6 @@ auto ExecutionGPU<T>::backward_exchange(const bool nonBlockingExchange) -> void 
 
 template <typename T>
 auto ExecutionGPU<T>::backward_xy(const SpfftProcessingUnitType outputLocation) -> void {
-
   HOST_TIMING_START("exechange_fininalize");
   transpose_->exchange_backward_finalize();
   HOST_TIMING_STOP("exechange_fininalize");
@@ -389,4 +396,4 @@ template class ExecutionGPU<double>;
 template class ExecutionGPU<float>;
 #endif
 
-} // namespace spfft
+}  // namespace spfft

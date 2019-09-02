@@ -52,3 +52,4 @@ GPU
 | If available, GPU aware MPI can be utilized, to safe on the otherwise required transfers between host and GPU in preparation of the MPI exchange. This can greatly impact performance and is enabled by compiling the library with the CMake option SPFFT_GPU_DIRECT set to ON.
 
 .. note:: Additional environment variables may have to be set for some MPI implementations, to allow GPUDirect usage.
+.. note:: The execution of a transform is synchronized with the default stream.

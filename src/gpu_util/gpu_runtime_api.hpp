@@ -50,6 +50,7 @@ namespace gpu {
 
 using StatusType = GPU_PREFIX(Error_t);
 using StreamType = GPU_PREFIX(Stream_t);
+using EventType = GPU_PREFIX(Event_t);
 
 #ifdef SPFFT_CUDA
 using PointerAttributes = GPU_PREFIX(PointerAttributes);
@@ -98,6 +99,11 @@ constexpr auto MemoryTypeManaged = GPU_PREFIX(MemoryTypeManaged);
 
 constexpr auto MemcpyHostToDevice = GPU_PREFIX(MemcpyHostToDevice);
 constexpr auto MemcpyDeviceToHost = GPU_PREFIX(MemcpyDeviceToHost);
+
+constexpr auto EventDefault = GPU_PREFIX(EventDefault);
+constexpr auto EventBlockingSync = GPU_PREFIX(EventBlockingSync);
+constexpr auto EventDisableTiming = GPU_PREFIX(EventDisableTiming);
+constexpr auto EventInterprocess = GPU_PREFIX(EventInterprocess);
 } // namespace flag
 
 // ==================================
@@ -136,6 +142,26 @@ inline auto stream_create_with_flags(ARGS... args) -> StatusType {
 template <typename... ARGS>
 inline auto stream_destroy(ARGS... args) -> StatusType {
   return GPU_PREFIX(StreamDestroy)(std::forward<ARGS>(args)...);
+}
+
+template <typename... ARGS>
+inline auto stream_wait_event(ARGS... args) -> StatusType {
+  return GPU_PREFIX(StreamWaitEvent)(std::forward<ARGS>(args)...);
+}
+
+template <typename... ARGS>
+inline auto event_create_with_flags(ARGS... args) -> StatusType {
+  return GPU_PREFIX(EventCreateWithFlags)(std::forward<ARGS>(args)...);
+}
+
+template <typename... ARGS>
+inline auto event_destroy(ARGS... args) -> StatusType {
+  return GPU_PREFIX(EventDestroy)(std::forward<ARGS>(args)...);
+}
+
+template <typename... ARGS>
+inline auto event_record(ARGS... args) -> StatusType {
+  return GPU_PREFIX(EventRecord)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>

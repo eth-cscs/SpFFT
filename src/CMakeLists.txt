@@ -101,7 +101,7 @@ configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFTConfig.cmake
 # installation commands
 if(SPFFT_INSTALL)
 	install(TARGETS spfft DESTINATION lib EXPORT SpFFTTargets)
-	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/spfft DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/spfft DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.f90")
 	install(FILES ${PROJECT_BINARY_DIR}/spfft/config.h DESTINATION include/spfft)
 	install(EXPORT SpFFTTargets DESTINATION lib/cmake)
 	install(

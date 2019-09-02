@@ -131,9 +131,21 @@ public:
 
   /**
    * Access a transform parameter.
+   * @return Global number of elements in space domain. Equals dim_x() * dim_y() * dim_z().
+   */
+  long long int global_size() const;
+
+  /**
+   * Access a transform parameter.
    * @return Number of elements in frequency domain.
    */
   int num_local_elements() const;
+
+  /**
+   * Access a transform parameter.
+   * @return Global number of elements in frequency domain.
+   */
+  long long int num_global_elements() const;
 
   /**
    * Access a transform parameter.

@@ -126,6 +126,10 @@ public:
 
   inline auto local_num_elements() const -> SizeType { return freqValueIndices_.size(); }
 
+  inline auto global_num_elements() const -> SizeType { return totalNumFrequencyDomainElements_; }
+
+  inline auto global_size() const -> SizeType { return dimX_ * dimY_ * dimZ_; }
+
   inline auto comm_rank() const -> SizeType { return comm_rank_; }
 
   inline auto comm_size() const -> SizeType { return comm_size_; }
@@ -141,6 +145,7 @@ private:
   SizeType maxNumXYPlanes_ = 0;
   SizeType totalNumZSticks_ = 0;
   SizeType totalNumXYPlanes_ = 0;
+  SizeType totalNumFrequencyDomainElements_ = 0;
   SizeType comm_rank_ = 0;
   SizeType comm_size_ = 1;
   std::vector<SizeType> numZSticksPerRank_;

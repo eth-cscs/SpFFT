@@ -103,6 +103,10 @@ int Transform::local_slice_size() const {
 
 int Transform::num_local_elements() const { return transform_->num_local_elements(); }
 
+long long int Transform::num_global_elements() const { return transform_->num_global_elements(); }
+
+long long int Transform::global_size() const { return transform_->global_size(); }
+
 SpfftProcessingUnitType Transform::processing_unit() const { return transform_->processing_unit(); }
 
 int Transform::device_id() const { return transform_->device_id(); }
@@ -289,6 +293,34 @@ SpfftError spfft_transform_num_local_elements(SpfftTransform transform, int* loc
   }
   try {
     *localZLength = reinterpret_cast<spfft::Transform*>(transform)->local_z_length();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_transform_num_global_elements(SpfftTransform transform, long long int* numGlobalElements) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *numGlobalElements = reinterpret_cast<spfft::Transform*>(transform)->num_global_elements();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_transform_global_size(SpfftTransform transform, long long int* globalSize) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *globalSize = reinterpret_cast<spfft::Transform*>(transform)->global_size();
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {

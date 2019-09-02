@@ -173,10 +173,27 @@ SpfftError spfft_transform_local_z_offset(SpfftTransform transform, int* offset)
 /**
  * Access a transform parameter.
  * @param[in] transform Handle to the transform.
+ * @param[out] globalSize Global number of elements in space domain. Equals dim_x() * dim_y() *
+ * dim_z().
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SpfftError spfft_transform_global_size(SpfftTransform transform, long long int* globalSize);
+
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
  * @param[out] numLocalElements Number of local elements in frequency domain.
  * @return Error code or SPFFT_SUCCESS.
  */
 SpfftError spfft_transform_num_local_elements(SpfftTransform transform, int* numLocalElements);
+
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
+ * @param[out] numGlobalElements Global number of elements in space domain. Equals dim_x() * dim_y() * dim_z().
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SpfftError spfft_transform_num_global_elements(SpfftTransform transform, long long int* numGlobalElements);
 
 /**
  * Access a transform parameter.

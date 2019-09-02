@@ -168,6 +168,15 @@ SpfftError spfft_float_transform_local_z_length(SpfftFloatTransform transform, i
 /**
  * Access a transform parameter.
  * @param[in] transform Handle to the transform.
+ * @param[out] globalSize Global number of elements in space domain. Equals dim_x() * dim_y() *
+ * dim_z().
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform, long long int* globalSize);
+
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
  * @param[out] offset Offset in z of the space domain slice held by the local MPI rank.
  * @return Error code or SPFFT_SUCCESS.
  */
@@ -180,6 +189,14 @@ SpfftError spfft_float_transform_local_z_offset(SpfftFloatTransform transform, i
  * @return Error code or SPFFT_SUCCESS.
  */
 SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform, int* numLocalElements);
+
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
+ * @param[out] numGlobalElements Global number of elements in space domain. Equals dim_x() * dim_y() * dim_z().
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform, long long int* numGlobalElements);
 
 /**
  * Access a transform parameter.

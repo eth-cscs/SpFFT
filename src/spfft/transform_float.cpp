@@ -93,6 +93,10 @@ int TransformFloat::local_slice_size() const {
 
 int TransformFloat::num_local_elements() const { return transform_->num_local_elements(); }
 
+long long int TransformFloat::num_global_elements() const { return transform_->num_global_elements(); }
+
+long long int TransformFloat::global_size() const { return transform_->global_size(); }
+
 SpfftProcessingUnitType TransformFloat::processing_unit() const { return transform_->processing_unit(); }
 
 int TransformFloat::device_id() const { return transform_->device_id(); }
@@ -280,6 +284,34 @@ SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transfor
   }
   try {
     *localZLength = reinterpret_cast<spfft::TransformFloat*>(transform)->local_z_length();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform, long long int* numGlobalElements) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *numGlobalElements = reinterpret_cast<spfft::TransformFloat*>(transform)->num_global_elements();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform, long long int* globalSize) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *globalSize = reinterpret_cast<spfft::TransformFloat*>(transform)->global_size();
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {

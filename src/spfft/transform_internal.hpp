@@ -72,6 +72,10 @@ public:
 
   inline auto num_local_elements() const -> int { return param_->local_num_elements(); }
 
+  inline auto num_global_elements() const -> long long int { return param_->global_num_elements(); }
+
+  inline auto global_size() const -> long long int { return param_->global_size(); }
+
   inline auto shared_grid(const TransformInternal<T>& other) const -> bool {
     return other.grid_ == grid_;
   }

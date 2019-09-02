@@ -165,9 +165,8 @@ public:
   GPUArrayConstView3D(const GPUArrayView3D<T>&); // conversion allowed
 
 #if defined(__CUDACC__) || defined(__HIPCC__)
-
   __device__ inline auto operator()(const int idxOuter, const int idxMid, const int idxInner) const
-      noexcept -> const ValueType& {
+      -> ValueType {
     assert(idxOuter < dims_[0]);
     assert(idxMid < dims_[1]);
     assert(idxInner < dims_[2]);

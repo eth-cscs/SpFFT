@@ -354,6 +354,7 @@ auto ExecutionGPU<T>::backward_z(const T* input) -> void {
 }
 template <typename T>
 auto ExecutionGPU<T>::backward_exchange(const bool nonBlockingExchange) -> void {
+  HOST_TIMING_SCOPED("exchange_start")
   transpose_->exchange_backward_start(nonBlockingExchange);
 }
 

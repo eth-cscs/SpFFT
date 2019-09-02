@@ -59,6 +59,7 @@ Parameters::Parameters(const MPICommunicatorHandle& comm, const SpfftTransformTy
     SizeType dimZ;
     SizeType numLocalXYPlanes;
     SizeType numLocalZSticks;
+    SizeType numLocalElements;
   };
 
 
@@ -120,6 +121,7 @@ Parameters::Parameters(const MPICommunicatorHandle& comm, const SpfftTransformTy
     xyPlaneOffsets_.emplace_back(xyPlaneOffset);
     startIndex += p.numLocalZSticks;
     xyPlaneOffset += p.numLocalXYPlanes;
+    totalNumFrequencyDomainElements_ += p.numLocalElements;
   }
 
   maxNumZSticks_ = *std::max_element(numZSticksPerRank_.begin(), numZSticksPerRank_.end());
@@ -149,6 +151,7 @@ Parameters::Parameters(const SpfftTransformType transformType, const SizeType di
       dimZ_(dimZ),
       maxNumXYPlanes_(dimZ),
       totalNumXYPlanes_(dimZ),
+      totalNumFrequencyDomainElements_(numLocalElements),
       comm_rank_(0),
       comm_size_(1),
       numXYPlanesPerRank_(1, dimZ),

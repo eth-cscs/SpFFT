@@ -48,23 +48,26 @@
 #
 #   MKL::Sequential
 
-
-# try to detect location with pkgconfig
-if(NOT MKLSequential_ROOT)
-    find_package(PkgConfig QUIET)
-    if(PKG_CONFIG_FOUND)
-       # look for dynmic module, such that a -L flag can be parsed
-      pkg_check_modules(PKG_MKL QUIET "mkl-dynamic-lp64-seq")
-    endif()
-endif()
-
 # set paths to look for MKL
-set(_MKLSequential_PATHS ${MKLSequential_ROOT} $ENV{MKLROOT} ${PKG_MKL_LIBRARY_DIRS})
+set(_MKLSequential_PATHS ${MKLSequential_ROOT} $ENV{MKLROOT})
+set(_MKLSequential_INCLUDE_PATHS)
 
-# do not look at any default paths if a custom path was set or pgk-config module exists
 set(_MKLSequential_DEFAULT_PATH_SWITCH)
+
 if(_MKLSequential_PATHS)
+    # do not look at any default paths if a custom path was set
     set(_MKLSequential_DEFAULT_PATH_SWITCH NO_DEFAULT_PATH)
+else()
+    # try to detect location with pkgconfig
+    if(NOT MKLSequential_ROOT)
+        find_package(PkgConfig QUIET)
+        if(PKG_CONFIG_FOUND)
+           # look for dynmic module, such that a -L flag can be parsed
+          pkg_check_modules(PKG_MKL QUIET "mkl-dynamic-lp64-seq")
+            set(_MKLSequential_PATHS ${PKG_MKL_LIBRARY_DIRS})
+            set(_MKLSequential_INCLUDE_PATHS ${PKG_MKL_INCLUDE_DIRS})
+        endif()
+    endif()
 endif()
 
 
@@ -92,14 +95,14 @@ find_library(
 )
 find_path(MKLSequential_INCLUDE_DIRS
     NAMES "mkl.h"
-    HINTS ${_MKLSequential_PATHS}
-    PATH_SUFFIXES "include" "../include"
+    HINTS ${_MKLSequential_PATHS} ${_MKLSequential_INCLUDE_PATHS}
+    PATH_SUFFIXES "include"
     ${_MKLSequential_DEFAULT_PATH_SWITCH}
 )
 find_path(MKLSequential_FFTW_INCLUDE_DIRS
     NAMES "fftw3.h"
-    HINTS ${_MKLSequential_PATHS}
-    PATH_SUFFIXES "include" "../include" "include/fftw" "../include/fftw" "fftw"
+    HINTS ${_MKLSequential_PATHS} ${_MKLSequential_INCLUDE_PATHS}
+    PATH_SUFFIXES "include" "include/fftw" "fftw"
     ${_MKLSequential_DEFAULT_PATH_SWITCH}
 )
 

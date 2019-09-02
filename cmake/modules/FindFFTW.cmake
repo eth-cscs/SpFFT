@@ -50,6 +50,7 @@
 
 # set paths to look for library
 set(_FFTW_PATHS ${FFTW_ROOT} $ENV{FFTW_ROOT})
+set(_FFTW_INCLUDE_PATHS)
 
 set(_FFTW_DEFAULT_PATH_SWITCH)
 
@@ -63,6 +64,7 @@ else()
       pkg_check_modules(PKG_FFTW QUIET "fftw3")
     endif()
     set(_FFTW_PATHS ${PKG_FFTW_LIBRARY_DIRS})
+    set(_FFTW_INCLUDE_PATHS ${PKG_FFTW_INCLUDE_DIRS})
 endif()
 
 
@@ -82,8 +84,8 @@ find_library(
 )
 find_path(FFTW_INCLUDE_DIRS
     NAMES "fftw3.h"
-    HINTS ${_FFTW_PATHS}
-    PATH_SUFFIXES "include" "include/fftw" "../include" "../include/fftw"
+    HINTS ${_FFTW_PATHS} ${_FFTW_INCLUDE_PATHS}
+    PATH_SUFFIXES "include" "include/fftw"
     ${_FFTW_DEFAULT_PATH_SWITCH}
 )
 

@@ -54,8 +54,11 @@ auto create_value_indices(T& sharedRandGen, const std::vector<double>& zStickDis
   for (int x = 0; x < dimXFreq; ++x) {
     for (int y = 0; y < dimY; ++y) {
       if (!(x == 0 && y >= dimYFreq) && uniformRandDis(sharedRandGen) < totalZStickFraction) {
-        const auto selectedRank = rankSelectDis(sharedRandGen);
-        xyIndicesPerRank[selectedRank].emplace_back(std::make_pair(x, y));
+	// use full hermitian symmetry on x = 0 plane
+        if (!hermitianSymmetry || x != 0 || y < dimYFreq) {
+          const auto selectedRank = rankSelectDis(sharedRandGen);
+          xyIndicesPerRank[selectedRank].emplace_back(std::make_pair(x, y));
+        }
       }
     }
   }

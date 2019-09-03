@@ -102,7 +102,7 @@ __global__ static void symmetrize_stick_kernel(
   if (idxInner < numIndices) {
     idxInner += startIndex;
     auto value = data(idxInner);
-    if (value.x != T(0) && value.y != T(0)) {
+    if (value.x != T(0) || value.y != T(0)) {
       value.y = -value.y;
       data(data.size() - idxInner) = value;
     }

@@ -5,15 +5,32 @@ Complex Number Format
 ---------------------
 SpFFT always assumes an interleaved format in double or single precision. The alignment of memory provided for space domain data is guaranteed to fulfill to the requirements for std::complex (for C++11), C complex types and GPU complex types of CUDA or ROCM.
 
-
 Indexing
 --------
-The only format for providing the indices of the sparse frequency domain data supported at the moment are index triplets in an interleaved array.
-Example: x\ :sub:`1`\ , y\ :sub:`1`\ , z\ :sub:`1`\, x\ :sub:`2`\ , y\ :sub:`2`\ , z\ :sub:`2`\ ...
+| The three dimensions are referred to as :math:`x, y` and :math:`z`. An element in space domain is addressed in memory as:
 
-Indices for a dimension of size *n* must be either in the interval [0, *n* - 1] or [floor(*n*/2) - *n* + 1, floor(*n*/2)].
+| :math:`(z \cdot n_y + y) \cdot n_x + x`
 
-.. note:: For R2C transforms, the full hermitian symmetry property is exploited. All indices in X must always be in the interval [0, floor(*n*/2)], an some other index combinations (where one or two indices are 0) can be ommitted without loss of information.
+| For now, the only supported format for providing the indices of sparse frequency domain data are index triplets in an interleaved array.
+| Example: :math:`x_1, y_1, z_1, x_2, y_2, z_2, ...`
+
+Indices for a dimension of size *n* must be either in the interval :math:`[0, n - 1]` or :math:`\left [ \left \lfloor \frac{n}{2} \right \rfloor - n + 1, \left \lfloor \frac{n}{2} \right \rfloor \right ]`. For Real-To-Complex transforms additional restrictions apply (see next section).
+
+Real-To-Complex Transforms
+--------------------------
+| The Discrete Fourier Transform :math:`f(x, y, z)` of a real valued function is hermitian:
+
+| :math:`f(x, y, z) = f^*(-x, -y, -z)`
+
+| Due to this property, only about half the frequency domain data is required without loss of information. Therefore, similar to other FFT libraries, all indices in :math:`x` *must* be in the interval  :math:`\left [ 0, \left \lfloor \frac{n}{2} \right \rfloor \right ]`.
+To fully utlize the symmetry property, the following steps can be followed:
+
+- Only non-redundent z-coloumns on the y-z plane at :math:`x = 0` have to be provided. A z-coloumn must be complete and can be provided at either :math:`y` or :math:`-y`.
+- All redundant values in the z-coloumn at :math:`x = 0`, :math:`y = 0` can be omitted.
+
+Normalization
+-------------
+Normalization is only available for the forward transform with a scaling factor of :math:`\frac{1}{n_x n_y n_z}`. Applying a forward and backwards transform with scaling enabled will therefore yield identical output (within numerical accuracy).
 
 
 Data Distribution
@@ -37,7 +54,7 @@ SPFFT_EXCH_BUFFERED
  Exchange with MPI_Alltoall. Requires repacking of data into buffer. Possibly best optimized for large number of ranks by MPI implementations, but does not adjust well to non-uniform data distributions.
 
 SPFFT_EXCH_COMPACT_BUFFERED
-  Exchange with MPI_Alltoallv. Requires repacking of data into buffer. Performance is usually close to MPI_alltoall and it adapts well to non-unitform data distributions.
+  Exchange with MPI_Alltoallv. Requires repacking of data into buffer. Performance is usually close to MPI_alltoall and it adapts well to non-uniform data distributions.
 
 SPFFT_EXCH_UNBUFFERED
   Exchange with MPI_Alltoallw. Does not require repacking of data into buffer (outside of the MPI library). Performance varies widely between systems and MPI implementations. It is generally difficult to optimize for large number of ranks, but may perform best in certain conditions.

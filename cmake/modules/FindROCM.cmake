@@ -308,41 +308,41 @@ endforeach()
 # Generates library compiled with hipcc
 # Usage:
 #   rocm_hip_add_library(<name> <sources> [STATIC | SHARED] [FLAGS] <flags> [OUTPUT_DIR] <dir> [INCLUDE_DIRS] <dirs ...>)
-macro(rocm_hip_add_library)
+macro(rocm_add_library)
     cmake_parse_arguments(
-        HIP_LIB
+        ROCM_ARG
         "SHARED;STATIC"
         "OUTPUT_DIR"
         "FLAGS;INCLUDE_DIRS"
         ${ARGN}
     )
     # allow either STATIC or SHARED
-    if(HIP_LIB_SHARED AND HIP_LIB_STATIC)
+    if(ROCM_ARG_SHARED AND ROCM_ARG_STATIC)
         message(FATAL_ERROR "rocm_hip_add_library: library cannot by both static and shared!")
     endif()
 
     # default to SHARED
-    if(NOT (HIP_LIB_SHARED OR HIP_LIB_STATIC))
-        set(HIP_LIB_SHARED TRUE)
+    if(NOT (ROCM_ARG_SHARED OR ROCM_ARG_STATIC))
+        set(ROCM_ARG_SHARED TRUE)
     endif()
 
     # default to current binary output directory
-    if(NOT HIP_LIB_OUTPUT_DIR)
-	set(HIP_LIB_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    if(NOT ROCM_ARG_OUTPUT_DIR)
+	set(ROCM_ARG_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
     endif()
 
     # parse positional arguments
-    list(LENGTH HIP_LIB_UNPARSED_ARGUMENTS NARGS)
+    list(LENGTH ROCM_ARG_UNPARSED_ARGUMENTS NARGS)
     if(${NARGS} LESS 2)
         message(FATAL_ERROR "rocm_hip_add_library: Not enough arguments!")
     endif()
-    list(GET HIP_LIB_UNPARSED_ARGUMENTS 0 HIP_LIB_NAME)
-    list(REMOVE_AT HIP_LIB_UNPARSED_ARGUMENTS 0)
-    set(HIP_LIB_SOURCES ${HIP_LIB_UNPARSED_ARGUMENTS})
+    list(GET ROCM_ARG_UNPARSED_ARGUMENTS 0 ROCM_ARG_NAME)
+    list(REMOVE_AT ROCM_ARG_UNPARSED_ARGUMENTS 0)
+    set(ROCM_ARG_SOURCES ${ROCM_ARG_UNPARSED_ARGUMENTS})
 
     # generate include flags
     set(_ROCM_FULL_PATH_INCLUDE_FLAGS)
-    foreach(_rocm_iternal_dir IN LISTS HIP_LIB_INCLUDE_DIRS)
+    foreach(_rocm_iternal_dir IN LISTS ROCM_ARG_INCLUDE_DIRS)
 	if(NOT IS_ABSOLUTE ${_rocm_iternal_dir})
 	    get_filename_component(_rocm_iternal_dir ${_rocm_iternal_dir} ABSOLUTE)
 	endif()
@@ -351,20 +351,20 @@ macro(rocm_hip_add_library)
 
     # generate full path to source files
     unset(_ROCM_SOURCES)
-    foreach(source IN LISTS HIP_LIB_SOURCES)
+    foreach(source IN LISTS ROCM_ARG_SOURCES)
 	if(NOT IS_ABSOLUTE ${source})
 	    get_filename_component(source ${source} ABSOLUTE)
 	endif()
 	set(_ROCM_SOURCES ${_ROCM_SOURCES} ${source})
     endforeach()
-    get_filename_component(HIP_LIB_OUTPUT_DIR ${HIP_LIB_OUTPUT_DIR} ABSOLUTE)
+    get_filename_component(ROCM_ARG_OUTPUT_DIR ${ROCM_ARG_OUTPUT_DIR} ABSOLUTE)
 
     # generate flags to use
-    set(_ROCM_STD_FLAGS ${HIP_LIB_FLAGS} ${ROCM_HIPCC_FLAGS})
+    set(_ROCM_STD_FLAGS ${ROCM_ARG_FLAGS} ${ROCM_HIPCC_FLAGS})
     if(_ROCM_STD_FLAGS)
 	list(FILTER _ROCM_STD_FLAGS INCLUDE REGEX -std=)
     endif()
-    set(_ROCM_FLAGS ${HIP_LIB_FLAGS})
+    set(_ROCM_FLAGS ${ROCM_ARG_FLAGS})
     if(CMAKE_CXX_STANDARD AND NOT _ROCM_STD_FLAGS)
 	list(APPEND _ROCM_FLAGS -std=c++${CMAKE_CXX_STANDARD})
     endif()
@@ -377,7 +377,9 @@ macro(rocm_hip_add_library)
 	    message(FATAL_ERROR "HIPCC executable not found!")
     endif()
 
-    set(_ROCM_FLAGS ${_ROCM_FLAGS} -fPIC  -fno-gpu-rdc )
+    if(ROCM_ARG_SHARED)
+	set(_ROCM_FLAGS ${_ROCM_FLAGS} -fPIC)
+    endif()
 
     # compile all files to .o
     set(_ROCM_OBJS)
@@ -387,7 +389,7 @@ macro(rocm_hip_add_library)
 	# create output directory for .o file
 	get_filename_component(_ROCM_CURRENT_DIR ${_rocm_file} DIRECTORY)
 	file(RELATIVE_PATH _ROCM_CURRENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ${_ROCM_CURRENT_DIR})
-	set(_ROCM_OBJ_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${HIP_LIB_NAME}.dir/${_ROCM_CURRENT_DIR}")
+	set(_ROCM_OBJ_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${ROCM_ARG_NAME}.dir/${_ROCM_CURRENT_DIR}")
 	file(MAKE_DIRECTORY ${_ROCM_OBJ_OUT_DIR})
 
 	# set .o name and path
@@ -403,26 +405,26 @@ macro(rocm_hip_add_library)
     endforeach()
 
     # compile shared library
-    if(HIP_LIB_SHARED)
-	add_custom_target(HIP_TARGET_${HIP_LIB_NAME} COMMAND ${ROCM_HIPCC_EXECUTABLE} ${_ROCM_OBJS} -fPIC --shared -o ${HIP_LIB_OUTPUT_DIR}/lib${HIP_LIB_NAME}.so
+    if(ROCM_ARG_SHARED)
+	add_custom_target(HIP_TARGET_${ROCM_ARG_NAME} COMMAND ${ROCM_HIPCC_EXECUTABLE} ${_ROCM_OBJS} -fPIC --shared -o ${ROCM_ARG_OUTPUT_DIR}/lib${ROCM_ARG_NAME}.so
 	    ${_ROCM_FLAGS} ${_ROCM_FULL_PATH_INCLUDE_FLAGS}
-	    WORKING_DIRECTORY ${HIP_LIB_OUTPUT_DIR})
+	    WORKING_DIRECTORY ${ROCM_ARG_OUTPUT_DIR})
 
-	add_library(${HIP_LIB_NAME} INTERFACE)
-	target_link_libraries(${HIP_LIB_NAME} INTERFACE ${HIP_LIB_OUTPUT_DIR}/lib${HIP_LIB_NAME}.so)
+	add_library(${ROCM_ARG_NAME} INTERFACE)
+	target_link_libraries(${ROCM_ARG_NAME} INTERFACE ${ROCM_ARG_OUTPUT_DIR}/lib${ROCM_ARG_NAME}.so)
 
 	# add depencies
-	add_dependencies(${HIP_LIB_NAME} HIP_TARGET_${HIP_LIB_NAME})
+	add_dependencies(${ROCM_ARG_NAME} HIP_TARGET_${ROCM_ARG_NAME})
 	foreach(_rocm_target IN LISTS _ROCM_OBJ_TARGETS)
-	    add_dependencies(HIP_TARGET_${HIP_LIB_NAME} ${_rocm_target})
+	    add_dependencies(HIP_TARGET_${ROCM_ARG_NAME} ${_rocm_target})
 	endforeach()
     endif()
 
     # static library
-    if(HIP_LIB_STATIC)
+    if(ROCM_ARG_STATIC)
         # create library from object files
-        add_library(${HIP_LIB_NAME} ${_ROCM_OBJS})
-        set_target_properties(${HIP_LIB_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+        add_library(${ROCM_ARG_NAME} ${_ROCM_OBJS})
+        set_target_properties(${ROCM_ARG_NAME} PROPERTIES LINKER_LANGUAGE CXX)
         set_source_files_properties(
             ${_ROCM_OBJS}
             PROPERTIES
@@ -431,9 +433,110 @@ macro(rocm_hip_add_library)
             )
 	# add dependencies
 	foreach(_rocm_target IN LISTS _ROCM_OBJ_TARGETS)
-	    add_dependencies(${HIP_LIB_NAME} ${_rocm_target})
+	    add_dependencies(${ROCM_ARG_NAME} ${_rocm_target})
 	endforeach()
     endif()
 
+endmacro()
+
+
+# Generates compiled objects
+# Usage:
+#   rocm_hip_add_library(<objects variable> <targets variable> <sources> [FLAGS] <flags> [INCLUDE_DIRS] <dirs ...>)
+macro(rocm_generate_objects)
+    cmake_parse_arguments(
+        ROCM_ARG
+	"" # options
+	"" # single value args
+        "FLAGS;INCLUDE_DIRS" # multi value args
+        ${ARGN}
+    )
+    set(ROCM_ARG_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+    # parse positional arguments
+    list(LENGTH ROCM_ARG_UNPARSED_ARGUMENTS NARGS)
+    if(${NARGS} LESS 3)
+        message(FATAL_ERROR "rocm_hip_add_library: Not enough arguments!")
+    endif()
+    list(GET ROCM_ARG_UNPARSED_ARGUMENTS 0 ROCM_ARG_OBJECT_VAR)
+    list(REMOVE_AT ROCM_ARG_UNPARSED_ARGUMENTS 0)
+    list(GET ROCM_ARG_UNPARSED_ARGUMENTS 0 ROCM_ARG_TARGETS_VAR)
+    list(REMOVE_AT ROCM_ARG_UNPARSED_ARGUMENTS 0)
+    set(ROCM_ARG_SOURCES ${ROCM_ARG_UNPARSED_ARGUMENTS})
+
+    # generate include flags
+    set(_ROCM_FULL_PATH_INCLUDE_FLAGS)
+    foreach(_rocm_iternal_dir IN LISTS ROCM_ARG_INCLUDE_DIRS)
+	if(NOT IS_ABSOLUTE ${_rocm_iternal_dir})
+	    get_filename_component(_rocm_iternal_dir ${_rocm_iternal_dir} ABSOLUTE)
+	endif()
+	list(APPEND _ROCM_FULL_PATH_INCLUDE_FLAGS -I${_rocm_iternal_dir})
+    endforeach()
+
+    # generate full path to source files
+    unset(_ROCM_SOURCES)
+    foreach(source IN LISTS ROCM_ARG_SOURCES)
+	if(NOT IS_ABSOLUTE ${source})
+	    get_filename_component(source ${source} ABSOLUTE)
+	endif()
+	set(_ROCM_SOURCES ${_ROCM_SOURCES} ${source})
+    endforeach()
+    get_filename_component(ROCM_ARG_OUTPUT_DIR ${ROCM_ARG_OUTPUT_DIR} ABSOLUTE)
+
+    # generate flags to use
+    set(_ROCM_STD_FLAGS ${ROCM_ARG_FLAGS} ${ROCM_HIPCC_FLAGS})
+    if(_ROCM_STD_FLAGS)
+	list(FILTER _ROCM_STD_FLAGS INCLUDE REGEX -std=)
+    endif()
+    set(_ROCM_FLAGS ${ROCM_ARG_FLAGS})
+    if(CMAKE_CXX_STANDARD AND NOT _ROCM_STD_FLAGS)
+	list(APPEND _ROCM_FLAGS -std=c++${CMAKE_CXX_STANDARD})
+    endif()
+    if(CMAKE_BUILD_TYPE)
+	string(TOUPPER ${CMAKE_BUILD_TYPE} _ROCM_BUILD_TYPE_UPPER)
+	list(APPEND _ROCM_FLAGS ${ROCM_HIPCC_FLAGS_${_ROCM_BUILD_TYPE_UPPER}})
+    endif()
+
+    if(NOT ROCM_HIPCC_EXECUTABLE)
+	message(FATAL_ERROR "HIPCC executable not found!")
+    endif()
+
+    # compile all files to .o
+    set(_ROCM_OBJS)
+    set(_ROCM_OBJ_TARGETS)
+    foreach(_rocm_file IN LISTS _ROCM_SOURCES)
+	get_filename_component(_ROCM_FILE_NAME_ONLY ${_rocm_file} NAME)
+
+	set(_ROCM_TARGET_NAME hip_target_${_ROCM_FILE_NAME_ONLY})
+
+	# create output directory for .o file
+	get_filename_component(_ROCM_CURRENT_DIR ${_rocm_file} DIRECTORY)
+	file(RELATIVE_PATH _ROCM_CURRENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ${_ROCM_CURRENT_DIR})
+	set(_ROCM_OBJ_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${_ROCM_TARGET_NAME}.dir")
+	file(MAKE_DIRECTORY ${_ROCM_OBJ_OUT_DIR})
+
+	# set .o name and path
+	set(_ROCM_OBJ_FILE ${_ROCM_OBJ_OUT_DIR}/${_ROCM_FILE_NAME_ONLY}.o)
+	list(APPEND _ROCM_OBJS ${_ROCM_OBJ_FILE})
+	list(APPEND _ROCM_OBJ_TARGETS ${_ROCM_TARGET_NAME})
+
+	# compile .o file
+	add_custom_target(${_ROCM_TARGET_NAME} ALL
+	    COMMAND ${ROCM_HIPCC_EXECUTABLE} -c ${_rocm_file} -o ${_ROCM_OBJ_FILE} ${_ROCM_FLAGS} ${_ROCM_FULL_PATH_INCLUDE_FLAGS}
+	    WORKING_DIRECTORY ${_ROCM_OBJ_OUT_DIR} SOURCES ${_rocm_file})
+    endforeach()
+
+    set_source_files_properties(
+	${_ROCM_OBJS}
+	PROPERTIES
+	EXTERNAL_OBJECT true
+	GENERATED true
+    )
+
+    # set input variable to object files
+    set(${ROCM_ARG_OBJECT_VAR} ${_ROCM_OBJS})
+
+    # set targets for dependency management
+    set(${ROCM_ARG_TARGETS_VAR} ${_ROCM_OBJ_TARGETS})
 endmacro()
 

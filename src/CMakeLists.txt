@@ -45,8 +45,9 @@ if(SPFFT_CUDA)
 endif()
 
 if(SPFFT_ROCM)
-	rocm_hip_add_library(spfft_device ${SPFFT_GPU_KERNELS} STATIC INCLUDE_DIRS ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS}
-		FLAGS --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906)
+	rocm_generate_objects(ROCM_OBJECTS ROCM_TARGETS ${SPFFT_GPU_KERNELS} INCLUDE_DIRS ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS}
+		FLAGS -fPIC  -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906)
+	list(APPEND SPFFT_SOURCE_FILES ${ROCM_OBJECTS})
 endif()
 
 if(SPFFT_MPI)
@@ -61,6 +62,11 @@ add_library(spfft ${SPFFT_LIBRARY_TYPE}
 	${SPFFT_SOURCE_FILES}
 	)
 
+# add depency on ojbect generating targets for ROCM
+if(SPFFT_ROCM)
+	add_dependencies(spfft ${ROCM_TARGETS})
+endif()
+
 target_compile_options(spfft PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
 target_include_directories(spfft PRIVATE ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 target_include_directories(spfft PRIVATE ${PROJECT_SOURCE_DIR}/include)
@@ -68,10 +74,6 @@ target_include_directories(spfft PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(spfft PRIVATE ${PROJECT_BINARY_DIR})
 target_link_libraries(spfft PRIVATE ${SPFFT_EXTERNAL_LIBS})
 target_link_libraries(spfft INTERFACE ${SPFFT_INTERFACE_LIBS})
-
-if(SPFFT_ROCM)
-	target_link_libraries(spfft PRIVATE spfft_device)
-endif()
 
 target_include_directories(spfft INTERFACE $<INSTALL_INTERFACE:include>) # for install(EXPORT ...)
 target_include_directories(spfft INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>) # for export(...)

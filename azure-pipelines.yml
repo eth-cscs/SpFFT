@@ -1,0 +1,83 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+# trigger:
+# - master
+
+jobs:
+- job: Ubuntu_GCC
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  strategy:
+    matrix:
+      Release:
+        BUILD_TYPE: 'RELEASE'
+      Debug:
+        BUILD_TYPE: 'DEBUG'
+    maxParallel: 2
+
+  steps:
+  - script: printenv
+
+  - script: |
+      sudo apt-get update
+      sudo apt-get install g++ cmake libfftw3-dev libfftw3-single3 libmpich-dev
+    displayName: 'Install dependencies'
+
+  - script: cmake --version
+
+  - script: g++ --version
+
+  - script: echo ${BUILD_TYPE}
+
+  - script: |
+      mkdir -p build
+      cd build
+      CXX=g++ cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+      make -j4
+    displayName: 'Build'
+
+  - script: |
+      ./build/tests/run_local_tests
+    displayName: 'Run local tests'
+
+  - script: |
+      mpirun -n 2 ./build/tests/run_mpi_tests
+    displayName: 'Run MPI tests'
+
+
+- job: macOS_Clang
+  pool:
+    vmImage: 'macOS-10.14'
+
+  steps:
+  - script: |
+      /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    displayName: 'Install Homebrew'
+
+  - script: |
+      brew install llvm
+      # brew install cmake # cmake alreay installed
+      brew install fftw
+      brew install open-mpi
+    displayName: 'Install dependencies'
+
+  - script: $(brew --prefix llvm)/bin/clang++ --version
+
+  - script: |
+      mkdir -p build
+      cd build
+      CXX=$(brew --prefix llvm)/bin/clang++ cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+      make -j4
+    displayName: 'Build'
+
+  - script: |
+      ./build/tests/run_local_tests
+    displayName: 'Run local tests'
+
+  - script: |
+      mpirun -n 2 ./build/tests/run_mpi_tests
+    displayName: 'Run MPI tests'

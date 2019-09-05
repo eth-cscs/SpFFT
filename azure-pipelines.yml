@@ -36,8 +36,8 @@ jobs:
   - script: |
       mkdir -p build
       cd build
-      CXX=g++ cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-      make -j4
+      CXX=g++ cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
+      make -j4 VERBOSE=1
     displayName: 'Build'
 
   - script: |
@@ -60,6 +60,7 @@ jobs:
 
   - script: |
       brew install llvm
+      brew install libomp
       # brew install cmake # cmake alreay installed
       brew install fftw
       brew install open-mpi
@@ -70,8 +71,8 @@ jobs:
   - script: |
       mkdir -p build
       cd build
-      CXX=$(brew --prefix llvm)/bin/clang++ cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-      make -j4
+      CXX=$(brew --prefix llvm)/bin/clang++ cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
+      make -j4 VERBOSE=1
     displayName: 'Build'
 
   - script: |

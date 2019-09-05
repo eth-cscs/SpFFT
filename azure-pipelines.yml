@@ -23,21 +23,27 @@ jobs:
   - script: printenv
 
   - script: |
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update
-      sudo apt-get install g++ cmake libfftw3-dev libfftw3-single3 libmpich-dev
+      sudo apt-get install gcc-6 g++-6
+      sudo apt-get install cmake libfftw3-dev libfftw3-single3 libmpich-dev
     displayName: 'Install dependencies'
 
   - script: cmake --version
 
-  - script: g++ --version
+  - script: g++-6 --version
+
+  - script: apt-get search cuda
+
+  - script: apt-cache search cuda
 
   - script: echo ${BUILD_TYPE}
 
   - script: |
       mkdir -p build
       cd build
-      CXX=g++ cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DCMAKE_CXX_FLAGS=-std=c++11
-      make -j4 VERBOSE=1
+      CXX=g++-6 cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
+      make VERBOSE=1
     displayName: 'Build'
 
   - script: |
@@ -71,8 +77,8 @@ jobs:
   - script: |
       mkdir -p build
       cd build
-      cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=OFF -DSPFFT_OMP=ON
-      make -j4 VERBOSE=1
+      cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=OFF
+      make VERBOSE=1
     displayName: 'Build'
 
   - script: |

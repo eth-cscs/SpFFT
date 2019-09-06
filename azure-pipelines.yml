@@ -20,40 +20,47 @@ jobs:
     matrix:
       Release:
         BUILD_TYPE: 'RELEASE'
-        CMAKE_EXEC: '/opt/cmake-3.9.0/bin/cmake'
-      # Debug:
-      #   BUILD_TYPE: 'DEBUG'
+      Debug:
+        BUILD_TYPE: 'DEBUG'
     maxParallel: 2
 
   steps:
 
   - script: |
       mkdir -p build_cuda_cm_3.9.0
-      cd build_cuda
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc $CMAKE_EXEC .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
+      cd build_cuda_cm_3.9.0
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.9.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
       make VERBOSE=1
     displayName: 'Build CUDA CMake 3.9.0'
 
   - script: |
       mkdir -p build_cuda_cm_3.11.0
-      cd build_cuda
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc $CMAKE_EXEC .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
+      cd build_cuda_cm_3.11.0
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
       make VERBOSE=1
     displayName: 'Build CUDA CMake 3.11.0'
 
   - script: |
-      mkdir -p build
-      cd build
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc $CMAKE_EXEC .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
+      mkdir -p build_mpi
+      cd build_mpi
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
       make VERBOSE=1
-    displayName: 'Build MPI'
+    displayName: 'Build MPI Tests'
 
   - script: |
-      ./build/tests/run_local_tests
+      mkdir -p build_no_parallel
+      cd build_no_parallel
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=OFF -DSPFFT_OMP=OFF
+      make VERBOSE=1
+    displayName: 'Build Local Tests'
+
+  - script: |
+      ./build_mpi/tests/run_local_tests
+      ./build_no_parallel/tests/run_local_tests
     displayName: 'Run local tests'
 
   - script: |
-      mpirun -n 2 ./build/tests/run_mpi_tests
+      mpirun -n 2 ./build_mpi/tests/run_mpi_tests
     displayName: 'Run MPI tests'
 
 

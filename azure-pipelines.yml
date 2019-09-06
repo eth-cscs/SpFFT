@@ -29,14 +29,14 @@ jobs:
   - script: |
       mkdir -p build_cuda_cm_3.9.0
       cd build_cuda_cm_3.9.0
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.9.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.9.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=OFF -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
       make VERBOSE=1
     displayName: 'Build CUDA CMake 3.9.0'
 
   - script: |
       mkdir -p build_cuda_cm_3.11.0
       cd build_cuda_cm_3.11.0
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=OFF -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
       make VERBOSE=1
     displayName: 'Build CUDA CMake 3.11.0'
 
@@ -56,8 +56,11 @@ jobs:
 
   - script: |
       ./build_mpi/tests/run_local_tests
+    displayName: 'Run local tests with OpenMP'
+
+  - script: |
       ./build_no_parallel/tests/run_local_tests
-    displayName: 'Run local tests'
+    displayName: 'Run local tests without OpenMP'
 
   - script: |
       mpirun -n 2 ./build_mpi/tests/run_mpi_tests

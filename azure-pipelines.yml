@@ -18,11 +18,18 @@ jobs:
 
   steps:
   - script: |
-      mkdir -p build_cuda_cm_3.11.0
-      cd build_cuda_cm_3.11.0
+      mkdir -p build_cuda
+      cd build_cuda
       CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=OFF -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_SINGLE_PRECISION=ON -DSPFFT_GPU_BACKEND=CUDA
       make VERBOSE=1
-    displayName: 'Build CUDA CMake 3.11.0'
+    displayName: 'Build CUDA with single precision (library only)'
+
+  - script: |
+      mkdir -p build_cuda_tests
+      cd build_cuda_tests
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
+      make VERBOSE=1
+    displayName: 'Build CUDA Tests'
 
   - script: |
       mkdir -p build_mpi
@@ -39,6 +46,7 @@ jobs:
     displayName: 'Build Local Tests'
 
   - script: |
+      export OMP_NUM_THREADS=2
       ./build_mpi/tests/run_local_tests
     displayName: 'Run local tests with OpenMP'
 
@@ -47,6 +55,7 @@ jobs:
     displayName: 'Run local tests without OpenMP'
 
   - script: |
+      export OMP_NUM_THREADS=1
       mpirun -n 2 ./build_mpi/tests/run_mpi_tests
     displayName: 'Run MPI tests'
 

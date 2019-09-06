@@ -17,7 +17,6 @@ jobs:
     maxParallel: 2
 
   steps:
-
     - script: |
       mkdir -p build_cuda_cm_3.11.0
       cd build_cuda_cm_3.11.0

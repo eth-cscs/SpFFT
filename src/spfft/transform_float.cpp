@@ -44,7 +44,7 @@ TransformFloat::TransformFloat(const std::shared_ptr<GridInternal<float>>& grid,
     param.reset(new Parameters(grid->communicator(), transformType, dimX, dimY, dimZ, localZLength,
                                numLocalElements, indexFormat, indices));
 #else
-    throw MPISupportError()
+    throw MPISupportError();
 #endif
   } else {
     param.reset(new Parameters(transformType, dimX, dimY, dimZ, numLocalElements, indexFormat,

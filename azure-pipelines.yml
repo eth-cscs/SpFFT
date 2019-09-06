@@ -6,45 +6,47 @@
 # trigger:
 # - master
 
+#######################
+#       Linux
+#######################
 jobs:
 - job: Ubuntu_GCC
   pool:
     vmImage: 'ubuntu-latest'
 
+  container: adhocman/master:ubuntu_18_04_spfft
+
   strategy:
     matrix:
       Release:
         BUILD_TYPE: 'RELEASE'
-      Debug:
-        BUILD_TYPE: 'DEBUG'
+        CMAKE_EXEC: '/opt/cmake-3.9.0/bin/cmake'
+      # Debug:
+      #   BUILD_TYPE: 'DEBUG'
     maxParallel: 2
 
   steps:
-  - script: printenv
 
   - script: |
-      sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-      sudo apt-get update
-      sudo apt-get install gcc-6 g++-6
-      sudo apt-get install cmake libfftw3-dev libfftw3-single3 libmpich-dev
-    displayName: 'Install dependencies'
+      mkdir -p build_cuda_cm_3.9.0
+      cd build_cuda
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc $CMAKE_EXEC .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
+      make VERBOSE=1
+    displayName: 'Build CUDA CMake 3.9.0'
 
-  - script: cmake --version
-
-  - script: g++-6 --version
-
-  - script: apt-get search cuda
-
-  - script: apt-cache search cuda
-
-  - script: echo ${BUILD_TYPE}
+  - script: |
+      mkdir -p build_cuda_cm_3.11.0
+      cd build_cuda
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc $CMAKE_EXEC .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
+      make VERBOSE=1
+    displayName: 'Build CUDA CMake 3.11.0'
 
   - script: |
       mkdir -p build
       cd build
-      CXX=g++-6 cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc $CMAKE_EXEC .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
       make VERBOSE=1
-    displayName: 'Build'
+    displayName: 'Build MPI'
 
   - script: |
       ./build/tests/run_local_tests
@@ -55,6 +57,9 @@ jobs:
     displayName: 'Run MPI tests'
 
 
+#######################
+#       macOS
+#######################
 - job: macOS_Clang
   pool:
     vmImage: 'macOS-10.14'
@@ -65,14 +70,9 @@ jobs:
     displayName: 'Install Homebrew'
 
   - script: |
-      # brew install llvm
-      # brew install libomp
-      # brew install cmake # cmake alreay installed
       brew install fftw
       brew install open-mpi
     displayName: 'Install dependencies'
-
-  # - script: $(brew --prefix llvm)/bin/clang++ --version
 
   - script: |
       mkdir -p build

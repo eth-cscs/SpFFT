@@ -21,11 +21,11 @@ jobs:
     maxParallel: 2
 
   variables:
-	SPFFT_BUILD_TESTS: ${{ parameters.build_tests }}
-	SPFFT_MPI: ${{ parameters.mpi }}
-	SPFFT_OMP: ${{ parameters.omp }}
-	SPFFT_SINGLE_PRECISION: ${{ parameters.single_precision }}
-	SPFFT_GPU_BACKEND: ${{ parameters.gpu_backend }}
+    SPFFT_BUILD_TESTS: ${{ parameters.build_tests }}
+    SPFFT_MPI: ${{ parameters.mpi }}
+    SPFFT_OMP: ${{ parameters.omp }}
+    SPFFT_SINGLE_PRECISION: ${{ parameters.single_precision }}
+    SPFFT_GPU_BACKEND: ${{ parameters.gpu_backend }}
 
   steps:
   - script: |

@@ -54,7 +54,7 @@ Transform::Transform(const std::shared_ptr<GridInternal<double>>& grid,
                                                      dimY, dimZ, localZLength, numLocalElements,
                                                      indexFormat, indices));
 #else
-    throw MPISupportError()
+    throw MPISupportError();
 #endif
   } else {
     param.reset(new Parameters(

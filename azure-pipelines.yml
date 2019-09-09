@@ -2,63 +2,38 @@
 #       Linux
 #######################
 jobs:
-- job: Ubuntu_GCC
-  pool:
-    vmImage: 'ubuntu-latest'
+# CUDA build
+- template: CI/azure_templates/ubuntu_build_test.yml
+  parameters:
+    job_name: "Ubuntu_GCC_CUDA"
+    run_mpi_tests: false
+    run_local_tests: false
+    cm_mpi: 'ON'
+    cm_omp: 'ON'
+    cm_single_precision: 'ON'
+    cm_gpu_backend: 'CUDA'
 
-  container: adhocman/master:ubuntu_18_04_cuda_9
+# buld and test without MPI and OpenMP
+- template: CI/azure_templates/ubuntu_build_test.yml
+  parameters:
+    job_name: "Ubuntu_GCC_no_parallel"
+    run_mpi_tests: false
+    run_local_tests: true
+    cm_mpi: 'OFF'
+    cm_omp: 'OFF'
+    cm_single_precision: 'OFF'
+    cm_gpu_backend: 'OFF'
 
-  strategy:
-    matrix:
-      Release:
-        BUILD_TYPE: 'RELEASE'
-      Debug:
-        BUILD_TYPE: 'DEBUG'
-    maxParallel: 2
-
-  steps:
-  - script: |
-      mkdir -p build_cuda
-      cd build_cuda
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=OFF -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_SINGLE_PRECISION=ON -DSPFFT_GPU_BACKEND=CUDA
-      make VERBOSE=1
-    displayName: 'Build CUDA with single precision (library only)'
-
-  - script: |
-      mkdir -p build_cuda_tests
-      cd build_cuda_tests
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON -DSPFFT_GPU_BACKEND=CUDA
-      make VERBOSE=1
-    displayName: 'Build CUDA Tests'
-
-  - script: |
-      mkdir -p build_mpi
-      cd build_mpi
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=ON -DSPFFT_OMP=ON
-      make VERBOSE=1
-    displayName: 'Build MPI Tests'
-
-  - script: |
-      mkdir -p build_no_parallel
-      cd build_no_parallel
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=ON -DSPFFT_MPI=OFF -DSPFFT_OMP=OFF
-      make VERBOSE=1
-    displayName: 'Build Local Tests'
-
-  - script: |
-      export OMP_NUM_THREADS=2
-      ./build_mpi/tests/run_local_tests
-    displayName: 'Run local tests with OpenMP'
-
-  - script: |
-      ./build_no_parallel/tests/run_local_tests
-    displayName: 'Run local tests without OpenMP'
-
-  - script: |
-      export OMP_NUM_THREADS=1
-      mpirun -n 2 ./build_mpi/tests/run_mpi_tests
-    displayName: 'Run MPI tests'
-
+# buld and test with full parallelization
+- template: CI/azure_templates/ubuntu_build_test.yml
+  parameters:
+    job_name: "Ubuntu_GCC_parallel"
+    run_mpi_tests: true
+    run_local_tests: true
+    cm_mpi: 'ON'
+    cm_omp: 'ON'
+    cm_single_precision: 'OFF'
+    cm_gpu_backend: 'OFF'
 
 #######################
 #       macOS

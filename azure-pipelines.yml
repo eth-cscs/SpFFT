@@ -6,7 +6,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
 
-  container: adhocman/master:ubuntu_18_04_spfft
+  container: adhocman/master::ubuntu_18_04_cuda_9
 
   strategy:
     matrix:

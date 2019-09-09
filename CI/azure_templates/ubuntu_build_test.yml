@@ -1,0 +1,36 @@
+parameters:
+  build_tests: 'OFF'
+  mpi: 'ON'
+  omp: 'ON'
+  single_precision: 'OFF'
+  gpu_backend: 'OFF'
+
+jobs:
+- job: Ubuntu_GCC
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  container: adhocman/master:ubuntu_18_04_cuda_9
+
+  strategy:
+    matrix:
+      Release:
+        BUILD_TYPE: 'RELEASE'
+      Debug:
+        BUILD_TYPE: 'DEBUG'
+    maxParallel: 2
+
+  variables:
+  - SPFFT_BUILD_TESTS: ${{ parameters.build_tests }}
+  - SPFFT_MPI: ${{ parameters.mpi }}
+  - SPFFT_OMP: ${{ parameters.omp }}
+  - SPFFT_SINGLE_PRECISION: ${{ parameters.single_precision }}
+  - SPFFT_GPU_BACKEND: ${{ parameters.gpu_backend }}
+
+  steps:
+  - script: |
+      mkdir -p build
+      cd build
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=${SPFFT_BUILD_TESTS} -DSPFFT_MPI=${SPFFT_MPI} -DSPFFT_OMP=${SPFFT_OMP} -DSPFFT_SINGLE_PRECISION=${SPFFT_SINGLE_PRECISION} -DSPFFT_GPU_BACKEND=${SPFFT_GPU_BACKEND}
+      make VERBOSE=1
+    displayName: 'Build'

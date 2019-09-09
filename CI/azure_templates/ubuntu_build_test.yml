@@ -4,7 +4,6 @@ parameters:
   run_mpi_tests: false
   run_local_tests: false
 #cmake parameters
-  cm_build_tests: 'OFF'
   cm_mpi: 'ON'
   cm_omp: 'ON'
   cm_single_precision: 'OFF'
@@ -26,7 +25,6 @@ jobs:
     maxParallel: 2
 
   variables:
-    SPFFT_BUILD_TESTS: ${{ parameters.cm_build_tests }}
     SPFFT_MPI: ${{ parameters.cm_mpi }}
     SPFFT_OMP: ${{ parameters.cm_omp }}
     SPFFT_SINGLE_PRECISION: ${{ parameters.cm_single_precision }}
@@ -36,18 +34,32 @@ jobs:
   - script: |
       mkdir -p build
       cd build
-      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=${SPFFT_BUILD_TESTS} -DSPFFT_MPI=${SPFFT_MPI} -DSPFFT_OMP=${SPFFT_OMP} -DSPFFT_SINGLE_PRECISION=${SPFFT_SINGLE_PRECISION} -DSPFFT_GPU_BACKEND=${SPFFT_GPU_BACKEND}
+      CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=OFF -DSPFFT_MPI=${SPFFT_MPI} -DSPFFT_OMP=${SPFFT_OMP} -DSPFFT_SINGLE_PRECISION=${SPFFT_SINGLE_PRECISION} -DSPFFT_GPU_BACKEND=${SPFFT_GPU_BACKEND}
       make VERBOSE=1
-    displayName: 'Build'
+    displayName: 'Build library only'
+
+  - script: |
+      cd build
+      mkdir -p install_dir
+      /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir
+      make VERBOSE=1 install
+    displayName: 'Install library'
+
+  - script: |
+      mkdir -p build
+      cd build
+      /opt/cmake-3.11.0/bin/cmake .. -DSPFFT_BUILD_TESTS=ON
+      make VERBOSE=1
+    displayName: 'Build tests'
 
   - script: |
       export OMP_NUM_THREADS=2
-      ./build_mpi/tests/run_local_tests
+      ./build/tests/run_local_tests
     displayName: 'Run local tests'
     condition: and(succeeded(), eq('${{ parameters.run_local_tests }}', 'true'))
 
   - script: |
       export OMP_NUM_THREADS=2
-      mpirun -n 2 ./build_mpi/tests/run_mpi_tests
+      mpirun -n 2 ./build/tests/run_mpi_tests
     displayName: 'Run MPI tests'
     condition: and(succeeded(), eq('${{ parameters.run_mpi_tests }}', 'true'))

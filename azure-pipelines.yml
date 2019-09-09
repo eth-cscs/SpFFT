@@ -2,25 +2,36 @@
 #       Linux
 #######################
 jobs:
+# CUDA build test
 - template: CI/azure_templates/ubuntu_build_test.yml
   parameters:
     job_name: "Ubuntu_GCC_CUDA_single_precision"
     run_mpi_tests: false
     run_local_tests: false
-    cm_build_tests: 'ON'
     cm_mpi: 'ON'
     cm_omp: 'ON'
     cm_single_precision: 'ON'
     cm_gpu_backend: 'CUDA'
 
+# buld and test without MPI and OpenMP
 - template: CI/azure_templates/ubuntu_build_test.yml
   parameters:
     job_name: "Ubuntu_GCC_no_parallel"
     run_mpi_tests: false
     run_local_tests: true
-    cm_build_tests: 'ON'
     cm_mpi: 'OFF'
     cm_omp: 'OFF'
+    cm_single_precision: 'OFF'
+    cm_gpu_backend: 'OFF'
+
+# buld and test with full parallelization
+- template: CI/azure_templates/ubuntu_build_test.yml
+  parameters:
+    job_name: "Ubuntu_GCC_parallel"
+    run_mpi_tests: true
+    run_local_tests: true
+    cm_mpi: 'ON'
+    cm_omp: 'ON'
     cm_single_precision: 'OFF'
     cm_gpu_backend: 'OFF'
 

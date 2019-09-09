@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
   std::cout << "Dimensions: x = " << dimX << ", y = " << dimY << ", z = " << dimZ << std::endl
             << std::endl;
 
-  const int numThreads = -1; // Use default OpenMP value
+  const int numThreads = -1;  // Use default OpenMP value
 
   std::vector<std::complex<double>> freqValues;
   freqValues.reserve(dimX * dimY * dimZ);

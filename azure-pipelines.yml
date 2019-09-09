@@ -2,7 +2,7 @@
 #       Linux
 #######################
 jobs:
-# CUDA build test
+# CUDA build
 - template: CI/azure_templates/ubuntu_build_test.yml
   parameters:
     job_name: "Ubuntu_GCC_CUDA"

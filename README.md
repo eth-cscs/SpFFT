@@ -1,3 +1,4 @@
+[![Build Status](https://dev.azure.com/zeadreamplay/SpFFT/_apis/build/status/eth-cscs.SpFFT?branchName=master)](https://dev.azure.com/zeadreamplay/SpFFT/_build/latest?definitionId=3&branchName=master)
 [![Documentation](https://readthedocs.org/projects/spfft/badge/?version=latest)](https://spfft.readthedocs.io/en/latest/?badge=latest)
 
 # SpFFT

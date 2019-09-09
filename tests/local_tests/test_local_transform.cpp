@@ -1,4 +1,3 @@
-#include "test_util/test_transform.hpp"
 #include <algorithm>
 #include <memory>
 #include <random>
@@ -12,15 +11,15 @@
 #include "parameters/parameters.hpp"
 #include "spfft/grid.hpp"
 #include "spfft/transform.hpp"
-#include "test_util/test_check_values.hpp"
 #include "test_util/generate_indices.hpp"
+#include "test_util/test_check_values.hpp"
+#include "test_util/test_transform.hpp"
 #include "util/common_types.hpp"
 
 class TestLocalTransform : public TransformTest {
 protected:
   TestLocalTransform()
-      : TransformTest(),
-        grid_(dimX_, dimY_, dimZ_, dimX_ * dimY_, std::get<1>(GetParam()), -1) {}
+      : TransformTest(), grid_(dimX_, dimY_, dimZ_, dimX_ * dimY_, std::get<1>(GetParam()), -1) {}
 
   auto grid() -> Grid& override { return grid_; }
 
@@ -110,4 +109,3 @@ INSTANTIATE_TEST_CASE_P(CenteredIndicesTest, TestLocalTransform,
                                            ::testing::Values(1, 2, 11, 100),
                                            ::testing::Values(true)),
                         param_type_names);
-

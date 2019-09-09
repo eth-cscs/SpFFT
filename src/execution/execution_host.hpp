@@ -100,5 +100,5 @@ private:
   HostArrayView3D<T> spaceDomainDataExternal_;
   HostArrayView2D<std::complex<T>> freqDomainData_;
 };
-} // namespace spfft
+}  // namespace spfft
 #endif

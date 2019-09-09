@@ -232,6 +232,6 @@ auto HostArray<T>::unpin_memory() noexcept -> void {
 #endif
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

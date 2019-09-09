@@ -27,10 +27,10 @@
  */
 
 #include "spfft/transform.hpp"
+#include "parameters/parameters.hpp"
 #include "spfft/grid.hpp"
 #include "spfft/transform.h"
 #include "spfft/transform_internal.hpp"
-#include "parameters/parameters.hpp"
 
 namespace spfft {
 
@@ -50,15 +50,14 @@ Transform::Transform(const std::shared_ptr<GridInternal<double>>& grid,
   std::shared_ptr<Parameters> param;
   if (!grid->local()) {
 #ifdef SPFFT_MPI
-    param.reset(new Parameters(grid->communicator(), transformType, dimX,
-                                                     dimY, dimZ, localZLength, numLocalElements,
-                                                     indexFormat, indices));
+    param.reset(new Parameters(grid->communicator(), transformType, dimX, dimY, dimZ, localZLength,
+                               numLocalElements, indexFormat, indices));
 #else
     throw MPISupportError();
 #endif
   } else {
-    param.reset(new Parameters(
-        transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, indices));
+    param.reset(
+        new Parameters(transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, indices));
   }
 
   transform_.reset(new TransformInternal<double>(processingUnit, grid, std::move(param)));
@@ -97,9 +96,7 @@ int Transform::local_z_length() const { return transform_->num_local_xy_planes()
 
 int Transform::local_z_offset() const { return transform_->local_xy_plane_offset(); }
 
-int Transform::local_slice_size() const {
-  return dim_x() * dim_y() * local_z_length();
-}
+int Transform::local_slice_size() const { return dim_x() * dim_y() * local_z_length(); }
 
 int Transform::num_local_elements() const { return transform_->num_local_elements(); }
 
@@ -117,7 +114,7 @@ int Transform::num_threads() const { return transform_->num_threads(); }
 MPI_Comm Transform::communicator() const { return transform_->communicator(); }
 #endif
 
-} // namespace spfft
+}  // namespace spfft
 
 //---------------------
 // C API
@@ -171,7 +168,6 @@ SpfftError spfft_transform_clone(SpfftTransform transform, SpfftTransform* newTr
   return SpfftError::SPFFT_SUCCESS;
 }
 
-
 SpfftError spfft_transform_forward(SpfftTransform transform, SpfftProcessingUnitType inputLocation,
                                    double* output, SpfftScalingType scaling) {
   if (!transform) {
@@ -203,7 +199,7 @@ SpfftError spfft_transform_backward(SpfftTransform transform, const double* inpu
 }
 
 SpfftError spfft_transform_get_space_domain(SpfftTransform transform,
-                                           SpfftProcessingUnitType dataLocation, double** data) {
+                                            SpfftProcessingUnitType dataLocation, double** data) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -301,7 +297,8 @@ SpfftError spfft_transform_num_local_elements(SpfftTransform transform, int* loc
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_transform_num_global_elements(SpfftTransform transform, long long int* numGlobalElements) {
+SpfftError spfft_transform_num_global_elements(SpfftTransform transform,
+                                               long long int* numGlobalElements) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -387,6 +384,4 @@ SpfftError spfft_transform_communicator_fortran(SpfftGrid grid, int* commFortran
 }
 #endif
 
-} // extern C
-
-
+}  // extern C

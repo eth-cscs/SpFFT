@@ -27,8 +27,8 @@
  */
 
 #include "spfft/transform_float.hpp"
-#include "spfft/transform_float.h"
 #include "spfft/grid_float.hpp"
+#include "spfft/transform_float.h"
 #include "spfft/transform_internal.hpp"
 
 #ifdef SPFFT_SINGLE_PRECISION
@@ -47,8 +47,8 @@ TransformFloat::TransformFloat(const std::shared_ptr<GridInternal<float>>& grid,
     throw MPISupportError();
 #endif
   } else {
-    param.reset(new Parameters(transformType, dimX, dimY, dimZ, numLocalElements, indexFormat,
-                               indices));
+    param.reset(
+        new Parameters(transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, indices));
   }
 
   transform_.reset(new TransformInternal<float>(processingUnit, grid, std::move(param)));
@@ -87,17 +87,19 @@ int TransformFloat::local_z_length() const { return transform_->num_local_xy_pla
 
 int TransformFloat::local_z_offset() const { return transform_->local_xy_plane_offset(); }
 
-int TransformFloat::local_slice_size() const {
-  return dim_x() * dim_y() * local_z_length();
-}
+int TransformFloat::local_slice_size() const { return dim_x() * dim_y() * local_z_length(); }
 
 int TransformFloat::num_local_elements() const { return transform_->num_local_elements(); }
 
-long long int TransformFloat::num_global_elements() const { return transform_->num_global_elements(); }
+long long int TransformFloat::num_global_elements() const {
+  return transform_->num_global_elements();
+}
 
 long long int TransformFloat::global_size() const { return transform_->global_size(); }
 
-SpfftProcessingUnitType TransformFloat::processing_unit() const { return transform_->processing_unit(); }
+SpfftProcessingUnitType TransformFloat::processing_unit() const {
+  return transform_->processing_unit();
+}
 
 int TransformFloat::device_id() const { return transform_->device_id(); }
 
@@ -107,8 +109,7 @@ int TransformFloat::num_threads() const { return transform_->num_threads(); }
 MPI_Comm TransformFloat::communicator() const { return transform_->communicator(); }
 #endif
 
-
-} // namespace spfft
+}  // namespace spfft
 
 //---------------------
 // C API
@@ -116,14 +117,15 @@ MPI_Comm TransformFloat::communicator() const { return transform_->communicator(
 
 extern "C" {
 SpfftError spfft_float_transform_create(SpfftFloatTransform* transform, SpfftFloatGrid grid,
-                                  SpfftProcessingUnitType processingUnit,
-                                  SpfftTransformType transformType, int dimX, int dimY, int dimZ,
-                                  int localZLength, int numLocalElements,
-                                  SpfftIndexFormatType indexFormat, const int* indices) {
+                                        SpfftProcessingUnitType processingUnit,
+                                        SpfftTransformType transformType, int dimX, int dimY,
+                                        int dimZ, int localZLength, int numLocalElements,
+                                        SpfftIndexFormatType indexFormat, const int* indices) {
   try {
-    *transform = new spfft::TransformFloat(reinterpret_cast<spfft::GridFloat*>(grid)->create_transform(
-        processingUnit, transformType, dimX, dimY, dimZ, localZLength, numLocalElements,
-        indexFormat, indices));
+    *transform =
+        new spfft::TransformFloat(reinterpret_cast<spfft::GridFloat*>(grid)->create_transform(
+            processingUnit, transformType, dimX, dimY, dimZ, localZLength, numLocalElements,
+            indexFormat, indices));
 
   } catch (const spfft::GenericError& e) {
     return e.error_code();
@@ -148,7 +150,8 @@ SpfftError spfft_float_transform_destroy(SpfftFloatTransform transform) {
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_transform_clone(SpfftFloatTransform transform, SpfftFloatTransform* newTransform) {
+SpfftError spfft_float_transform_clone(SpfftFloatTransform transform,
+                                       SpfftFloatTransform* newTransform) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -163,8 +166,9 @@ SpfftError spfft_float_transform_clone(SpfftFloatTransform transform, SpfftFloat
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_transform_forward(SpfftFloatTransform transform, SpfftProcessingUnitType inputLocation,
-                                   float* output, SpfftScalingType scaling) {
+SpfftError spfft_float_transform_forward(SpfftFloatTransform transform,
+                                         SpfftProcessingUnitType inputLocation, float* output,
+                                         SpfftScalingType scaling) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -179,7 +183,7 @@ SpfftError spfft_float_transform_forward(SpfftFloatTransform transform, SpfftPro
 }
 
 SpfftError spfft_float_transform_backward(SpfftFloatTransform transform, const float* input,
-                                    SpfftProcessingUnitType outputLocation) {
+                                          SpfftProcessingUnitType outputLocation) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -194,7 +198,8 @@ SpfftError spfft_float_transform_backward(SpfftFloatTransform transform, const f
 }
 
 SpfftError spfft_float_transform_get_space_domain(SpfftFloatTransform transform,
-                                           SpfftProcessingUnitType dataLocation, float** data) {
+                                                  SpfftProcessingUnitType dataLocation,
+                                                  float** data) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -278,7 +283,8 @@ SpfftError spfft_float_transform_local_z_offset(SpfftFloatTransform transform, i
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform, int* localZLength) {
+SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform,
+                                                    int* localZLength) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -292,7 +298,8 @@ SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transfor
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform, long long int* numGlobalElements) {
+SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform,
+                                                     long long int* numGlobalElements) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -306,7 +313,8 @@ SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transfo
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform, long long int* globalSize) {
+SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform,
+                                             long long int* globalSize) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -363,7 +371,8 @@ SpfftError spfft_float_transform_communicator(SpfftFloatTransform transform, MPI
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_transform_communicator_fortran(SpfftFloatTransform transform, int* commFortran) {
+SpfftError spfft_float_transform_communicator_fortran(SpfftFloatTransform transform,
+                                                      int* commFortran) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -379,6 +388,6 @@ SpfftError spfft_float_transform_communicator_fortran(SpfftFloatTransform transf
 }
 #endif
 
-} // extern C
+}  // extern C
 
 #endif

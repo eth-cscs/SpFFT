@@ -248,6 +248,5 @@ HostArrayConstView3D<T>::HostArrayConstView3D(const ValueType* data,
                                               const std::array<SizeType, 3>& dims,
                                               const bool pinned)
     : dims_(dims), pinned_(pinned), data_(data) {}
-} // namespace spfft
+}  // namespace spfft
 #endif
-

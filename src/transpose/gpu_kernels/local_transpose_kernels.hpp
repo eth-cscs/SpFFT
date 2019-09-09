@@ -59,5 +59,4 @@ auto local_transpose_forward(
     const GPUArrayView3D<typename gpu::fft::ComplexType<float>::type>& spaceDomain,
     GPUArrayView2D<typename gpu::fft::ComplexType<float>::type> freqZData) -> void;
 
-} // namespace spfft
-
+}  // namespace spfft

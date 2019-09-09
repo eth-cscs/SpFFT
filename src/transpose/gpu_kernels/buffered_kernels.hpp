@@ -105,6 +105,6 @@ auto buffered_pack_forward(
     const GPUArrayView3D<typename gpu::fft::ComplexType<double>::type>& freqXYData,
     GPUArrayView3D<typename gpu::fft::ComplexType<float>::type> buffer) -> void;
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

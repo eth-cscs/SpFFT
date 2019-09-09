@@ -46,7 +46,7 @@ void multi_transform_backward(int numTransforms, Transform* transforms, double**
   MultiTransformInternal<Transform>::backward(numTransforms, transforms, inputPointers,
                                               outputLocations);
 }
-} // namespace spfft
+}  // namespace spfft
 
 extern "C" {
 

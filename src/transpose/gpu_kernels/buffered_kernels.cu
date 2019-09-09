@@ -30,9 +30,9 @@
 #include "gpu_util/complex_conversion.cuh"
 #include "gpu_util/gpu_fft_api.hpp"
 #include "gpu_util/gpu_runtime.hpp"
+#include "memory/array_view_utility.hpp"
 #include "memory/gpu_array_const_view.hpp"
 #include "memory/gpu_array_view.hpp"
-#include "memory/array_view_utility.hpp"
 
 namespace spfft {
 
@@ -241,10 +241,9 @@ auto buffered_unpack_forward(
 // Dimension of buffer are (numRanks, maxNumZSticks, maxNumXYPlanes)
 // Dimension of freqXYData are (numLocalXYPlanes, dimY, dimX)
 template <typename DATA_TYPE, typename BUFFER_TYPE>
-__global__ static void buffered_pack_forward_kernel(const GPUArrayConstView1D<int> numZSticks,
-                                                    const GPUArrayConstView1D<int> indices,
-                                                    const GPUArrayConstView2D<DATA_TYPE> freqXYDataFlat,
-                                                    GPUArrayView3D<BUFFER_TYPE> buffer) {
+__global__ static void buffered_pack_forward_kernel(
+    const GPUArrayConstView1D<int> numZSticks, const GPUArrayConstView1D<int> indices,
+    const GPUArrayConstView2D<DATA_TYPE> freqXYDataFlat, GPUArrayView3D<BUFFER_TYPE> buffer) {
   // buffer.dim_mid() is equal to maxNumZSticks
   const int xyPlaneIndex = threadIdx.x + blockIdx.x * blockDim.x;
   if (xyPlaneIndex < freqXYDataFlat.dim_outer()) {
@@ -306,5 +305,4 @@ auto buffered_pack_forward(
   buffered_pack_forward_launch(stream, maxNumXYPlanes, numZSticks, indices, freqXYData, buffer);
 }
 
-} // namespace spfft
-
+}  // namespace spfft

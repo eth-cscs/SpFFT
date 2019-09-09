@@ -79,7 +79,7 @@ int Grid::num_threads() const { return grid_->num_threads(); }
 #ifdef SPFFT_MPI
 MPI_Comm Grid::communicator() const { return grid_->communicator().get(); }
 #endif
-} // namespace spfft
+}  // namespace spfft
 
 //---------------------
 // C API
@@ -292,4 +292,3 @@ SpfftError spfft_grid_communicator_fortran(SpfftGrid grid, int* commFortran) {
 }
 #endif
 }
-

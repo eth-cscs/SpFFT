@@ -63,7 +63,7 @@ private:
   std::shared_ptr<gpu::StreamType> stream_;
   int deviceId_ = 0;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
 #endif

@@ -27,11 +27,11 @@
  */
 #include <algorithm>
 #include <cassert>
-#include "spfft/config.h"
 #include "gpu_util/gpu_fft_api.hpp"
 #include "gpu_util/gpu_runtime.hpp"
-#include "memory/gpu_array_const_view.hpp"
 #include "memory/array_view_utility.hpp"
+#include "memory/gpu_array_const_view.hpp"
+#include "spfft/config.h"
 
 namespace spfft {
 
@@ -70,8 +70,9 @@ auto local_transpose_backward(
                         std::min(freqZData.dim_inner(), 2160));
   launch_kernel(transpose_backward_kernel<typename gpu::fft::ComplexType<double>::type>, threadGrid,
                 threadBlock, 0, stream, indices, freqZData,
-                GPUArrayView2D<typename gpu::fft::ComplexType<double>::type>(spaceDomain.data(), spaceDomain.dim_outer(),
-                               spaceDomain.dim_mid() * spaceDomain.dim_inner(), spaceDomain.device_id()));
+                GPUArrayView2D<typename gpu::fft::ComplexType<double>::type>(
+                    spaceDomain.data(), spaceDomain.dim_outer(),
+                    spaceDomain.dim_mid() * spaceDomain.dim_inner(), spaceDomain.device_id()));
 }
 
 auto local_transpose_backward(
@@ -121,8 +122,9 @@ auto local_transpose_backward(
                         std::min(freqZData.dim_outer(), 2160));
   launch_kernel(transpose_backward_kernel<typename gpu::fft::ComplexType<double>::type>, threadGrid,
                 threadBlock, 0, stream, indices, freqZData,
-                GPUArrayView2D<typename gpu::fft::ComplexType<double>::type>(spaceDomain.data(), spaceDomain.dim_outer(),
-                               spaceDomain.dim_mid() * spaceDomain.dim_inner(), spaceDomain.device_id()));
+                GPUArrayView2D<typename gpu::fft::ComplexType<double>::type>(
+                    spaceDomain.data(), spaceDomain.dim_outer(),
+                    spaceDomain.dim_mid() * spaceDomain.dim_inner(), spaceDomain.device_id()));
 }
 
 auto local_transpose_backward(
@@ -197,5 +199,4 @@ auto local_transpose_forward(
                 freqZData);
 }
 
-} // namespace spfft
-
+}  // namespace spfft

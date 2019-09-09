@@ -105,6 +105,6 @@ private:
   GPUArray<int> indicesGPU_;
 };
 
-} // namespace spfft
-#endif // SPFFT_MPI
+}  // namespace spfft
+#endif  // SPFFT_MPI
 #endif

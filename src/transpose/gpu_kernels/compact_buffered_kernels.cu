@@ -290,5 +290,4 @@ auto compact_buffered_pack_forward(
                                        buffer);
 }
 
-} // namespace spfft
-
+}  // namespace spfft

@@ -51,11 +51,8 @@ auto allocate_aligned(SizeType numBytes) -> void* {
   return allocate_aligned(numBytes, static_cast<SizeType>(pageSize));
 }
 
-auto free_aligned(void* ptr) noexcept -> void {
-  free(ptr);
-}
+auto free_aligned(void* ptr) noexcept -> void { free(ptr); }
 
-} // namespace memory
+}  // namespace memory
 
-} // namespace spfft
-
+}  // namespace spfft

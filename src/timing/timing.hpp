@@ -38,8 +38,8 @@
 namespace spfft {
 namespace timing {
 extern HostTiming GlobalHostTimer;
-} // namespace timing
-} // namespace spfft
+}  // namespace timing
+}  // namespace spfft
 
 #define HOST_TIMING_CONCAT_IMPL(x, y) x##y
 #define HOST_TIMING_MACRO_CONCAT(x, y) HOST_TIMING_CONCAT_IMPL(x, y)

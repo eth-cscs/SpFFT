@@ -29,7 +29,6 @@
 #ifndef SPFFT_GPU_ARRAY_VIEW_HPP
 #define SPFFT_GPU_ARRAY_VIEW_HPP
 
-
 #include <cassert>
 #include <limits>
 #include "spfft/config.h"
@@ -39,7 +38,6 @@
 #if defined(__CUDACC__) || defined(__HIPCC__)
 #include "gpu_util/gpu_runtime.hpp"
 #endif
-
 
 namespace spfft {
 
@@ -257,7 +255,6 @@ GPUArrayView1D<T>::GPUArrayView1D(ValueType* data, const int size, const int dev
   assert(!(size != 0 && data == nullptr));
 }
 
-
 template <typename T>
 GPUArrayView2D<T>::GPUArrayView2D(ValueType* data, const int dimOuter, const int dimInner,
                                   const int deviceId)
@@ -266,7 +263,6 @@ GPUArrayView2D<T>::GPUArrayView2D(ValueType* data, const int dimOuter, const int
   assert(dimOuter >= 0);
   assert(dimInner >= 0);
 }
-
 
 template <typename T>
 GPUArrayView3D<T>::GPUArrayView3D(ValueType* data, const int dimOuter, const int dimMid,
@@ -278,7 +274,6 @@ GPUArrayView3D<T>::GPUArrayView3D(ValueType* data, const int dimOuter, const int
   assert(dimInner >= 0);
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

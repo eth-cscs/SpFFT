@@ -81,8 +81,7 @@ int GridFloat::num_threads() const { return grid_->num_threads(); }
 MPI_Comm GridFloat::communicator() const { return grid_->communicator().get(); }
 #endif
 
-} // namespace spfft
-
+}  // namespace spfft
 
 //---------------------
 // C API
@@ -90,11 +89,11 @@ MPI_Comm GridFloat::communicator() const { return grid_->communicator().get(); }
 
 extern "C" {
 SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDimX, int maxDimY, int maxDimZ,
-                             int maxNumLocalZSticks, SpfftProcessingUnitType processingUnit,
-                             int maxNumThreads) {
+                                   int maxNumLocalZSticks, SpfftProcessingUnitType processingUnit,
+                                   int maxNumThreads) {
   try {
     *grid = new spfft::GridFloat(maxDimX, maxDimY, maxDimZ, maxNumLocalZSticks, processingUnit,
-                            maxNumThreads);
+                                 maxNumThreads);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {
@@ -104,13 +103,15 @@ SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDimX, int maxDim
 }
 
 #ifdef SPFFT_MPI
-SpfftError spfft_float_grid_create_distributed(SpfftFloatGrid* grid, int maxDimX, int maxDimY, int maxDimZ,
-                                         int maxNumLocalZSticks, int maxLocalZLength,
-                                         SpfftProcessingUnitType processingUnit, int maxNumThreads,
-                                         MPI_Comm comm, SpfftExchangeType exchangeType) {
+SpfftError spfft_float_grid_create_distributed(SpfftFloatGrid* grid, int maxDimX, int maxDimY,
+                                               int maxDimZ, int maxNumLocalZSticks,
+                                               int maxLocalZLength,
+                                               SpfftProcessingUnitType processingUnit,
+                                               int maxNumThreads, MPI_Comm comm,
+                                               SpfftExchangeType exchangeType) {
   try {
     *grid = new spfft::GridFloat(maxDimX, maxDimY, maxDimZ, maxNumLocalZSticks, maxLocalZLength,
-                            processingUnit, maxNumThreads, comm, exchangeType);
+                                 processingUnit, maxNumThreads, comm, exchangeType);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {
@@ -205,7 +206,8 @@ SpfftError spfft_float_grid_max_local_z_length(SpfftFloatGrid grid, int* maxLoca
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_grid_processing_unit(SpfftFloatGrid grid, SpfftProcessingUnitType* processingUnit) {
+SpfftError spfft_float_grid_processing_unit(SpfftFloatGrid grid,
+                                            SpfftProcessingUnitType* processingUnit) {
   if (!grid) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }
@@ -276,7 +278,6 @@ SpfftError spfft_float_grid_communicator_fortran(SpfftFloatGrid grid, int* commF
   return SpfftError::SPFFT_SUCCESS;
 }
 #endif
-
 }
 
 #endif

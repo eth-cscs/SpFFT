@@ -41,9 +41,7 @@ class GenericError : public std::exception {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Generic error"; }
 
-  virtual auto error_code() const noexcept -> SpfftError {
-    return SpfftError::SPFFT_UNKNOWN_ERROR;
-  }
+  virtual auto error_code() const noexcept -> SpfftError { return SpfftError::SPFFT_UNKNOWN_ERROR; }
 };
 
 /**
@@ -94,7 +92,6 @@ public:
   }
 };
 
-
 /**
  * Invalid indices given to transform.
  */
@@ -128,9 +125,7 @@ class MPIError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: MPI error"; }
 
-  auto error_code() const noexcept -> SpfftError override {
-    return SpfftError::SPFFT_MPI_ERROR;
-  }
+  auto error_code() const noexcept -> SpfftError override { return SpfftError::SPFFT_MPI_ERROR; }
 };
 
 /**
@@ -166,9 +161,7 @@ class FFTWError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: FFTW error"; }
 
-  auto error_code() const noexcept -> SpfftError override {
-    return SpfftError::SPFFT_FFTW_ERROR;
-  }
+  auto error_code() const noexcept -> SpfftError override { return SpfftError::SPFFT_FFTW_ERROR; }
 };
 
 /**
@@ -178,9 +171,7 @@ class InternalError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Internal error"; }
 
-  auto error_code() const noexcept -> SpfftError override {
-    return SpfftError::SPFFT_FFTW_ERROR;
-  }
+  auto error_code() const noexcept -> SpfftError override { return SpfftError::SPFFT_FFTW_ERROR; }
 };
 
 // ==================================
@@ -193,9 +184,7 @@ class GPUError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: GPU error"; }
 
-  auto error_code() const noexcept -> SpfftError override {
-    return SpfftError::SPFFT_GPU_ERROR;
-  }
+  auto error_code() const noexcept -> SpfftError override { return SpfftError::SPFFT_GPU_ERROR; }
 };
 
 /**
@@ -312,6 +301,6 @@ public:
   }
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

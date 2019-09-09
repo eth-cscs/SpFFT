@@ -52,7 +52,7 @@ __global__ static void symmetrize_plane_kernel(
 auto symmetrize_plane_gpu(const gpu::StreamType stream,
                           const GPUArrayView3D<typename gpu::fft::ComplexType<double>::type>& data)
     -> void {
-     assert(data.size() > 2);
+  assert(data.size() > 2);
   {
     const int startIndex = 1;
     const int numIndices = data.dim_mid() / 2;
@@ -74,7 +74,7 @@ auto symmetrize_plane_gpu(const gpu::StreamType stream,
 auto symmetrize_plane_gpu(const gpu::StreamType stream,
                           const GPUArrayView3D<typename gpu::fft::ComplexType<float>::type>& data)
     -> void {
-     assert(data.size() > 2);
+  assert(data.size() > 2);
   {
     const int startIndex = 1;
     const int numIndices = data.dim_mid() / 2;
@@ -112,7 +112,7 @@ __global__ static void symmetrize_stick_kernel(
 auto symmetrize_stick_gpu(const gpu::StreamType stream,
                           const GPUArrayView1D<typename gpu::fft::ComplexType<double>::type>& data)
     -> void {
-     assert(data.size() > 2);
+  assert(data.size() > 2);
   {
     const int startIndex = 1;
     const int numIndices = data.size() / 2;
@@ -130,12 +130,11 @@ auto symmetrize_stick_gpu(const gpu::StreamType stream,
                   startIndex, numIndices);
   }
 }
-
 
 auto symmetrize_stick_gpu(const gpu::StreamType stream,
                           const GPUArrayView1D<typename gpu::fft::ComplexType<float>::type>& data)
     -> void {
-     assert(data.size() > 2);
+  assert(data.size() > 2);
   {
     const int startIndex = 1;
     const int numIndices = data.size() / 2;
@@ -154,5 +153,4 @@ auto symmetrize_stick_gpu(const gpu::StreamType stream,
   }
 }
 
-} // namespace spfft
-
+}  // namespace spfft

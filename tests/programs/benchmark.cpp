@@ -27,7 +27,7 @@
 #include "spfft/multi_transform.hpp"
 #include "spfft/transform.hpp"
 
-#include <unistd.h> // for MPI debugging
+#include <unistd.h>  // for MPI debugging
 
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
 #include "gpu_util/gpu_runtime_api.hpp"
@@ -44,7 +44,7 @@ void to_json(nlohmann::json& j, const std::list<::spfft::timing::TimingResult>& 
       j[res.identifier] = {{"values", res.timings}, {"sub-timings", res.subNodes}};
   }
 }
-} // namespace std
+}  // namespace std
 
 using namespace spfft;
 
@@ -90,8 +90,7 @@ void run_benchmark(const int dimX, const int dimY, const int dimZ, const int num
   if (numTransforms == 1) {
     for (int repeat = 0; repeat < numRepeats; ++repeat) {
       transforms.front().backward(*freqValuesPTR, targetUnits.front());
-      transforms.front().forward(targetUnits.front(),
-                              *freqValuesPTR, scalingTypes.front());
+      transforms.front().forward(targetUnits.front(), *freqValuesPTR, scalingTypes.front());
     }
   } else {
     for (int repeat = 0; repeat < numRepeats; ++repeat) {
@@ -173,8 +172,9 @@ int main(int argc, char** argv) {
     // distribute z-sticks as evenly as possible
     numLocalZSticks = (xyIndicesGlobal.size()) / comm.size() +
                       (comm.rank() < (xyIndicesGlobal.size()) % comm.size() ? 1 : 0);
-    const int offset = ((xyIndicesGlobal.size()) / comm.size()) * comm.rank() +
-                       std::min(comm.rank(), static_cast<SizeType>(xyIndicesGlobal.size()) % comm.size());
+    const int offset =
+        ((xyIndicesGlobal.size()) / comm.size()) * comm.rank() +
+        std::min(comm.rank(), static_cast<SizeType>(xyIndicesGlobal.size()) % comm.size());
 
     // assemble index triplets
     xyzIndices.reserve(numLocalZSticks);

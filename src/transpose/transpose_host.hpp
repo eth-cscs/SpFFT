@@ -32,8 +32,8 @@
 #include <cassert>
 #include <complex>
 #include <cstring>
-#include <vector>
 #include <memory>
+#include <vector>
 #include "memory/host_array_view.hpp"
 #include "parameters/parameters.hpp"
 #include "spfft/config.h"
@@ -74,7 +74,7 @@ public:
   auto exchange_backward_start(const bool) -> void override {}
 
   auto unpack_backward() -> void override {
-    SPFFT_OMP_PRAGMA("omp for schedule(static)") // implicit barrier
+    SPFFT_OMP_PRAGMA("omp for schedule(static)")  // implicit barrier
     for (SizeType z = 0; z < spaceDomainData_.dim_outer(); ++z) {
       std::memset(static_cast<void*>(&spaceDomainData_(z, 0, 0)), 0,
                   sizeof(typename decltype(spaceDomainData_)::ValueType) *
@@ -106,7 +106,7 @@ public:
     }
 
     // transpose remaining elements
-    SPFFT_OMP_PRAGMA("omp for schedule(static)") // keep barrier
+    SPFFT_OMP_PRAGMA("omp for schedule(static)")  // keep barrier
     for (SizeType zStickIndex = unrolledLoopEnd; zStickIndex < freqDomainData_.dim_outer();
          zStickIndex += 1) {
       const SizeType xyIndex = stickIndicesView(zStickIndex);
@@ -144,7 +144,7 @@ public:
     }
 
     // transpose remaining elements
-    SPFFT_OMP_PRAGMA("omp for schedule(static)") // keep barrier
+    SPFFT_OMP_PRAGMA("omp for schedule(static)")  // keep barrier
     for (SizeType zStickIndex = unrolledLoopEnd; zStickIndex < freqDomainData_.dim_outer();
          zStickIndex += 1) {
       const SizeType xyIndex = stickIndicesView(zStickIndex);
@@ -159,5 +159,5 @@ private:
   HostArrayView2D<ComplexType> freqDomainData_;
   std::shared_ptr<Parameters> param_;
 };
-} // namespace spfft
+}  // namespace spfft
 #endif

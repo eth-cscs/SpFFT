@@ -25,13 +25,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 #include "gpu_util/gpu_fft_api.hpp"
 #include "gpu_util/gpu_runtime.hpp"
+#include "memory/array_view_utility.hpp"
 #include "memory/gpu_array_const_view.hpp"
 #include "memory/gpu_array_view.hpp"
-#include "memory/array_view_utility.hpp"
 
 namespace spfft {
 
@@ -53,7 +53,7 @@ __global__ static void decompress_kernel(
 auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indices,
                     const double* input,
                     GPUArrayView2D<typename gpu::fft::ComplexType<double>::type> output) -> void {
- assert(indices.size() <= output.size());
+  assert(indices.size() <= output.size());
   const dim3 threadBlock(256);
   const dim3 threadGrid(
       std::min(static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), 4320));
@@ -130,5 +130,4 @@ auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indic
                   create_1d_view(input, 0, input.size()), output);
   }
 }
-} // namespace spfft
-
+}  // namespace spfft

@@ -31,8 +31,8 @@
 #include <algorithm>
 #include <cassert>
 #include <complex>
-#include <vector>
 #include <memory>
+#include <vector>
 #include "parameters/parameters.hpp"
 #include "spfft/config.h"
 #include "spfft/exceptions.hpp"
@@ -62,7 +62,8 @@ public:
                GPUArrayView2D<ComplexType> freqDomainData)
       : stream_(std::move(stream)),
         spaceDomainData_(spaceDomainData),
-        freqDomainData_(freqDomainData), indices_(param->num_z_sticks(0)) {
+        freqDomainData_(freqDomainData),
+        indices_(param->num_z_sticks(0)) {
     // single node only checks
     assert(spaceDomainData.dim_outer() == freqDomainData.dim_inner());
 
@@ -82,7 +83,7 @@ public:
     std::vector<int> transposedIndices;
     transposedIndices.reserve(zStickXYIndices.size());
 
-    for(const auto& index : zStickXYIndices) {
+    for (const auto& index : zStickXYIndices) {
       const int x = index / param->dim_y();
       const int y = index - x * param->dim_y();
       transposedIndices.emplace_back(y * param->dim_x_freq() + x);
@@ -119,5 +120,5 @@ private:
   GPUArrayView2D<ComplexType> freqDomainData_;
   GPUArray<int> indices_;
 };
-} // namespace spfft
+}  // namespace spfft
 #endif

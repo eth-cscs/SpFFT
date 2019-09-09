@@ -31,52 +31,51 @@
 
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
 #include "memory/gpu_array.hpp"
-#include "memory/gpu_array_view.hpp"
 #include "memory/gpu_array_const_view.hpp"
+#include "memory/gpu_array_view.hpp"
 #endif
 
 namespace spfft {
 
-template<typename T>
+template <typename T>
 struct IsDeviceMemory {
   constexpr static bool value = false;
 };
 
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
-template<typename T>
+template <typename T>
 struct IsDeviceMemory<GPUArray<T>> {
   constexpr static bool value = true;
 };
 
-template<typename T>
+template <typename T>
 struct IsDeviceMemory<GPUArrayView1D<T>> {
   constexpr static bool value = true;
 };
 
-template<typename T>
+template <typename T>
 struct IsDeviceMemory<GPUArrayView2D<T>> {
   constexpr static bool value = true;
 };
-template<typename T>
+template <typename T>
 struct IsDeviceMemory<GPUArrayView3D<T>> {
   constexpr static bool value = true;
 };
 
-
-template<typename T>
+template <typename T>
 struct IsDeviceMemory<GPUArrayConstView1D<T>> {
   constexpr static bool value = true;
 };
 
-template<typename T>
+template <typename T>
 struct IsDeviceMemory<GPUArrayConstView2D<T>> {
   constexpr static bool value = true;
 };
-template<typename T>
+template <typename T>
 struct IsDeviceMemory<GPUArrayConstView3D<T>> {
   constexpr static bool value = true;
 };
 
 #endif
-} // namespace
+}  // namespace spfft
 #endif

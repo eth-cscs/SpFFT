@@ -35,16 +35,16 @@
 namespace spfft {
 
 template <typename T>
-auto translate_gpu_pointer(const T* inputPointer)
-    -> std::pair<const T*, const T*> {
+auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T*> {
   gpu::PointerAttributes attr;
   auto status = gpu::pointer_get_attributes(&attr, static_cast<const void*>(inputPointer));
-  gpu::get_last_error(); // if pointer is not registered, error will be stored and has to be cleared
+  gpu::get_last_error();  // if pointer is not registered, error will be stored and has to be
+                          // cleared
 
 #ifdef SPFFT_ROCM
-  if(status != gpu::status::Success) {
+  if (status != gpu::status::Success) {
 #else
-  if(status == gpu::status::ErrorInvalidValue) {
+  if (status == gpu::status::ErrorInvalidValue) {
 #endif
     // not registered with cuda -> host pointer
     const T* devicePtr = nullptr;
@@ -53,21 +53,20 @@ auto translate_gpu_pointer(const T* inputPointer)
     gpu::check_status(status);
     return {static_cast<const T*>(attr.hostPointer), static_cast<const T*>(attr.devicePointer)};
   }
-
 }
 
 template <typename T>
-auto translate_gpu_pointer(T* inputPointer)
-    -> std::pair<T*, T*> {
+auto translate_gpu_pointer(T* inputPointer) -> std::pair<T*, T*> {
   gpu::PointerAttributes attr;
   auto status = gpu::pointer_get_attributes(&attr, static_cast<const void*>(inputPointer));
-  gpu::get_last_error(); // if pointer is not registered, error will be stored and has to be cleared
+  gpu::get_last_error();  // if pointer is not registered, error will be stored and has to be
+                          // cleared
 
-      gpu::get_last_error();
+  gpu::get_last_error();
 #ifdef SPFFT_ROCM
-  if(status != gpu::status::Success) {
+  if (status != gpu::status::Success) {
 #else
-  if(status == gpu::status::ErrorInvalidValue) {
+  if (status == gpu::status::ErrorInvalidValue) {
 #endif
     // not registered with cuda -> host pointer
     T* devicePtr = nullptr;
@@ -76,9 +75,8 @@ auto translate_gpu_pointer(T* inputPointer)
     gpu::check_status(status);
     return {static_cast<T*>(attr.hostPointer), static_cast<T*>(attr.devicePointer)};
   }
-
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

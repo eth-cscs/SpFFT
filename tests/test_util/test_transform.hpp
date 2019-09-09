@@ -15,8 +15,8 @@
 #include "parameters/parameters.hpp"
 #include "spfft/grid.hpp"
 #include "spfft/transform.hpp"
-#include "test_util/test_check_values.hpp"
 #include "test_util/generate_indices.hpp"
+#include "test_util/test_check_values.hpp"
 #include "util/common_types.hpp"
 
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)

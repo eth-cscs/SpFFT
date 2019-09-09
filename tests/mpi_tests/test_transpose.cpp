@@ -69,8 +69,7 @@ protected:
         const auto x = stickIdx / dimY;
         const auto y = stickIdx - x * dimY;
         for (SizeType z = 0; z < freqView.dim_inner(); ++z) {
-          fullView(x, y, z) =
-              std::complex<double>(dis(sharedRandGen), dis(sharedRandGen));
+          fullView(x, y, z) = std::complex<double>(dis(sharedRandGen), dis(sharedRandGen));
         }
       }
     }
@@ -147,11 +146,9 @@ TEST_F(TransposeTest, CompactBuffered) {
       create_3d_view(fullArray_, 0, paramPtr_->dim_x(), paramPtr_->dim_y(), paramPtr_->dim_z());
 
   auto transposeBufferZ = create_1d_view(
-      array2_, 0,
-      paramPtr_->total_num_xy_planes() * paramPtr_->num_z_sticks(comm_.rank()));
+      array2_, 0, paramPtr_->total_num_xy_planes() * paramPtr_->num_z_sticks(comm_.rank()));
   auto transposeBufferXY = create_1d_view(
-      array1_, 0,
-      paramPtr_->total_num_z_sticks() * paramPtr_->num_xy_planes(comm_.rank()));
+      array1_, 0, paramPtr_->total_num_z_sticks() * paramPtr_->num_xy_planes(comm_.rank()));
 
   TransposeMPICompactBufferedHost<double, double> transpose(paramPtr_, comm_, freqXYView, freqView,
                                                             transposeBufferXY, transposeBufferZ);

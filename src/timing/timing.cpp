@@ -31,5 +31,5 @@
 namespace spfft {
 namespace timing {
 HostTiming GlobalHostTimer;
-} // namespace timing
-} // namespace spfft
+}  // namespace timing
+}  // namespace spfft

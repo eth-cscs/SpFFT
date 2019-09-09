@@ -106,6 +106,6 @@ struct MPIMatchElementaryType<long double> {
   inline static auto get() -> MPI_Datatype { return MPI_LONG_DOUBLE; }
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

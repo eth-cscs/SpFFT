@@ -92,7 +92,6 @@ public:
 private:
   HostArrayView1D<std::complex<T>> stick_;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

@@ -76,8 +76,7 @@ private:
 // Implementation
 // ======================
 template <typename T>
-GPUArray<T>::GPUArray(const SizeType size)
-    : size_(size), data_(nullptr), deviceId_(0) {
+GPUArray<T>::GPUArray(const SizeType size) : size_(size), data_(nullptr), deviceId_(0) {
   assert(size >= 0);
   gpu::check_status(gpu::get_device(&deviceId_));
   if (size > 0) {
@@ -117,6 +116,6 @@ auto GPUArray<T>::operator=(GPUArray&& array) noexcept -> GPUArray& {
   return *this;
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

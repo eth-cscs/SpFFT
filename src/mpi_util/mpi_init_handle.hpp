@@ -64,6 +64,6 @@ private:
   bool callFinalize_ = false;
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

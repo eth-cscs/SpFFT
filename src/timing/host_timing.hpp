@@ -74,7 +74,7 @@ public:
   // start with string literal
   template <std::size_t N>
   inline auto start(const char (&identifierPtr)[N]) -> void {
-    asm volatile("" ::: "memory"); // prevent compiler reordering
+    asm volatile("" ::: "memory");  // prevent compiler reordering
     timeStamps_.emplace_back(identifierPtr, TimeStampType::Start);
     asm volatile("" ::: "memory");
   }
@@ -166,7 +166,7 @@ private:
   HostTiming& timer_;
 };
 
-} // namespace timing
-} // namespace spfft
+}  // namespace timing
+}  // namespace spfft
 
 #endif

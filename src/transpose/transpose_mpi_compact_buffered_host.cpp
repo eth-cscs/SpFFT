@@ -127,7 +127,7 @@ auto TransposeMPICompactBufferedHost<T, U>::pack_backward() -> void {
 template <typename T, typename U>
 auto TransposeMPICompactBufferedHost<T, U>::unpack_backward() -> void {
   // zero target data location (not all values are overwritten upon unpacking)
-  SPFFT_OMP_PRAGMA("omp for schedule(static)") // implicit barrier
+  SPFFT_OMP_PRAGMA("omp for schedule(static)")  // implicit barrier
   for (SizeType z = 0; z < spaceDomainData_.dim_outer(); ++z) {
     std::memset(static_cast<void*>(&spaceDomainData_(z, 0, 0)), 0,
                 sizeof(typename decltype(spaceDomainData_)::ValueType) *
@@ -182,7 +182,7 @@ auto TransposeMPICompactBufferedHost<T, U>::exchange_backward_finalize() -> void
 template <typename T, typename U>
 auto TransposeMPICompactBufferedHost<T, U>::exchange_backward_start(const bool nonBlockingExchange)
     -> void {
-  assert(omp_get_thread_num() == 0); // only must thread must be allowed to enter
+  assert(omp_get_thread_num() == 0);  // only must thread must be allowed to enter
 
   // exchange data
   if (nonBlockingExchange) {
@@ -268,7 +268,7 @@ auto TransposeMPICompactBufferedHost<T, U>::unpack_forward() -> void {
 template <typename T, typename U>
 auto TransposeMPICompactBufferedHost<T, U>::exchange_forward_start(const bool nonBlockingExchange)
     -> void {
-  assert(omp_get_thread_num() == 0); // only must thread must be allowed to enter
+  assert(omp_get_thread_num() == 0);  // only must thread must be allowed to enter
 
   if (nonBlockingExchange) {
     mpi_check_status(MPI_Ialltoallv(spaceDomainBuffer_.data(), spaceDomainCount_.data(),
@@ -290,5 +290,5 @@ template class TransposeMPICompactBufferedHost<float, float>;
 #endif
 template class TransposeMPICompactBufferedHost<double, double>;
 template class TransposeMPICompactBufferedHost<double, float>;
-} // namespace spfft
-#endif // SPFFT_MPI
+}  // namespace spfft
+#endif  // SPFFT_MPI

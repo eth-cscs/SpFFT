@@ -199,5 +199,5 @@ public:
 private:
   std::shared_ptr<GridInternal<double>> grid_;
 };
-} // namespace spfft
+}  // namespace spfft
 #endif

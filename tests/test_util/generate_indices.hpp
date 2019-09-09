@@ -37,9 +37,9 @@ namespace spfft {
 // creates randomly distributed indices for all ranks according to the input distributions
 template <typename T>
 auto create_value_indices(T& sharedRandGen, const std::vector<double>& zStickDistribution,
-                                 const double totalZStickFraction, const double zStickFillFraction,
-                                 const int dimX, const int dimY, const int dimZ,
-                                 const bool hermitianSymmetry) -> std::vector<std::vector<int>> {
+                          const double totalZStickFraction, const double zStickFillFraction,
+                          const int dimX, const int dimY, const int dimZ,
+                          const bool hermitianSymmetry) -> std::vector<std::vector<int>> {
   std::uniform_real_distribution<double> uniformRandDis(0.0, 1.0);
   std::discrete_distribution<int> rankSelectDis(zStickDistribution.begin(),
                                                 zStickDistribution.end());
@@ -54,7 +54,7 @@ auto create_value_indices(T& sharedRandGen, const std::vector<double>& zStickDis
   for (int x = 0; x < dimXFreq; ++x) {
     for (int y = 0; y < dimY; ++y) {
       if (!(x == 0 && y >= dimYFreq) && uniformRandDis(sharedRandGen) < totalZStickFraction) {
-	// use full hermitian symmetry on x = 0 plane
+        // use full hermitian symmetry on x = 0 plane
         if (!hermitianSymmetry || x != 0 || y < dimYFreq) {
           const auto selectedRank = rankSelectDis(sharedRandGen);
           xyIndicesPerRank[selectedRank].emplace_back(std::make_pair(x, y));
@@ -90,11 +90,11 @@ inline auto center_indices(const int dimX, const int dimY, const int dimZ,
   const int positiveSizeY = dimY / 2 + 1;
   const int positiveSizeZ = dimZ / 2 + 1;
   for (auto& rankIndices : indicesPerRank) {
-	for (std::size_t i = 0; i < rankIndices.size() ; i += 3) {
-	  if (rankIndices[i] >= positiveSizeX) rankIndices[i] -= dimX;
-	  if (rankIndices[i + 1] >= positiveSizeY) rankIndices[i + 1] -= dimY;
-	  if (rankIndices[i + 2] >= positiveSizeZ) rankIndices[i + 2] -= dimZ;
-	}
+    for (std::size_t i = 0; i < rankIndices.size(); i += 3) {
+      if (rankIndices[i] >= positiveSizeX) rankIndices[i] -= dimX;
+      if (rankIndices[i + 1] >= positiveSizeY) rankIndices[i + 1] -= dimY;
+      if (rankIndices[i + 2] >= positiveSizeZ) rankIndices[i + 2] -= dimZ;
+    }
   }
 }
 
@@ -135,7 +135,6 @@ inline auto calculate_num_local_xy_planes(const int rank, const int dimZ,
   return numXYPlanesPerRank[rank];
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

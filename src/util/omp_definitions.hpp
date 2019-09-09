@@ -43,7 +43,7 @@ inline int omp_get_nested() { return 0; }
 inline int omp_get_num_procs() { return 1; }
 inline int omp_get_level() { return 0; }
 inline void omp_set_nested(int) {}
-} // namespace spfft
+}  // namespace spfft
 #endif
 
 #endif

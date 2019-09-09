@@ -31,9 +31,9 @@
 #include "spfft/config.h"
 #include "spfft/grid.hpp"
 #include "spfft/grid_float.hpp"
-#include "spfft/transform.hpp"
-#include "spfft/transform_float.hpp"
 #include "spfft/multi_transform.hpp"
 #include "spfft/multi_transform_float.hpp"
+#include "spfft/transform.hpp"
+#include "spfft/transform_float.hpp"
 
 #endif

@@ -51,7 +51,7 @@ public:
                const SizeType ostride, const SizeType idist, const SizeType odist,
                const SizeType howmany) {
     assert(reinterpret_cast<void*>(input) !=
-           reinterpret_cast<void*>(output)); // must not be in place
+           reinterpret_cast<void*>(output));  // must not be in place
     int rank = 1;
     int n[] = {(int)size};
     int inembed[] = {n[0]};
@@ -68,7 +68,7 @@ public:
                const SizeType ostride, const SizeType idist, const SizeType odist,
                const SizeType howmany) {
     assert(reinterpret_cast<void*>(input) !=
-           reinterpret_cast<void*>(output)); // must not be in place
+           reinterpret_cast<void*>(output));  // must not be in place
     int rank = 1;
     int n[] = {(int)size};
     int inembed[] = {n[0]};
@@ -140,7 +140,7 @@ public:
                const SizeType ostride, const SizeType idist, const SizeType odist,
                const SizeType howmany) {
     assert(reinterpret_cast<void*>(input) !=
-           reinterpret_cast<void*>(output)); // must not be in place
+           reinterpret_cast<void*>(output));  // must not be in place
     int rank = 1;
     int n[] = {(int)size};
     int inembed[] = {n[0]};
@@ -157,7 +157,7 @@ public:
                const SizeType ostride, const SizeType idist, const SizeType odist,
                const SizeType howmany) {
     assert(reinterpret_cast<void*>(input) !=
-           reinterpret_cast<void*>(output)); // must not be in place
+           reinterpret_cast<void*>(output));  // must not be in place
     int rank = 1;
     int n[] = {(int)size};
     int inembed[] = {n[0]};
@@ -234,6 +234,6 @@ private:
 
 #endif
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

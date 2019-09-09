@@ -96,6 +96,6 @@ private:
   std::vector<int> spaceDomainCount_;
 };
 
-} // namespace spfft
-#endif // SPFFT_MPI
+}  // namespace spfft
+#endif  // SPFFT_MPI
 #endif

@@ -37,7 +37,6 @@
 namespace spfft {
 class GPUEventHandle {
 public:
-
   explicit GPUEventHandle(const bool enableTiming) : deviceId_(0) {
     gpu::check_status(gpu::get_device(&deviceId_));
     gpu::EventType event;
@@ -45,11 +44,10 @@ public:
     const auto flag = enableTiming ? gpu::flag::EventDefault : gpu::flag::EventDisableTiming;
     gpu::check_status(gpu::event_create_with_flags(&event, flag));
 
-    event_ =
-        std::shared_ptr<gpu::EventType>(new gpu::EventType(event), [](gpu::EventType* ptr) {
-          gpu::event_destroy(*ptr);
-          delete ptr;
-        });
+    event_ = std::shared_ptr<gpu::EventType>(new gpu::EventType(event), [](gpu::EventType* ptr) {
+      gpu::event_destroy(*ptr);
+      delete ptr;
+    });
   };
 
   inline auto get() const -> gpu::EventType { return *event_; }
@@ -68,7 +66,7 @@ private:
   std::shared_ptr<gpu::EventType> event_;
   int deviceId_ = 0;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
 #endif

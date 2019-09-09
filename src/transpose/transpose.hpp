@@ -61,5 +61,5 @@ public:
 
   virtual ~Transpose() = default;
 };
-} // namespace spfft
+}  // namespace spfft
 #endif

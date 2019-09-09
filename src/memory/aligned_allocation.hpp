@@ -96,7 +96,7 @@ auto deconstruct_elements(T* ptr,
   }
 }
 
-} // namespace memory
-} // namespace spfft
+}  // namespace memory
+}  // namespace spfft
 
 #endif

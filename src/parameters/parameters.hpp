@@ -29,15 +29,15 @@
 #define SPFFT_PARAMETERS_HPP
 
 #include <cassert>
+#include <limits>
 #include <utility>
 #include <vector>
-#include <limits>
 #include "compression/indices.hpp"
+#include "memory/host_array_const_view.hpp"
 #include "spfft/config.h"
 #include "spfft/exceptions.hpp"
-#include "util/common_types.hpp"
-#include "memory/host_array_const_view.hpp"
 #include "spfft/types.h"
+#include "util/common_types.hpp"
 
 #ifdef SPFFT_MPI
 #include "mpi_util/mpi_communicator_handle.hpp"
@@ -155,6 +155,6 @@ private:
   std::vector<int> freqValueIndices_;
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

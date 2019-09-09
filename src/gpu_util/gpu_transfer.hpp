@@ -95,6 +95,6 @@ auto copy_from_gpu_async(const GPUStreamHandle& stream, const T& gpuArray, U&& h
                                       gpu::flag::MemcpyDeviceToHost, stream.get()));
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

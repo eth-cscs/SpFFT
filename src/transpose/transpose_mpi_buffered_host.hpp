@@ -84,9 +84,8 @@ private:
   HostArrayView2D<ComplexType> freqDomainData_;
   HostArrayView1D<ComplexExchangeType> spaceDomainBuffer_;
   HostArrayView1D<ComplexExchangeType> freqDomainBuffer_;
-
 };
 
-} // namespace spfft
-#endif // SPFFT_MPI
+}  // namespace spfft
+#endif  // SPFFT_MPI
 #endif

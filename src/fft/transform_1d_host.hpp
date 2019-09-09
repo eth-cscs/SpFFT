@@ -195,6 +195,6 @@ private:
   std::vector<FFTWPlan<ValueType>> transforms_;
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

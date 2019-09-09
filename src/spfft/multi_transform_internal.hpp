@@ -144,6 +144,6 @@ public:
     }
   }
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif

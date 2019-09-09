@@ -36,13 +36,17 @@ jobs:
       cd build
       CUDACXX=/usr/local/cuda-9.0/bin/nvcc /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSPFFT_BUILD_TESTS=OFF -DSPFFT_MPI=${SPFFT_MPI} -DSPFFT_OMP=${SPFFT_OMP} -DSPFFT_SINGLE_PRECISION=${SPFFT_SINGLE_PRECISION} -DSPFFT_GPU_BACKEND=${SPFFT_GPU_BACKEND}
       make VERBOSE=1
-    displayName: 'Build library only'
+    displayName: 'Build library'
 
   - script: |
       cd build
       mkdir -p install_dir
-      /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir
+      INSTALL_DIR=$(pwd)/install_dir
+      /opt/cmake-3.11.0/bin/cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
       make VERBOSE=1 install
+      test -f ${INSTALL_DIR}/lib/libspfft.so
+      test -f ${INSTALL_DIR}/include/spfft/spfft.hpp
+      test -f ${INSTALL_DIR}/include/spfft/spfft.h
     displayName: 'Install library'
 
   - script: |

@@ -5,7 +5,7 @@ jobs:
 # CUDA build test
 - template: CI/azure_templates/ubuntu_build_test.yml
   parameters:
-    job_name: "Ubuntu_GCC_CUDA_single_precision"
+    job_name: "Ubuntu_GCC_CUDA"
     run_mpi_tests: false
     run_local_tests: false
     cm_mpi: 'ON'

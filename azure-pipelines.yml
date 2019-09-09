@@ -3,6 +3,26 @@
 #######################
 jobs:
 - template: CI/azure_templates/ubuntu_build_test.yml
+  parameters:
+    job_name: "Ubuntu_GCC_CUDA_single_precision"
+    run_mpi_tests: false
+    run_local_tests: false
+    cm_build_tests: 'ON'
+    cm_mpi: 'ON'
+    cm_omp: 'ON'
+    cm_single_precision: 'ON'
+    cm_gpu_backend: 'CUDA'
+
+- template: CI/azure_templates/ubuntu_build_test.yml
+  parameters:
+    job_name: "Ubuntu_GCC_no_parallel"
+    run_mpi_tests: false
+    run_local_tests: true
+    cm_build_tests: 'ON'
+    cm_mpi: 'OFF'
+    cm_omp: 'OFF'
+    cm_single_precision: 'OFF'
+    cm_gpu_backend: 'OFF'
 
 #######################
 #       macOS

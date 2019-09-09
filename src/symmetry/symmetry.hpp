@@ -38,7 +38,6 @@ public:
 
   virtual ~Symmetry() = default;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

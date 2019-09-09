@@ -170,7 +170,7 @@ auto TransposeMPIBufferedGPU<T, U>::unpack_backward() -> void {
 template <typename T, typename U>
 auto TransposeMPIBufferedGPU<T, U>::exchange_backward_start(const bool nonBlockingExchange)
     -> void {
-  assert(omp_get_thread_num() == 0); // only master thread must be allowed to enter
+  assert(omp_get_thread_num() == 0);  // only master thread must be allowed to enter
 
   gpu::check_status(gpu::stream_synchronize(freqDomainStream_.get()));
 
@@ -243,7 +243,7 @@ auto TransposeMPIBufferedGPU<T, U>::unpack_forward() -> void {
 
 template <typename T, typename U>
 auto TransposeMPIBufferedGPU<T, U>::exchange_forward_start(const bool nonBlockingExchange) -> void {
-  assert(omp_get_thread_num() == 0); // only master thread must be allowed to enter
+  assert(omp_get_thread_num() == 0);  // only master thread must be allowed to enter
 
   gpu::check_status(gpu::stream_synchronize(spaceDomainStream_.get()));
 
@@ -293,5 +293,5 @@ template class TransposeMPIBufferedGPU<float, float>;
 #endif
 template class TransposeMPIBufferedGPU<double, double>;
 template class TransposeMPIBufferedGPU<double, float>;
-} // namespace spfft
-#endif // SPFFT_MPI
+}  // namespace spfft
+#endif  // SPFFT_MPI

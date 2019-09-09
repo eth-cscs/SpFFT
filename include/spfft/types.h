@@ -114,5 +114,5 @@ typedef enum SpfftTransformType SpfftTransformType;
 typedef enum SpfftIndexFormatType SpfftIndexFormatType;
 typedef enum SpfftScalingType SpfftScalingType;
 /*! \endcond */
-#endif // cpp
+#endif  // cpp
 #endif

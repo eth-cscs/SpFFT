@@ -27,9 +27,9 @@
  */
 #ifndef COMPRESSION_KERNELS_HPP
 #define COMPRESSION_KERNELS_HPP
-#include "memory/gpu_array_view.hpp"
-#include "gpu_util/gpu_runtime_api.hpp"
 #include "gpu_util/gpu_fft_api.hpp"
+#include "gpu_util/gpu_runtime_api.hpp"
+#include "memory/gpu_array_view.hpp"
 
 namespace spfft {
 
@@ -46,9 +46,9 @@ auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indic
                   double* output, const bool useScaling, const double scalingFactor) -> void;
 
 auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indices,
-                  GPUArrayView2D<typename gpu::fft::ComplexType<float>::type> input,
-                  float* output, const bool useScaling, const float scalingFactor) -> void;
+                  GPUArrayView2D<typename gpu::fft::ComplexType<float>::type> input, float* output,
+                  const bool useScaling, const float scalingFactor) -> void;
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

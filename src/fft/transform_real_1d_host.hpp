@@ -89,12 +89,10 @@ public:
     const SizeType outputSplitStrideInner = transposeOutputData ? numTransformsPerSplit : 0;
 
     // check for non-transposed output
-    assert((transposeOutputData) ||
-           (size / 2 + 1 == outputData.dim_inner()));
+    assert((transposeOutputData) || (size / 2 + 1 == outputData.dim_inner()));
 
     // check for transposed output
-    assert((!transposeOutputData) ||
-           (size / 2 + 1 == outputData.dim_mid()));
+    assert((!transposeOutputData) || (size / 2 + 1 == outputData.dim_mid()));
 
     // determine number of transforms per plane
     // create plans within each plane
@@ -149,12 +147,10 @@ public:
     const SizeType outputSplitStrideInner = transposeOutputData ? numTransformsPerSplit : 0;
 
     // check for non-transposed output
-    assert((transposeInputData) ||
-           (size / 2 + 1 == inputData.dim_inner()));
+    assert((transposeInputData) || (size / 2 + 1 == inputData.dim_inner()));
 
     // check for transposed output
-    assert((!transposeInputData) ||
-           (size / 2 + 1 == inputData.dim_mid()));
+    assert((!transposeInputData) || (size / 2 + 1 == inputData.dim_mid()));
 
     // determine number of transforms per plane
     // create plans within each plane
@@ -183,6 +179,6 @@ public:
 private:
   std::vector<FFTWRealPlan<ValueType>> transforms_;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif

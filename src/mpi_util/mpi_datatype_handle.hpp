@@ -112,6 +112,6 @@ private:
   std::shared_ptr<MPI_Datatype> type_ = nullptr;
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

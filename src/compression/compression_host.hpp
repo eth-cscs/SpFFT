@@ -30,16 +30,15 @@
 
 #include <complex>
 #include <cstring>
-#include <vector>
 #include <memory>
+#include <vector>
 #include "compression/indices.hpp"
+#include "memory/host_array_const_view.hpp"
 #include "memory/host_array_view.hpp"
 #include "parameters/parameters.hpp"
 #include "spfft/config.h"
 #include "util/common_types.hpp"
 #include "util/omp_definitions.hpp"
-#include "memory/host_array_view.hpp"
-#include "memory/host_array_const_view.hpp"
 
 namespace spfft {
 // Handles packing and unpacking of sparse frequency values for single or double precision on Host
@@ -53,7 +52,8 @@ public:
   auto compress(const HostArrayView2D<std::complex<T>> input2d, T* output, bool useScaling,
                 const T scalingFactor = 1.0) const -> void {
     const auto& indices = param_->local_value_indices();
-    auto input = HostArrayConstView1D<std::complex<T>>(input2d.data(), input2d.size(), input2d.pinned());
+    auto input =
+        HostArrayConstView1D<std::complex<T>>(input2d.data(), input2d.size(), input2d.pinned());
 
     if (useScaling) {
       SPFFT_OMP_PRAGMA("omp for schedule(static)")
@@ -76,10 +76,11 @@ public:
   template <typename T>
   auto decompress(const T* input, HostArrayView2D<std::complex<T>> output2d) const -> void {
     const auto& indices = param_->local_value_indices();
-    auto output = HostArrayView1D<std::complex<T>>(output2d.data(), output2d.size(), output2d.pinned());
+    auto output =
+        HostArrayView1D<std::complex<T>>(output2d.data(), output2d.size(), output2d.pinned());
 
     // ensure values are padded with zeros
-    SPFFT_OMP_PRAGMA("omp for schedule(static)") // implicit barrier
+    SPFFT_OMP_PRAGMA("omp for schedule(static)")  // implicit barrier
     for (SizeType stick = 0; stick < output2d.dim_outer(); ++stick) {
       std::memset(static_cast<void*>(&output2d(stick, 0)), 0,
                   sizeof(typename decltype(output2d)::ValueType) * output2d.dim_inner());
@@ -95,7 +96,6 @@ private:
   int numThreads_;
   std::shared_ptr<Parameters> param_;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

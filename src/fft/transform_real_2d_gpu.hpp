@@ -165,6 +165,6 @@ private:
   T* spaceDomainPtr_;
   typename gpu::fft::ComplexType<T>::type* freqDomainPtr_;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif

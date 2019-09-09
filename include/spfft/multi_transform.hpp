@@ -62,6 +62,6 @@ void multi_transform_forward(int numTransforms, Transform* transforms,
 void multi_transform_backward(int numTransforms, Transform* transforms, double** inputPointers,
                               SpfftProcessingUnitType* outputLocations);
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

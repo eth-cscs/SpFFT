@@ -30,8 +30,8 @@
 
 #include <complex>
 #include <cstring>
-#include <vector>
 #include <memory>
+#include <vector>
 #include "compression/gpu_kernels/compression_kernels.hpp"
 #include "compression/indices.hpp"
 #include "gpu_util/gpu_fft_api.hpp"
@@ -51,7 +51,8 @@ namespace spfft {
 class CompressionGPU {
 public:
   CompressionGPU(const std::shared_ptr<Parameters>& param)
-      : indicesGPU_(param->local_value_indices().size()) { // stream MUST synchronize with default stream
+      : indicesGPU_(
+            param->local_value_indices().size()) {  // stream MUST synchronize with default stream
     copy_to_gpu(param->local_value_indices(), indicesGPU_);
   }
 
@@ -73,14 +74,12 @@ public:
     gpu::check_status(gpu::memset_async(
         static_cast<void*>(output.data()), 0,
         output.size() * sizeof(typename decltype(output)::ValueType), stream.get()));
-    decompress_gpu(stream.get(), create_1d_view(indicesGPU_, 0, indicesGPU_.size()), input,
-                   output);
+    decompress_gpu(stream.get(), create_1d_view(indicesGPU_, 0, indicesGPU_.size()), input, output);
   }
 
 private:
   GPUArray<int> indicesGPU_;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

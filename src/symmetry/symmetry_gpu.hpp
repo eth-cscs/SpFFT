@@ -78,7 +78,6 @@ private:
   GPUStreamHandle stream_;
   GPUArrayView1D<typename gpu::fft::ComplexType<T>::type> stick_;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

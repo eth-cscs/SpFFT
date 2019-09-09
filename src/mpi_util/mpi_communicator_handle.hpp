@@ -77,6 +77,6 @@ private:
   SizeType rank_ = 0;
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

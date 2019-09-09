@@ -56,7 +56,7 @@ public:
         alignmentOutput_(fftw_alignment_of(reinterpret_cast<double*>(output))) {
     auto flags = FFTW_ESTIMATE;
     if (input != output) {
-      flags = flags | FFTW_DESTROY_INPUT; // allow input override for out-of-place transform
+      flags = flags | FFTW_DESTROY_INPUT;  // allow input override for out-of-place transform
     }
     plan_ = fftw_plan_dft_1d(size, reinterpret_cast<fftw_complex*>(input),
                              reinterpret_cast<fftw_complex*>(output), sign, flags);
@@ -74,7 +74,7 @@ public:
     int onembed[] = {n[0]};
     auto flags = FFTW_ESTIMATE;
     if (input != output) {
-      flags = flags | FFTW_DESTROY_INPUT; // allow input override for out-of-place transform
+      flags = flags | FFTW_DESTROY_INPUT;  // allow input override for out-of-place transform
     }
     plan_ =
         fftw_plan_many_dft(rank, n, (int)howmany, reinterpret_cast<fftw_complex*>(input), inembed,
@@ -246,6 +246,6 @@ private:
 
 #endif
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

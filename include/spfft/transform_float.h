@@ -130,8 +130,8 @@ SpfftError spfft_float_transform_backward(SpfftFloatTransform transform, const f
  * @return Error code or SPFFT_SUCCESS.
  */
 SpfftError spfft_float_transform_get_space_domain(SpfftFloatTransform transform,
-                                                 SpfftProcessingUnitType dataLocation,
-                                                 float** data);
+                                                  SpfftProcessingUnitType dataLocation,
+                                                  float** data);
 
 /**
  * Access a transform parameter.
@@ -172,7 +172,8 @@ SpfftError spfft_float_transform_local_z_length(SpfftFloatTransform transform, i
  * dim_z().
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform, long long int* globalSize);
+SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform,
+                                             long long int* globalSize);
 
 /**
  * Access a transform parameter.
@@ -188,15 +189,18 @@ SpfftError spfft_float_transform_local_z_offset(SpfftFloatTransform transform, i
  * @param[out] numLocalElements Number of local elements in frequency domain.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform, int* numLocalElements);
+SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform,
+                                                    int* numLocalElements);
 
 /**
  * Access a transform parameter.
  * @param[in] transform Handle to the transform.
- * @param[out] numGlobalElements Global number of elements in space domain. Equals dim_x() * dim_y() * dim_z().
+ * @param[out] numGlobalElements Global number of elements in space domain. Equals dim_x() * dim_y()
+ * * dim_z().
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform, long long int* numGlobalElements);
+SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform,
+                                                     long long int* numGlobalElements);
 
 /**
  * Access a transform parameter.

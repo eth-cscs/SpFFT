@@ -80,9 +80,7 @@ public:
     return other.grid_ == grid_;
   }
 
-  inline auto transform_type() const -> SpfftTransformType {
-    return param_->transform_type();
-  }
+  inline auto transform_type() const -> SpfftTransformType { return param_->transform_type(); }
 
 #ifdef SPFFT_MPI
   inline auto communicator() const -> MPI_Comm { return grid_->communicator().get(); }
@@ -129,7 +127,6 @@ private:
 #endif
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

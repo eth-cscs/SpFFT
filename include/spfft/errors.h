@@ -130,6 +130,6 @@ enum SpfftError {
 // C only
 typedef enum SpfftError SpfftError;
 /*! \endcond */
-#endif // cpp
+#endif  // cpp
 
 #endif

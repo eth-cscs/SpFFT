@@ -38,8 +38,8 @@
 namespace spfft {
 
 inline void check_c2c_space_domain(const HostArrayView3D<std::complex<double>>& realView,
-                                 const HostArrayView3D<std::complex<double>>& fftwView,
-                                 const SizeType planeOffset, const SizeType numLocalXYPlanes) {
+                                   const HostArrayView3D<std::complex<double>>& fftwView,
+                                   const SizeType planeOffset, const SizeType numLocalXYPlanes) {
   for (SizeType z = 0; z < numLocalXYPlanes; ++z) {
     for (SizeType x = 0; x < fftwView.dim_outer(); ++x) {
       for (SizeType y = 0; y < fftwView.dim_mid(); ++y) {
@@ -51,8 +51,8 @@ inline void check_c2c_space_domain(const HostArrayView3D<std::complex<double>>& 
 }
 
 inline void check_r2c_space_domain(const HostArrayView3D<double>& realView,
-                                 const HostArrayView3D<std::complex<double>>& fftwView,
-                                 const SizeType planeOffset, const SizeType numLocalXYPlanes) {
+                                   const HostArrayView3D<std::complex<double>>& fftwView,
+                                   const SizeType planeOffset, const SizeType numLocalXYPlanes) {
   for (SizeType z = 0; z < numLocalXYPlanes; ++z) {
     for (SizeType x = 0; x < fftwView.dim_outer(); ++x) {
       for (SizeType y = 0; y < fftwView.dim_mid(); ++y) {
@@ -63,8 +63,8 @@ inline void check_r2c_space_domain(const HostArrayView3D<double>& realView,
 }
 
 inline void check_freq_domain(const std::vector<std::complex<double>>& freqValues,
-                             const HostArrayView3D<std::complex<double>>& fftwView,
-                             const std::vector<int>& indices) {
+                              const HostArrayView3D<std::complex<double>>& fftwView,
+                              const std::vector<int>& indices) {
   assert(indices.size() == freqValues.size() * 3);
 
   for (SizeType i = 0; i < freqValues.size(); ++i) {
@@ -79,7 +79,6 @@ inline void check_freq_domain(const std::vector<std::complex<double>>& freqValue
   }
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

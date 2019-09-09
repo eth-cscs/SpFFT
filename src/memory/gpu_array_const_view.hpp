@@ -53,7 +53,7 @@ public:
 
   GPUArrayConstView1D(const ValueType* data, const int size, const int deviceId);
 
-  GPUArrayConstView1D(const GPUArrayView1D<T>&); // conversion allowed
+  GPUArrayConstView1D(const GPUArrayView1D<T>&);  // conversion allowed
 
 #if defined(__CUDACC__) || defined(__HIPCC__)
   __device__ inline auto operator()(const int idx) const -> ValueType {
@@ -99,7 +99,7 @@ public:
   GPUArrayConstView2D(const ValueType* data, const int dimOuter, const int dimInner,
                       const int deviceId);
 
-  GPUArrayConstView2D(const GPUArrayView2D<T>&); // conversion allowed
+  GPUArrayConstView2D(const GPUArrayView2D<T>&);  // conversion allowed
 
 #if defined(__CUDACC__) || defined(__HIPCC__)
 
@@ -162,7 +162,7 @@ public:
   GPUArrayConstView3D(const ValueType* data, const int dimOuter, const int dimMid,
                       const int dimInner, const int deviceId);
 
-  GPUArrayConstView3D(const GPUArrayView3D<T>&); // conversion allowed
+  GPUArrayConstView3D(const GPUArrayView3D<T>&);  // conversion allowed
 
 #if defined(__CUDACC__) || defined(__HIPCC__)
   __device__ inline auto operator()(const int idxOuter, const int idxMid, const int idxInner) const
@@ -239,8 +239,8 @@ GPUArrayConstView1D<T>::GPUArrayConstView1D(const GPUArrayView1D<T>& view)
     : size_(view.size()), data_(view.data()), deviceId_(view.device_id()) {}
 
 template <typename T>
-GPUArrayConstView2D<T>::GPUArrayConstView2D(const ValueType* data, const int dimOuter, const int dimInner,
-                                            const int deviceId)
+GPUArrayConstView2D<T>::GPUArrayConstView2D(const ValueType* data, const int dimOuter,
+                                            const int dimInner, const int deviceId)
     : dims_{dimOuter, dimInner}, data_(data), deviceId_(deviceId) {
   assert(!(dimOuter != 0 && dimInner != 0 && data == nullptr));
   assert(dimOuter >= 0);
@@ -267,7 +267,6 @@ GPUArrayConstView3D<T>::GPUArrayConstView3D(const GPUArrayView3D<T>& view)
     : dims_{view.dim_outer(), view.dim_mid(), view.dim_inner()},
       data_(view.data()),
       deviceId_(view.device_id()) {}
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

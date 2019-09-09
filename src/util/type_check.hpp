@@ -38,6 +38,6 @@ struct IsFloatOrDouble
     : std::integral_constant<bool,
                              std::is_same<float, typename std::remove_cv<T>::type>::value ||
                                  std::is_same<double, typename std::remove_cv<T>::type>::value> {};
-} // namespace spfft
+}  // namespace spfft
 
 #endif

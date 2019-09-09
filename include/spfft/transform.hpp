@@ -226,5 +226,5 @@ private:
   /*! \endcond */
 };
 
-} // namespace spfft
+}  // namespace spfft
 #endif

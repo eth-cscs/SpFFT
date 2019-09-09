@@ -59,7 +59,7 @@ inline auto checked_cast_to_int(const SizeType value) -> int {
   }
   return static_cast<int>(value);
 }
-} // namespace gpu_array_utility_internal
+}  // namespace gpu_array_utility_internal
 
 // ----------------------
 // Create array view
@@ -231,6 +231,6 @@ auto convert_from_complex_view(HostArrayView3D<std::complex<T>> view) -> HostArr
                             view.dim_inner() * 2, view.pinned());
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

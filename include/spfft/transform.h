@@ -190,10 +190,12 @@ SpfftError spfft_transform_num_local_elements(SpfftTransform transform, int* num
 /**
  * Access a transform parameter.
  * @param[in] transform Handle to the transform.
- * @param[out] numGlobalElements Global number of elements in space domain. Equals dim_x() * dim_y() * dim_z().
+ * @param[out] numGlobalElements Global number of elements in space domain. Equals dim_x() * dim_y()
+ * * dim_z().
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_transform_num_global_elements(SpfftTransform transform, long long int* numGlobalElements);
+SpfftError spfft_transform_num_global_elements(SpfftTransform transform,
+                                               long long int* numGlobalElements);
 
 /**
  * Access a transform parameter.

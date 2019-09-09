@@ -55,7 +55,7 @@ public:
   }
 
   inline auto wait_if_active() -> void {
-    if(activated_) {
+    if (activated_) {
       activated_ = false;
       MPI_Wait(&mpiRequest_, MPI_STATUS_IGNORE);
     }
@@ -66,6 +66,6 @@ private:
   bool activated_ = false;
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

@@ -38,8 +38,8 @@
 #endif
 
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
-#include "gpu_util/gpu_runtime_api.hpp"
 #include "gpu_util/gpu_device_guard.hpp"
+#include "gpu_util/gpu_runtime_api.hpp"
 #endif
 
 namespace spfft {
@@ -244,11 +244,10 @@ GridInternal<T>::GridInternal(const GridInternal<T>& grid)
       maxNumLocalZSticks_(grid.maxNumLocalZSticks_),
       maxNumLocalXYPlanes_(grid.maxNumLocalXYPlanes_),
       arrayHost1_(grid.arrayHost1_.size()),
-      arrayHost2_(grid.arrayHost2_.size())
-{
+      arrayHost2_(grid.arrayHost2_.size()) {
 #ifdef SPFFT_MPI
-      if(!grid.isLocal_) comm_ = MPICommunicatorHandle(grid.comm_.get());
-      exchangeType_ = grid.exchangeType_;
+  if (!grid.isLocal_) comm_ = MPICommunicatorHandle(grid.comm_.get());
+  exchangeType_ = grid.exchangeType_;
 #endif
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
   if (grid.executionUnit_ & SPFFT_PU_GPU) {
@@ -271,4 +270,4 @@ template class GridInternal<double>;
 template class GridInternal<float>;
 #endif
 
-} // namespace spfft
+}  // namespace spfft

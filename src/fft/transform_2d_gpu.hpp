@@ -130,6 +130,6 @@ private:
   std::shared_ptr<GPUArray<char>> workBuffer_;
   typename gpu::fft::ComplexType<T>::type* dataPtr_;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif

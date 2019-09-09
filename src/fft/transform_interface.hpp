@@ -44,6 +44,6 @@ public:
   virtual ~TransformGPU() = default;
 };
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

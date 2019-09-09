@@ -363,4 +363,4 @@ template class ExecutionHost<double>;
 template class ExecutionHost<float>;
 #endif
 
-} // namespace spfft
+}  // namespace spfft

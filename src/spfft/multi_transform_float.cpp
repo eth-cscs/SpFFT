@@ -25,11 +25,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "spfft/config.h"
-#include "spfft/types.h"
 #include "spfft/multi_transform_float.h"
+#include "spfft/config.h"
 #include "spfft/multi_transform_float.hpp"
 #include "spfft/multi_transform_internal.hpp"
+#include "spfft/types.h"
 
 namespace spfft {
 
@@ -49,8 +49,7 @@ void multi_transform_backward(int numTransforms, TransformFloat* transforms, flo
 }
 #endif
 
-} // namespace spfft
-
+}  // namespace spfft
 
 extern "C" {
 

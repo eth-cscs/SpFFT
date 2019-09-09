@@ -82,7 +82,7 @@ constexpr auto Backward = CUFFT_INVERSE;
 constexpr auto Forward = HIPFFT_FORWARD;
 constexpr auto Backward = HIPFFT_BACKWARD;
 #endif
-} // namespace TransformDirection
+}  // namespace TransformDirection
 
 // ==================================
 // Transform types
@@ -145,7 +145,7 @@ template <>
 struct ComplexToReal<float> {
   constexpr static auto value = C2R;
 };
-} // namespace TransformType
+}  // namespace TransformType
 
 // ==================================
 // Result values
@@ -156,7 +156,7 @@ constexpr auto Success = CUFFT_SUCCESS;
 #else
 constexpr auto Success = HIPFFT_SUCCESS;
 #endif
-} // namespace result
+}  // namespace result
 
 // ==================================
 // Error check functions
@@ -229,11 +229,11 @@ inline auto set_auto_allocation(ARGS... args) -> ResultType {
   return GPU_FFT_PREFIX(SetAutoAllocation)(std::forward<ARGS>(args)...);
 }
 
-} // namespace fft
-} // namespace gpu
-} // namespace spfft
+}  // namespace fft
+}  // namespace gpu
+}  // namespace spfft
 
 #undef GPU_FFT_PREFIX
 
-#endif // defined SPFFT_CUDA || SPFFT_ROCM
+#endif  // defined SPFFT_CUDA || SPFFT_ROCM
 #endif

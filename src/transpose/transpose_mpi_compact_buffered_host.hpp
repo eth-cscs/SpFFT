@@ -37,8 +37,8 @@
 #include "util/type_check.hpp"
 
 #ifdef SPFFT_MPI
-#include "mpi_util/mpi_datatype_handle.hpp"
 #include "mpi_util/mpi_communicator_handle.hpp"
+#include "mpi_util/mpi_datatype_handle.hpp"
 #include "mpi_util/mpi_request_handle.hpp"
 
 namespace spfft {
@@ -91,6 +91,6 @@ private:
   std::vector<int> freqDomainCount_;
 };
 
-} // namespace spfft
-#endif // SPFFT_MPI
+}  // namespace spfft
+#endif  // SPFFT_MPI
 #endif

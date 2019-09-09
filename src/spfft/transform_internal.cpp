@@ -98,9 +98,9 @@ TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
     } else {
       // GPU
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
-      execGPU_.reset(new ExecutionGPU<T>(
-          grid_->num_threads(), param_, grid_->array_host_1(), grid_->array_host_2(),
-          grid_->array_gpu_1(), grid_->array_gpu_2(), grid_->fft_work_buffer()));
+      execGPU_.reset(new ExecutionGPU<T>(grid_->num_threads(), param_, grid_->array_host_1(),
+                                         grid_->array_host_2(), grid_->array_gpu_1(),
+                                         grid_->array_gpu_2(), grid_->fft_work_buffer()));
 
 #else
       throw GPUSupportError();
@@ -125,13 +125,13 @@ TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
                                          grid_->array_host_2(), grid_->array_gpu_1(),
                                          grid_->array_gpu_2(), grid_->fft_work_buffer()));
 
-#else  // GPU
+#else   // GPU
       throw GPUSupportError();
-#endif // GPU
+#endif  // GPU
     }
-#else  // MPI
+#else   // MPI
     throw MPISupportError();
-#endif // MPI
+#endif  // MPI
   }
 }
 
@@ -332,10 +332,9 @@ auto TransformInternal<T>::space_domain_data(SpfftProcessingUnitType location) -
 template <typename T>
 auto TransformInternal<T>::synchronize() -> void {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
-  if(execGPU_) execGPU_->synchronize();
+  if (execGPU_) execGPU_->synchronize();
 #endif
 }
-
 
 // instatiate templates for float and double
 template class TransformInternal<double>;
@@ -343,5 +342,4 @@ template class TransformInternal<double>;
 template class TransformInternal<float>;
 #endif
 
-} // namespace spfft
-
+}  // namespace spfft

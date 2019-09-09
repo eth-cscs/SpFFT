@@ -30,9 +30,9 @@
 
 #include <complex>
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
-#include <set>
 #include "spfft/config.h"
 #include "spfft/exceptions.hpp"
 #include "util/common_types.hpp"
@@ -60,11 +60,11 @@ inline auto create_distributed_transform_indices(const MPICommunicatorHandle& co
     -> std::vector<std::vector<int>> {
   std::vector<MPI_Request> sendRequests(comm.size());
 
-  constexpr int tag = 442; // random tag (must be less than 32768)
+  constexpr int tag = 442;  // random tag (must be less than 32768)
 
   // send local stick indices
-  for(int r = 0; r < static_cast<int>(comm.size()); ++r) {
-    if(r != static_cast<int>(comm.rank())) {
+  for (int r = 0; r < static_cast<int>(comm.size()); ++r) {
+    if (r != static_cast<int>(comm.rank())) {
       mpi_check_status(MPI_Isend(localSticks.data(), localSticks.size(), MPI_INT, r, tag,
                                  comm.get(), &(sendRequests[r])));
     }
@@ -72,11 +72,9 @@ inline auto create_distributed_transform_indices(const MPICommunicatorHandle& co
 
   std::vector<std::vector<int>> globalXYIndices(comm.size());
 
-
   // recv all other stick indices
-  for(int r = 0; r < static_cast<int>(comm.size()); ++r) {
-    if(r != static_cast<int>(comm.rank())) {
-
+  for (int r = 0; r < static_cast<int>(comm.size()); ++r) {
+    if (r != static_cast<int>(comm.rank())) {
       // get recv count
       MPI_Status status;
       MPI_Probe(r, tag, comm.get(), &status);
@@ -85,14 +83,14 @@ inline auto create_distributed_transform_indices(const MPICommunicatorHandle& co
 
       // recv data
       globalXYIndices[r].resize(recvCount);
-      MPI_Recv(globalXYIndices[r].data(), recvCount, MPI_INT, r, tag,
-               comm.get(), MPI_STATUS_IGNORE);
+      MPI_Recv(globalXYIndices[r].data(), recvCount, MPI_INT, r, tag, comm.get(),
+               MPI_STATUS_IGNORE);
     }
   }
 
   // wait for all sends to finish
-  for(int r = 0; r < static_cast<int>(comm.size()); ++r) {
-    if(r != static_cast<int>(comm.rank())) {
+  for (int r = 0; r < static_cast<int>(comm.size()); ++r) {
+    if (r != static_cast<int>(comm.rank())) {
       MPI_Wait(&(sendRequests[r]), MPI_STATUS_IGNORE);
     }
   }
@@ -107,8 +105,8 @@ inline auto create_distributed_transform_indices(const MPICommunicatorHandle& co
 inline auto check_stick_duplicates(const std::vector<std::vector<int>>& indicesPerRank) -> void {
   // check for z-sticks indices
   std::set<int> globalXYIndices;
-  for(const auto& rankIndices : indicesPerRank) {
-    for(const auto& index : rankIndices) {
+  for (const auto& rankIndices : indicesPerRank) {
+    for (const auto& index : rankIndices) {
       if (globalXYIndices.count(index)) {
         throw DuplicateIndicesError();
       }
@@ -123,7 +121,6 @@ inline auto convert_index_triplets(const bool hermitianSymmetry, const int dimX,
                                    const int dimZ, const int numValues, const int* xIndices,
                                    const int* yIndices, const int* zIndices, const int stride)
     -> std::pair<std::vector<int>, std::vector<int>> {
-
   // check if indices are non-negative or centered
   bool centeredIndices = false;
   for (int i = 0; i < numValues; ++i) {
@@ -148,7 +145,7 @@ inline auto convert_index_triplets(const bool hermitianSymmetry, const int dimX,
   }
 
   // store all unique xy index pairs in an ordered container
-  std::map<int, int> sortedXYIndices; // key = index in xy-plane, value = stick index
+  std::map<int, int> sortedXYIndices;  // key = index in xy-plane, value = stick index
   for (int i = 0; i < numValues; ++i) {
     const auto x = to_storage_index(dimX, xIndices[i * stride]);
     const auto y = to_storage_index(dimY, yIndices[i * stride]);
@@ -184,7 +181,6 @@ inline auto convert_index_triplets(const bool hermitianSymmetry, const int dimX,
   return {std::move(valueIndices), std::move(stickIndices)};
 }
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif
-

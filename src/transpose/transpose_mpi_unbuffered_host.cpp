@@ -137,7 +137,7 @@ TransposeMPIUnbufferedHost<T>::TransposeMPIUnbufferedHost(
 template <typename T>
 auto TransposeMPIUnbufferedHost<T>::exchange_backward_start(const bool nonBlockingExchange)
     -> void {
-  assert(omp_get_thread_num() == 0); // only must thread must be allowed to enter
+  assert(omp_get_thread_num() == 0);  // only must thread must be allowed to enter
 
   // zero target data location (not all values are overwritten upon unpacking)
   std::memset(static_cast<void*>(spaceDomainData_.data()), 0,
@@ -164,7 +164,7 @@ auto TransposeMPIUnbufferedHost<T>::exchange_backward_finalize() -> void {
 
 template <typename T>
 auto TransposeMPIUnbufferedHost<T>::exchange_forward_start(const bool nonBlockingExchange) -> void {
-  assert(omp_get_thread_num() == 0); // only must thread must be allowed to enter
+  assert(omp_get_thread_num() == 0);  // only must thread must be allowed to enter
 
   if (nonBlockingExchange) {
     mpi_check_status(MPI_Ialltoallw(spaceDomainData_.data(), spaceDomainCount_.data(),
@@ -190,5 +190,5 @@ auto TransposeMPIUnbufferedHost<T>::exchange_forward_finalize() -> void {
 template class TransposeMPIUnbufferedHost<float>;
 #endif
 template class TransposeMPIUnbufferedHost<double>;
-} // namespace spfft
-#endif // SPFFT_MPI
+}  // namespace spfft
+#endif  // SPFFT_MPI

@@ -62,9 +62,8 @@ Parameters::Parameters(const MPICommunicatorHandle& comm, const SpfftTransformTy
     SizeType numLocalElements;
   };
 
-
   // Only index triplets supported (for now)
-  if(indexFormat != SPFFT_INDEX_TRIPLETS) {
+  if (indexFormat != SPFFT_INDEX_TRIPLETS) {
     throw InternalError();
   }
 
@@ -180,4 +179,4 @@ Parameters::Parameters(const SpfftTransformType transformType, const SizeType di
   }
 }
 
-} // namespace spfft
+}  // namespace spfft

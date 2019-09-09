@@ -59,8 +59,8 @@ typedef void* SpfftFloatGrid;
  * @return Error code or SPFFT_SUCCESS.
  */
 SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDimX, int maxDimY, int maxDimZ,
-                             int maxNumLocalZColumns, SpfftProcessingUnitType processingUnit,
-                             int maxNumThreads);
+                                   int maxNumLocalZColumns, SpfftProcessingUnitType processingUnit,
+                                   int maxNumThreads);
 
 #ifdef SPFFT_MPI
 /**
@@ -82,10 +82,12 @@ SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDimX, int maxDim
  * SPFFT_EXCH_DEFAULT, SPFFT_EXCH_BUFFERED, SPFFT_EXCH_COMPACT_BUFFERED and SPFFT_EXCH_UNBUFFERED.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_create_distributed(SpfftFloatGrid* grid, int maxDimX, int maxDimY, int maxDimZ,
-                                         int maxNumLocalZColumns, int maxLocalZLength,
-                                         SpfftProcessingUnitType processingUnit, int maxNumThreads,
-                                         MPI_Comm comm, SpfftExchangeType exchangeType);
+SpfftError spfft_float_grid_create_distributed(SpfftFloatGrid* grid, int maxDimX, int maxDimY,
+                                               int maxDimZ, int maxNumLocalZColumns,
+                                               int maxLocalZLength,
+                                               SpfftProcessingUnitType processingUnit,
+                                               int maxNumThreads, MPI_Comm comm,
+                                               SpfftExchangeType exchangeType);
 #endif
 
 /**
@@ -149,7 +151,8 @@ SpfftError spfft_float_grid_max_local_z_length(SpfftFloatGrid grid, int* maxLoca
  * or SPFFT_PU_GPU or SPFFT_PU_HOST | SPFFT_PU_GPU.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_processing_unit(SpfftFloatGrid grid, SpfftProcessingUnitType* processingUnit);
+SpfftError spfft_float_grid_processing_unit(SpfftFloatGrid grid,
+                                            SpfftProcessingUnitType* processingUnit);
 
 /**
  * Access a grid parameter.

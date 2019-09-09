@@ -47,11 +47,11 @@ public:
   GPUDeviceGuard(const GPUDeviceGuard&) = delete;
   GPUDeviceGuard(GPUDeviceGuard&&) = delete;
   auto operator=(const GPUDeviceGuard&) -> GPUDeviceGuard& = delete;
-  auto operator=(GPUDeviceGuard&&) -> GPUDeviceGuard& = delete;
+  auto operator=(GPUDeviceGuard &&) -> GPUDeviceGuard& = delete;
 
   ~GPUDeviceGuard() {
     if (targetDeviceId_ != originalDeviceId_) {
-      gpu::set_device(originalDeviceId_); // no check to avoid throw exeception in destructor
+      gpu::set_device(originalDeviceId_);  // no check to avoid throw exeception in destructor
     }
   }
 
@@ -59,7 +59,7 @@ private:
   int targetDeviceId_ = 0;
   int originalDeviceId_ = 0;
 };
-} // namespace spfft
+}  // namespace spfft
 
 #endif
 #endif

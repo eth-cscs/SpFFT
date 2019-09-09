@@ -28,8 +28,8 @@
 #ifndef SPFFT_GPU_RUNTIME_HPP
 #define SPFFT_GPU_RUNTIME_HPP
 
-#include "spfft/config.h"
 #include "gpu_util/gpu_runtime_api.hpp"
+#include "spfft/config.h"
 
 #ifdef SPFFT_ROCM
 #include <hip/hip_runtime.h>
@@ -44,12 +44,12 @@ inline auto launch_kernel(F func, const dim3 threadGrid, const dim3 threadBlock,
                           ARGS... args) -> void {
 #ifndef NDEBUG
   gpu::device_synchronize();
-  gpu::check_status(gpu::get_last_error()); // before
+  gpu::check_status(gpu::get_last_error());  // before
 #endif
-  func<<<threadGrid, threadBlock,sharedMemoryBytes, stream>>>(std::forward<ARGS>(args)...);
+  func<<<threadGrid, threadBlock, sharedMemoryBytes, stream>>>(std::forward<ARGS>(args)...);
 #ifndef NDEBUG
   gpu::device_synchronize();
-  gpu::check_status(gpu::get_last_error()); // after
+  gpu::check_status(gpu::get_last_error());  // after
 #endif
 }
 #endif
@@ -61,18 +61,17 @@ inline auto launch_kernel(F func, const dim3 threadGrid, const dim3 threadBlock,
                           ARGS... args) -> void {
 #ifndef NDEBUG
   gpu::device_synchronize();
-  gpu::check_status(gpu::get_last_error()); // before
+  gpu::check_status(gpu::get_last_error());  // before
 #endif
   hipLaunchKernelGGL(func, threadGrid, threadBlock, sharedMemoryBytes, stream,
                      std::forward<ARGS>(args)...);
 #ifndef NDEBUG
   gpu::device_synchronize();
-  gpu::check_status(gpu::get_last_error()); // after
+  gpu::check_status(gpu::get_last_error());  // after
 #endif
 }
 #endif
 
-
-} // namespace spfft
+}  // namespace spfft
 
 #endif

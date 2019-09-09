@@ -1,4 +1,3 @@
-#include "test_util/test_transform.hpp"
 #include <fftw3.h>
 #include <algorithm>
 #include <memory>
@@ -14,6 +13,7 @@
 #include "parameters/parameters.hpp"
 #include "spfft/spfft.hpp"
 #include "test_util/generate_indices.hpp"
+#include "test_util/test_transform.hpp"
 #include "util/common_types.hpp"
 
 TEST(MPIMultiTransformTest, BackwardsForwards) {
@@ -40,13 +40,13 @@ TEST(MPIMultiTransformTest, BackwardsForwards) {
         numTransforms, std::vector<std::complex<double>>(numValues));
 
     std::vector<double*> freqValuePtr;
-    for(auto& values: freqValuesPerTrans) {
+    for (auto& values : freqValuesPerTrans) {
       freqValuePtr.push_back(reinterpret_cast<double*>(values.data()));
     }
 
     // set frequency values to constant for each transform
-    for(std::size_t i = 0; i < freqValuesPerTrans.size(); ++i) {
-      for(auto& val : freqValuesPerTrans[i]) {
+    for (std::size_t i = 0; i < freqValuesPerTrans.size(); ++i) {
+      for (auto& val : freqValuesPerTrans[i]) {
         val = std::complex<double>(i, i);
       }
     }
@@ -60,7 +60,7 @@ TEST(MPIMultiTransformTest, BackwardsForwards) {
                                                numLocalXYPlanes, numValues, SPFFT_INDEX_TRIPLETS,
                                                localIndices.data()));
     // clone first transform
-    for(int i = 1; i < numTransforms; ++i) {
+    for (int i = 1; i < numTransforms; ++i) {
       transforms.push_back(transforms.front().clone());
     }
 
@@ -68,17 +68,17 @@ TEST(MPIMultiTransformTest, BackwardsForwards) {
     std::vector<SpfftScalingType> scalingTypes(numTransforms, SPFFT_NO_SCALING);
 
     // backward
-    multi_transform_backward(numTransforms, transforms.data(), freqValuePtr.data(), processingUnits.data());
+    multi_transform_backward(numTransforms, transforms.data(), freqValuePtr.data(),
+                             processingUnits.data());
 
     // forward
     multi_transform_forward(numTransforms, transforms.data(), processingUnits.data(),
                             freqValuePtr.data(), scalingTypes.data());
 
-
     // check all values
-    for(std::size_t i = 0; i < freqValuesPerTrans.size(); ++i) {
+    for (std::size_t i = 0; i < freqValuesPerTrans.size(); ++i) {
       const auto targetValue = std::complex<double>(i * dimX * dimY * dimZ, i * dimX * dimY * dimZ);
-      for(auto& val : freqValuesPerTrans[i]) {
+      for (auto& val : freqValuesPerTrans[i]) {
         ASSERT_NEAR(targetValue.real(), val.real(), 1e-8);
         ASSERT_NEAR(targetValue.imag(), val.imag(), 1e-8);
       }
@@ -89,4 +89,3 @@ TEST(MPIMultiTransformTest, BackwardsForwards) {
     ASSERT_TRUE(false);
   }
 }
-

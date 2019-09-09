@@ -34,5 +34,5 @@ namespace spfft {
 typedef unsigned long long SizeType;
 typedef long long SignedType;
 
-} // namespace
+}  // namespace spfft
 #endif

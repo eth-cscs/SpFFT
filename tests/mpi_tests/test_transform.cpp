@@ -14,8 +14,8 @@
 #include "parameters/parameters.hpp"
 #include "spfft/grid.hpp"
 #include "spfft/transform.hpp"
-#include "test_util/test_check_values.hpp"
 #include "test_util/generate_indices.hpp"
+#include "test_util/test_check_values.hpp"
 #include "util/common_types.hpp"
 
 class MPITransformTest : public TransformTest {
@@ -190,4 +190,3 @@ INSTANTIATE_TEST_CASE_P(CenteredIndicesTest, MPITransformTest,
                                            ::testing::Values(1, 2, 11, 100),
                                            ::testing::Values(true)),
                         param_type_names);
-

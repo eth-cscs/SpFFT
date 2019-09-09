@@ -78,7 +78,7 @@ constexpr StatusType ErrorHostMemoryAlreadyRegistered =
     GPU_PREFIX(ErrorHostMemoryAlreadyRegistered);
 constexpr StatusType ErrorHostMemoryNotRegistered = GPU_PREFIX(ErrorHostMemoryNotRegistered);
 constexpr StatusType ErrorUnsupportedLimit = GPU_PREFIX(ErrorUnsupportedLimit);
-} // namespace status
+}  // namespace status
 
 // flags to pass to GPU API
 namespace flag {
@@ -104,7 +104,7 @@ constexpr auto EventDefault = GPU_PREFIX(EventDefault);
 constexpr auto EventBlockingSync = GPU_PREFIX(EventBlockingSync);
 constexpr auto EventDisableTiming = GPU_PREFIX(EventDisableTiming);
 constexpr auto EventInterprocess = GPU_PREFIX(EventInterprocess);
-} // namespace flag
+}  // namespace flag
 
 // ==================================
 // Error check functions
@@ -174,7 +174,6 @@ inline auto free(ARGS... args) -> StatusType {
   return GPU_PREFIX(Free)(std::forward<ARGS>(args)...);
 }
 
-
 template <typename... ARGS>
 inline auto memcpy(ARGS... args) -> StatusType {
   return GPU_PREFIX(Memcpy)(std::forward<ARGS>(args)...);
@@ -215,18 +214,14 @@ inline auto pointer_get_attributes(ARGS... args) -> StatusType {
   return GPU_PREFIX(PointerGetAttributes)(std::forward<ARGS>(args)...);
 }
 
-inline auto get_last_error() -> StatusType {
-  return GPU_PREFIX(GetLastError)();
-}
+inline auto get_last_error() -> StatusType { return GPU_PREFIX(GetLastError)(); }
 
-inline auto device_synchronize() -> StatusType {
-  return GPU_PREFIX(DeviceSynchronize)();
-}
+inline auto device_synchronize() -> StatusType { return GPU_PREFIX(DeviceSynchronize)(); }
 
-} // namespace gpu
-} // namespace spfft
+}  // namespace gpu
+}  // namespace spfft
 
 #undef GPU_PREFIX
 
-#endif // defined SPFFT_CUDA || SPFFT_ROCM
+#endif  // defined SPFFT_CUDA || SPFFT_ROCM
 #endif

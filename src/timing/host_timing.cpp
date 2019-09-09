@@ -223,7 +223,7 @@ auto export_node_json(const std::string& padding, const std::list<TimingResult>&
   }
   stream << padding << "}" << std::endl;
 }
-} // namespace
+}  // namespace
 
 // ======================
 // HostTiming
@@ -379,6 +379,5 @@ auto HostTiming::export_json() -> std::string {
   return jsonStream.str();
 }
 
-} // namespace timing
-} // namespace spfft
-
+}  // namespace timing
+}  // namespace spfft

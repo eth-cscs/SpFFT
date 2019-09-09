@@ -28,7 +28,6 @@ TEST_F(HostArrayTest, Iterators) {
   }
 }
 
-
 TEST_F(HostArrayTest, OperatorAccess) {
   int count = 0;
   ASSERT_EQ(array_.size(), 5);
@@ -39,7 +38,6 @@ TEST_F(HostArrayTest, OperatorAccess) {
   for (SizeType i = 0; i < array_.size(); ++i) {
     ASSERT_EQ(array_(i), ++count);
   }
-
 }
 
 TEST_F(HostArrayTest, Accessors) {

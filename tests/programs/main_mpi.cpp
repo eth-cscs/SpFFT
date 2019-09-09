@@ -38,7 +38,7 @@
 #include "memory/gpu_array.hpp"
 #endif
 
-#include <unistd.h> // for MPI debugging
+#include <unistd.h>  // for MPI debugging
 using namespace spfft;
 
 static bool enablePrint = false;

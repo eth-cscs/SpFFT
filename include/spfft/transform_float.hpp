@@ -230,5 +230,5 @@ private:
 };
 #endif
 
-} // namespace spfft
+}  // namespace spfft
 #endif

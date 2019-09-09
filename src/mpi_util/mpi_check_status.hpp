@@ -38,6 +38,6 @@ inline auto mpi_check_status(int status) -> void {
     throw MPIError();
   }
 }
-} // namespace spfft
+}  // namespace spfft
 
 #endif

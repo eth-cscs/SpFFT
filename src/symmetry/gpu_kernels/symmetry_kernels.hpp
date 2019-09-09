@@ -49,6 +49,6 @@ auto symmetrize_stick_gpu(const gpu::StreamType stream,
                           const GPUArrayView1D<typename gpu::fft::ComplexType<float>::type>& data)
     -> void;
 
-} // namespace spfft
+}  // namespace spfft
 
 #endif

@@ -83,7 +83,7 @@ ExecutionGPU<T>::ExecutionGPU(const int numThreads, std::shared_ptr<Parameters> 
 
   // Transpose
   auto freqDomainXYGPU = create_3d_view(gpuArray2, 0, param->dim_z(), param->dim_y(),
-                                        param->dim_x_freq()); // must not overlap with z-sticks
+                                        param->dim_x_freq());  // must not overlap with z-sticks
   transpose_.reset(new TransposeGPU<T>(param, stream_, freqDomainXYGPU, freqDomainDataGPU_));
 
   // XY
@@ -140,7 +140,7 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
                         param->local_value_indices().size() * 2, gpuArray2.device_id());
 
   auto freqDomainXYGPU = create_3d_view(gpuArray2, 0, numLocalXYPlanes, param->dim_y(),
-                                        param->dim_x_freq()); // must not overlap with z-sticks
+                                        param->dim_x_freq());  // must not overlap with z-sticks
 
   // Z
   if (numLocalZSticks > 0) {
@@ -247,7 +247,6 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
 
 template <typename T>
 auto ExecutionGPU<T>::forward_xy(const SpfftProcessingUnitType inputLocation) -> void {
-
   // Check for any preceding errors before starting execution
   if (gpu::get_last_error() != gpu::status::Success) {
     throw GPUPrecedingError();

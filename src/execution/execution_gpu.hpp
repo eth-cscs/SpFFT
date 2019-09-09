@@ -33,9 +33,9 @@
 #include "compression/compression_gpu.hpp"
 #include "compression/indices.hpp"
 #include "fft/transform_interface.hpp"
+#include "gpu_util/gpu_event_handle.hpp"
 #include "gpu_util/gpu_fft_api.hpp"
 #include "gpu_util/gpu_stream_handle.hpp"
-#include "gpu_util/gpu_event_handle.hpp"
 #include "memory/gpu_array.hpp"
 #include "memory/gpu_array_view.hpp"
 #include "memory/host_array.hpp"
@@ -80,7 +80,6 @@ public:
   auto forward_exchange(const bool nonBlockingExchange) -> void;
   auto forward_xy(const SpfftProcessingUnitType inputLocation) -> void;
 
-
   // transform backward into a given memory location (Host or GPU).
   // The input is taken from the GPU.
   auto backward_z(const T* input) -> void;
@@ -115,5 +114,5 @@ private:
   GPUArrayView2D<typename gpu::fft::ComplexType<T>::type> freqDomainDataGPU_;
   GPUArrayView1D<T> freqDomainCompressedDataGPU_;
 };
-} // namespace spfft
+}  // namespace spfft
 #endif

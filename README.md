@@ -1,37 +1,43 @@
 [![Build Status](https://dev.azure.com/zeadreamplay/SpFFT/_apis/build/status/eth-cscs.SpFFT?branchName=master)](https://dev.azure.com/zeadreamplay/SpFFT/_build/latest?definitionId=3&branchName=master)
 [![Documentation](https://readthedocs.org/projects/spfft/badge/?version=latest)](https://spfft.readthedocs.io/en/latest/?badge=latest)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://raw.githubusercontent.com/eth-cscs/SpFFT/master/LICENSE)
 
 # SpFFT
-SpFFT is a library for the computation 3D FFTs with sparse frequency domain data written in C++ with support for MPI, OpenMP, CUDA and ROCm.
+SpFFT - A 3D FFT library for sparse frequency domain data written in C++ with support for MPI, OpenMP, CUDA and ROCm.
 
-It was originally intended for transforms of data with spherical cutoff in frequency domain, as required by some computational material science codes, but was generalized to sparse frequency domain data.
-
+It was originally intended for transforms of data with spherical cutoff in frequency domain, as required by some computational material science codes.
+For distributed computations, SpFFT uses a slab decomposition in space domain and pencil decomposition in frequency domain (all sparse data within a pencil must be on one rank). If desired, the libray can be compiled without any parallization (MPI, OpenMP, CUDA / ROCm).
 
 ### Design Goals
 - Sparse frequency domain input
 - Reuse of pre-allocated memory
 - Support of negative indexing for frequency domain data
 - Unified interface for calculations on CPUs and GPUs
-- Support of Complex-To-Real and Real-To-Complex transforms, where the full hermitian symmetry property is utilized. Therefore, there is no redundant frequency domain data, as is usually the case for dense 3D R2C / C2R transforms with libraries such as FFTW.
+- Support of Complex-To-Real and Real-To-Complex transforms, where the full hermitian symmetry property is utilized.
 - C++, C and Fortran interfaces
 
 ### Interface Design
 To allow for pre-allocation and reuse of memory, the design is based on two classes:
 
 - **Grid**: Allocates memory for transforms up to a given size in each dimension.
-- **Transform**: Is created using a *Grid* and can have any size up to the maximum allowed by the *Grid*. A *Transform* holds a counted reference to the underlying *Grid*. Therefore, *Transforms* created from the same *Grid* will share the memory, which is only freed, once the *Grid* and all associated *Transforms* are destroyed.
+- **Transform**: Is associated with a *Grid* and can have any size up to the *Grid* dimensions. A *Transform* holds a counted reference to the underlying *Grid*. Therefore, *Transforms* created with the same *Grid* share memory, which is only freed, once the *Grid* and all associated *Transforms* are destroyed.
 
-The user provides memory for storing the sparse frequency domain data, while a *Transform* provides memory for the space domain data. This implies, that executing a *Transform* will override the space domain data of all other *Transforms* associated to the same *Grid*.
+The user provides memory for storing sparse frequency domain data, while a *Transform* provides memory for space domain data. This implies, that executing a *Transform* will override the space domain data of all other *Transforms* associated with the same *Grid*.
 
 ## Documentation
 Documentation can be found [here](https://spfft.readthedocs.io/en/latest/).
 
 ## Requirements
-- C++ Compiler with C++11 support
-- CMake version 3.11 or greater
+- C++ Compiler with C++11 support. Supported compilers are:
+  - GCC 6 and later
+  - Clang 5 and later
+  - ICC 18.0 and later
+- CMake 3.11 and later
 - Library providing a FFTW 3.x interface (FFTW3 or Intel MKL)
 - For multi-threading: OpenMP support by the compiler
-- For GPU support: CUDA or ROCm
+- For compilation with GPU support:
+  - CUDA 9.0 and later for Nvidia hardware
+  - ROCm 2.6 and later for AMD hardware
 
 ## Installation
 The build system follows the standard CMake workflow. Example:
@@ -71,11 +77,20 @@ int main(int argc, char** argv) {
   std::cout << "Dimensions: x = " << dimX << ", y = " << dimY << ", z = " << dimZ << std::endl
             << std::endl;
 
-  const int numThreads = -1; // Use default OpenMP value
+  // Use default OpenMP value
+  const int numThreads = -1;
 
-  std::vector<std::complex<double>> freqValues;
-  freqValues.reserve(dimX * dimY * dimZ);
+  // use all elements in this example.
+  const int numFrequencyElements = dimX * dimY * dimZ;
 
+  // Slice length in space domain. Equivalent to dimZ for non-distributed case.
+  const int localZLength = dimZ;
+
+  // interleaved complex numbers
+  std::vector<double> frequencyElements;
+  frequencyElements.reserve(2 * numFrequencyElements);
+
+  // indices of frequency elements
   std::vector<int> indices;
   indices.reserve(dimX * dimY * dimZ * 3);
 
@@ -84,8 +99,9 @@ int main(int argc, char** argv) {
   for (int xIndex = 0; xIndex < dimX; ++xIndex) {
     for (int yIndex = 0; yIndex < dimY; ++yIndex) {
       for (int zIndex = 0; zIndex < dimZ; ++zIndex) {
-        // init values
-        freqValues.emplace_back(initValue, -initValue);
+        // init with interleaved complex numbers
+        frequencyElements.emplace_back(initValue);
+        frequencyElements.emplace_back(-initValue);
 
         // add index triplet for value
         indices.emplace_back(xIndex);
@@ -98,8 +114,8 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "Input:" << std::endl;
-  for (const auto& value : freqValues) {
-    std::cout << value.real() << ", " << value.imag() << std::endl;
+  for (int i = 0; i < numFrequencyElements; ++i) {
+    std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
   }
 
   // create local Grid. For distributed computations, a MPI Communicator has to be provided
@@ -107,62 +123,30 @@ int main(int argc, char** argv) {
 
   // create transform
   spfft::Transform transform =
-      grid.create_transform(SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY, dimZ, dimZ,
-                            freqValues.size(), SPFFT_INDEX_TRIPLETS, indices.data());
+      grid.create_transform(SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY, dimZ, localZLength,
+                            numFrequencyElements, SPFFT_INDEX_TRIPLETS, indices.data());
 
-  // get pointer to space domain data. Alignment is guaranteed to fullfill requirements for
-  // std::complex
-  std::complex<double>* realValues =
-      reinterpret_cast<std::complex<double>*>(transform.space_domain_data(SPFFT_PU_HOST));
+  // Get pointer to space domain data. Alignment fullfills requirements for std::complex.
+  // Can also be read as std::complex elements (guaranteed by the standard to be binary compatible
+  // since C++11).
+  double* spaceDomain = transform.space_domain_data(SPFFT_PU_HOST);
 
   // transform backward
-  transform.backward(reinterpret_cast<double*>(freqValues.data()), SPFFT_PU_HOST);
+  transform.backward(frequencyElements.data(), SPFFT_PU_HOST);
 
   std::cout << std::endl << "After backward transform:" << std::endl;
   for (int i = 0; i < transform.local_slice_size(); ++i) {
-    std::cout << realValues[i].real() << ", " << realValues[i].imag() << std::endl;
+    std::cout << spaceDomain[2 * i] << ", " << spaceDomain[2 * i + 1] << std::endl;
   }
 
   // transform forward
-  transform.forward(SPFFT_PU_HOST, reinterpret_cast<double*>(freqValues.data()), SPFFT_NO_SCALING);
+  transform.forward(SPFFT_PU_HOST, frequencyElements.data(), SPFFT_NO_SCALING);
 
   std::cout << std::endl << "After forward transform (without scaling):" << std::endl;
-  for (const auto& value : freqValues) {
-    std::cout << value.real() << ", " << value.imag() << std::endl;
+  for (int i = 0; i < numFrequencyElements; ++i) {
+    std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
   }
 
   return 0;
 }
-```
-
-## License
-
-```
-Copyright (c) 2019 ETH Zurich, Simon Frasch
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors
-may be used to endorse or promote products derived from this software
-without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
 ```

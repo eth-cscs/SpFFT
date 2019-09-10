@@ -10,11 +10,20 @@ int main(int argc, char** argv) {
 
   printf("Dimensions: x = %d, y = %d, z = %d\n\n", dimX, dimY, dimZ);
 
-  const int numThreads = -1; /* Use default OpenMP value */
+  /* Use default OpenMP value */
+  const int numThreads = -1;
 
-  double* freqValues = (double*)malloc(2 * sizeof(double) * dimX * dimY * dimZ);
+  /* use all elements in this example. */
+  const int numFrequencyElements = dimX * dimY * dimZ;
 
-  int* indices = (int*)malloc(3 * sizeof(int) * dimX * dimY * dimZ);
+  /* Slice length in space domain. Equivalent to dimZ for non-distributed case. */
+  const int localZLength = dimZ;
+
+  /* interleaved complex numbers */
+  double* frequencyElements = (double*)malloc(2 * sizeof(double) * numFrequencyElements);
+
+  /* indices of frequency elements */
+  int* indices = (int*)malloc(3 * sizeof(int) * numFrequencyElements);
 
   /* initialize frequency domain values and indices */
   double initValue = 0.0;
@@ -23,8 +32,8 @@ int main(int argc, char** argv) {
     for (int yIndex = 0; yIndex < dimY; ++yIndex) {
       for (int zIndex = 0; zIndex < dimZ; ++zIndex, ++count) {
         /* init values */
-        freqValues[2 * count] = initValue;
-        freqValues[2 * count + 1] = -initValue;
+        frequencyElements[2 * count] = initValue;
+        frequencyElements[2 * count + 1] = -initValue;
 
         /* add index triplet for value */
         indices[3 * count] = xIndex;
@@ -38,7 +47,7 @@ int main(int argc, char** argv) {
 
   printf("Input:\n");
   for (size_t i = 0; i < dimX * dimY * dimZ; ++i) {
-    printf("%f, %f\n", freqValues[2 * i], freqValues[2 * i + 1]);
+    printf("%f, %f\n", frequencyElements[2 * i], frequencyElements[2 * i + 1]);
   }
   printf("\n");
 
@@ -52,7 +61,7 @@ int main(int argc, char** argv) {
   /* create transform */
   SpfftTransform transform;
   status = spfft_transform_create(&transform, grid, SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY,
-                                  dimZ, dimZ, dimX * dimY * dimZ, SPFFT_INDEX_TRIPLETS, indices);
+                                  dimZ, localZLength, numFrequencyElements, SPFFT_INDEX_TRIPLETS, indices);
   if (status != SPFFT_SUCCESS) exit(status);
 
   /* grid can be safely destroyed after creating all transforms */
@@ -61,27 +70,27 @@ int main(int argc, char** argv) {
 
   /* get pointer to space domain data. Alignment is guaranteed to fullfill requirements C complex
    types */
-  double* realValues;
-  status = spfft_transform_get_space_domain(transform, SPFFT_PU_HOST, &realValues);
+  double* spaceDomain;
+  status = spfft_transform_get_space_domain(transform, SPFFT_PU_HOST, &spaceDomain);
   if (status != SPFFT_SUCCESS) exit(status);
 
   /* transform backward */
-  status = spfft_transform_backward(transform, freqValues, SPFFT_PU_HOST);
+  status = spfft_transform_backward(transform, frequencyElements, SPFFT_PU_HOST);
   if (status != SPFFT_SUCCESS) exit(status);
 
   printf("After backward transform:\n");
   for (size_t i = 0; i < dimX * dimY * dimZ; ++i) {
-    printf("%f, %f\n", realValues[2 * i], realValues[2 * i + 1]);
+    printf("%f, %f\n", spaceDomain[2 * i], spaceDomain[2 * i + 1]);
   }
   printf("\n");
 
   /* transform forward */
-  status = spfft_transform_forward(transform, SPFFT_PU_HOST, freqValues, SPFFT_NO_SCALING);
+  status = spfft_transform_forward(transform, SPFFT_PU_HOST, frequencyElements, SPFFT_NO_SCALING);
   if (status != SPFFT_SUCCESS) exit(status);
 
   printf("After forward transform (without scaling):\n");
   for (size_t i = 0; i < dimX * dimY * dimZ; ++i) {
-    printf("%f, %f\n", freqValues[2 * i], freqValues[2 * i + 1]);
+    printf("%f, %f\n", frequencyElements[2 * i], frequencyElements[2 * i + 1]);
   }
 
   /* destroying the final transform will free the associated memory */

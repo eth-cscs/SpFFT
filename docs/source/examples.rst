@@ -20,21 +20,31 @@ C++
      std::cout << "Dimensions: x = " << dimX << ", y = " << dimY << ", z = " << dimZ << std::endl
 	       << std::endl;
 
-     const int numThreads = -1; // Use default OpenMP value
+     // Use default OpenMP value
+     const int numThreads = -1;
 
-     std::vector<std::complex<double>> freqValues;
-     freqValues.reserve(dimX * dimY * dimZ);
+     // use all elements in this example.
+     const int numFrequencyElements = dimX * dimY * dimZ;
 
+     // Slice length in space domain. Equivalent to dimZ for non-distributed case.
+     const int localZLength = dimZ;
+
+     // interleaved complex numbers
+     std::vector<double> frequencyElements;
+     frequencyElements.reserve(2 * numFrequencyElements);
+
+     // indices of frequency elements
      std::vector<int> indices;
-     indices.reserve(dimX * dimY * dimZ * 3);
+     indices.reserve(3 * numFrequencyElements);
 
      // initialize frequency domain values and indices
      double initValue = 0.0;
      for (int xIndex = 0; xIndex < dimX; ++xIndex) {
        for (int yIndex = 0; yIndex < dimY; ++yIndex) {
 	 for (int zIndex = 0; zIndex < dimZ; ++zIndex) {
-	   // init values
-	   freqValues.emplace_back(initValue, -initValue);
+	   // init with interleaved complex numbers
+	   frequencyElements.emplace_back(initValue);
+	   frequencyElements.emplace_back(-initValue);
 
 	   // add index triplet for value
 	   indices.emplace_back(xIndex);
@@ -47,8 +57,8 @@ C++
      }
 
      std::cout << "Input:" << std::endl;
-     for (const auto& value : freqValues) {
-       std::cout << value.real() << ", " << value.imag() << std::endl;
+     for (int i = 0; i < numFrequencyElements; ++i) {
+       std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
      }
 
      // create local Grid. For distributed computations, a MPI Communicator has to be provided
@@ -56,28 +66,28 @@ C++
 
      // create transform
      spfft::Transform transform =
-	 grid.create_transform(SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY, dimZ, dimZ,
-			       freqValues.size(), SPFFT_INDEX_TRIPLETS, indices.data());
+	 grid.create_transform(SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY, dimZ, localZLength,
+			       numFrequencyElements, SPFFT_INDEX_TRIPLETS, indices.data());
 
-     // get pointer to space domain data. Alignment is guaranteed to fullfill requirements for
-     // std::complex
-     std::complex<double>* realValues =
-	 reinterpret_cast<std::complex<double>*>(transform.space_domain_data(SPFFT_PU_HOST));
+     // Get pointer to space domain data. Alignment fullfills requirements for std::complex.
+     // Can also be read as std::complex elements (guaranteed by the standard to be binary compatible
+     // since C++11).
+     double* spaceDomain = transform.space_domain_data(SPFFT_PU_HOST);
 
      // transform backward
-     transform.backward(reinterpret_cast<double*>(freqValues.data()), SPFFT_PU_HOST);
+     transform.backward(frequencyElements.data(), SPFFT_PU_HOST);
 
      std::cout << std::endl << "After backward transform:" << std::endl;
      for (int i = 0; i < transform.local_slice_size(); ++i) {
-       std::cout << realValues[i].real() << ", " << realValues[i].imag() << std::endl;
+       std::cout << spaceDomain[2 * i] << ", " << spaceDomain[2 * i + 1] << std::endl;
      }
 
      // transform forward
-     transform.forward(SPFFT_PU_HOST, reinterpret_cast<double*>(freqValues.data()), SPFFT_NO_SCALING);
+     transform.forward(SPFFT_PU_HOST, frequencyElements.data(), SPFFT_NO_SCALING);
 
      std::cout << std::endl << "After forward transform (without scaling):" << std::endl;
-     for (const auto& value : freqValues) {
-       std::cout << value.real() << ", " << value.imag() << std::endl;
+     for (int i = 0; i < numFrequencyElements; ++i) {
+       std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
      }
 
      return 0;
@@ -100,11 +110,20 @@ C
 
      printf("Dimensions: x = %d, y = %d, z = %d\n\n", dimX, dimY, dimZ);
 
-     const int numThreads = -1; /* Use default OpenMP value */
+     /* Use default OpenMP value */
+     const int numThreads = -1;
 
-     double* freqValues = (double*)malloc(2 * sizeof(double) * dimX * dimY * dimZ);
+     /* use all elements in this example. */
+     const int numFrequencyElements = dimX * dimY * dimZ;
 
-     int* indices = (int*)malloc(3 * sizeof(int) * dimX * dimY * dimZ);
+     /* Slice length in space domain. Equivalent to dimZ for non-distributed case. */
+     const int localZLength = dimZ;
+
+     /* interleaved complex numbers */
+     double* frequencyElements = (double*)malloc(2 * sizeof(double) * numFrequencyElements);
+
+     /* indices of frequency elements */
+     int* indices = (int*)malloc(3 * sizeof(int) * numFrequencyElements);
 
      /* initialize frequency domain values and indices */
      double initValue = 0.0;
@@ -113,8 +132,8 @@ C
        for (int yIndex = 0; yIndex < dimY; ++yIndex) {
 	 for (int zIndex = 0; zIndex < dimZ; ++zIndex, ++count) {
 	   /* init values */
-	   freqValues[2 * count] = initValue;
-	   freqValues[2 * count + 1] = -initValue;
+	   frequencyElements[2 * count] = initValue;
+	   frequencyElements[2 * count + 1] = -initValue;
 
 	   /* add index triplet for value */
 	   indices[3 * count] = xIndex;
@@ -128,7 +147,7 @@ C
 
      printf("Input:\n");
      for (size_t i = 0; i < dimX * dimY * dimZ; ++i) {
-       printf("%f, %f\n", freqValues[2 * i], freqValues[2 * i + 1]);
+       printf("%f, %f\n", frequencyElements[2 * i], frequencyElements[2 * i + 1]);
      }
      printf("\n");
 
@@ -142,7 +161,7 @@ C
      /* create transform */
      SpfftTransform transform;
      status = spfft_transform_create(&transform, grid, SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY,
-				     dimZ, dimZ, dimX * dimY * dimZ, SPFFT_INDEX_TRIPLETS, indices);
+				     dimZ, localZLength, numFrequencyElements, SPFFT_INDEX_TRIPLETS, indices);
      if (status != SPFFT_SUCCESS) exit(status);
 
      /* grid can be safely destroyed after creating all transforms */
@@ -151,27 +170,27 @@ C
 
      /* get pointer to space domain data. Alignment is guaranteed to fullfill requirements C complex
       types */
-     double* realValues;
-     status = spfft_transform_get_space_domain(transform, SPFFT_PU_HOST, &realValues);
+     double* spaceDomain;
+     status = spfft_transform_get_space_domain(transform, SPFFT_PU_HOST, &spaceDomain);
      if (status != SPFFT_SUCCESS) exit(status);
 
      /* transform backward */
-     status = spfft_transform_backward(transform, freqValues, SPFFT_PU_HOST);
+     status = spfft_transform_backward(transform, frequencyElements, SPFFT_PU_HOST);
      if (status != SPFFT_SUCCESS) exit(status);
 
      printf("After backward transform:\n");
      for (size_t i = 0; i < dimX * dimY * dimZ; ++i) {
-       printf("%f, %f\n", realValues[2 * i], realValues[2 * i + 1]);
+       printf("%f, %f\n", spaceDomain[2 * i], spaceDomain[2 * i + 1]);
      }
      printf("\n");
 
      /* transform forward */
-     status = spfft_transform_forward(transform, SPFFT_PU_HOST, freqValues, SPFFT_NO_SCALING);
+     status = spfft_transform_forward(transform, SPFFT_PU_HOST, frequencyElements, SPFFT_NO_SCALING);
      if (status != SPFFT_SUCCESS) exit(status);
 
      printf("After forward transform (without scaling):\n");
      for (size_t i = 0; i < dimX * dimY * dimZ; ++i) {
-       printf("%f, %f\n", freqValues[2 * i], freqValues[2 * i + 1]);
+       printf("%f, %f\n", frequencyElements[2 * i], frequencyElements[2 * i + 1]);
      }
 
      /* destroying the final transform will free the associated memory */
@@ -180,6 +199,7 @@ C
 
      return 0;
    }
+
 
 Fortran
 -------
@@ -198,78 +218,76 @@ Fortran
        integer, parameter :: maxNumThreads = -1
        type(c_ptr) :: grid = c_null_ptr
        type(c_ptr) :: transform = c_null_ptr
-       integer :: error = 0
+       integer :: errorCode = 0
        integer, dimension(dimX * dimY * dimZ * 3):: indices = 0
-       complex(C_DOUBLE_COMPLEX), dimension(dimX * dimY * dimZ):: freqValues
-       complex(C_DOUBLE_COMPLEX), pointer :: realValues(:,:,:)
+       complex(C_DOUBLE_COMPLEX), dimension(dimX * dimY * dimZ):: frequencyElements
+       complex(C_DOUBLE_COMPLEX), pointer :: spaceDomain(:,:,:)
        type(c_ptr) :: realValuesPtr
 
 
        counter = 0
        do k = 1, dimZ
-           do j = 1, dimY
-               do i = 1, dimX
-                freqValues(counter + 1) = cmplx(counter, counter)
-                indices(counter * 3 + 1) = i - 1
-                indices(counter * 3 + 2) = j - 1
-                indices(counter * 3 + 3) = k - 1
-                counter = counter + 1
-               end do
-           end do
+	   do j = 1, dimY
+	       do i = 1, dimX
+		frequencyElements(counter + 1) = cmplx(counter, -counter)
+		indices(counter * 3 + 1) = i - 1
+		indices(counter * 3 + 2) = j - 1
+		indices(counter * 3 + 3) = k - 1
+		counter = counter + 1
+	       end do
+	   end do
        end do
 
        ! print input
        print *, "Input:"
-       do i = 1, size(freqValues)
-            print *, freqValues(i)
+       do i = 1, size(frequencyElements)
+	    print *, frequencyElements(i)
        end do
 
 
        ! create grid and transform
-       error = spfft_grid_create(grid, dimX, dimY, dimZ, maxNumLocalZColumns, processingUnit, maxNumThreads);
-       if (error /= 0) stop error
-       error = spfft_transform_create(transform, grid, processingUnit, 0, dimX, dimY, dimZ, dimZ, size(freqValues), 0, indices)
-       if (error /= 0) stop error
+       errorCode = spfft_grid_create(grid, dimX, dimY, dimZ, maxNumLocalZColumns, processingUnit, maxNumThreads);
+       if (errorCode /= SPFFT_SUCCESS) error stop
+       errorCode = spfft_transform_create(transform, grid, processingUnit, 0, dimX, dimY, dimZ, dimZ, size(frequencyElements), 0, indices)
+       if (errorCode /= SPFFT_SUCCESS) error stop
 
-       ! grid can be safely deleted after creating all required transforms
-       error = spfft_grid_destroy(grid)
-       if (error /= 0) stop error
+       ! grid can be safely destroyed after creating all required transforms
+       errorCode = spfft_grid_destroy(grid)
+       if (errorCode /= SPFFT_SUCCESS) error stop
 
        ! set space domain array to use memory allocted by the library
-       error = spfft_transform_get_space_domain(transform, processingUnit, realValuesPtr)
-       if (error /= 0) stop error
+       errorCode = spfft_transform_get_space_domain(transform, processingUnit, realValuesPtr)
+       if (errorCode /= SPFFT_SUCCESS) error stop
 
        ! transform backward
-       error = spfft_transform_backward(transform, freqValues, processingUnit)
-       if (error /= 0) stop error
+       errorCode = spfft_transform_backward(transform, frequencyElements, processingUnit)
+       if (errorCode /= SPFFT_SUCCESS) error stop
 
 
-       call c_f_pointer(realValuesPtr, realValues, [dimX,dimY,dimZ])
+       call c_f_pointer(realValuesPtr, spaceDomain, [dimX,dimY,dimZ])
 
        print *, ""
        print *, "After backward transform:"
-       do k = 1, size(realValues, 3)
-           do j = 1, size(realValues, 2)
-               do i = 1, size(realValues, 1)
-                print *, realValues(i, j, k)
-               end do
-           end do
+       do k = 1, size(spaceDomain, 3)
+	   do j = 1, size(spaceDomain, 2)
+	       do i = 1, size(spaceDomain, 1)
+		print *, spaceDomain(i, j, k)
+	       end do
+	   end do
        end do
 
        ! transform forward (will invalidate space domain data)
-       error = spfft_transform_forward(transform, processingUnit, freqValues, 0)
-       if (error /= 0) stop error
+       errorCode = spfft_transform_forward(transform, processingUnit, frequencyElements, 0)
+       if (errorCode /= SPFFT_SUCCESS) error stop
 
        print *, ""
        print *, "After forward transform (without scaling):"
-       do i = 1, size(freqValues)
-                print *, freqValues(i)
+       do i = 1, size(frequencyElements)
+		print *, frequencyElements(i)
        end do
 
-       ! destroy transform after use
-       ! (will release memory if all transforms from the same grid are destroyed)
-       error = spfft_transform_destroy(transform)
-       if (error /= 0) stop error
+       ! destroying the final transform will free the associated memory
+       errorCode = spfft_transform_destroy(transform)
+       if (errorCode /= SPFFT_SUCCESS) error stop
 
    end
-

@@ -14,8 +14,8 @@ program main
     type(c_ptr) :: transform = c_null_ptr
     integer :: errorCode = 0
     integer, dimension(dimX * dimY * dimZ * 3):: indices = 0
-    complex(C_DOUBLE_COMPLEX), dimension(dimX * dimY * dimZ):: freqValues
-    complex(C_DOUBLE_COMPLEX), pointer :: realValues(:,:,:)
+    complex(C_DOUBLE_COMPLEX), dimension(dimX * dimY * dimZ):: frequencyElements
+    complex(C_DOUBLE_COMPLEX), pointer :: spaceDomain(:,:,:)
     type(c_ptr) :: realValuesPtr
 
 
@@ -23,7 +23,7 @@ program main
     do k = 1, dimZ
         do j = 1, dimY
             do i = 1, dimX
-             freqValues(counter + 1) = cmplx(counter, -counter)
+             frequencyElements(counter + 1) = cmplx(counter, -counter)
              indices(counter * 3 + 1) = i - 1
              indices(counter * 3 + 2) = j - 1
              indices(counter * 3 + 3) = k - 1
@@ -34,15 +34,15 @@ program main
 
     ! print input
     print *, "Input:"
-    do i = 1, size(freqValues)
-         print *, freqValues(i)
+    do i = 1, size(frequencyElements)
+         print *, frequencyElements(i)
     end do
 
 
     ! create grid and transform
     errorCode = spfft_grid_create(grid, dimX, dimY, dimZ, maxNumLocalZColumns, processingUnit, maxNumThreads);
     if (errorCode /= SPFFT_SUCCESS) error stop
-    errorCode = spfft_transform_create(transform, grid, processingUnit, 0, dimX, dimY, dimZ, dimZ, size(freqValues), 0, indices)
+    errorCode = spfft_transform_create(transform, grid, processingUnit, 0, dimX, dimY, dimZ, dimZ, size(frequencyElements), 0, indices)
     if (errorCode /= SPFFT_SUCCESS) error stop
 
     ! grid can be safely destroyed after creating all required transforms
@@ -54,30 +54,30 @@ program main
     if (errorCode /= SPFFT_SUCCESS) error stop
 
     ! transform backward
-    errorCode = spfft_transform_backward(transform, freqValues, processingUnit)
+    errorCode = spfft_transform_backward(transform, frequencyElements, processingUnit)
     if (errorCode /= SPFFT_SUCCESS) error stop
 
 
-    call c_f_pointer(realValuesPtr, realValues, [dimX,dimY,dimZ])
+    call c_f_pointer(realValuesPtr, spaceDomain, [dimX,dimY,dimZ])
 
     print *, ""
     print *, "After backward transform:"
-    do k = 1, size(realValues, 3)
-        do j = 1, size(realValues, 2)
-            do i = 1, size(realValues, 1)
-             print *, realValues(i, j, k)
+    do k = 1, size(spaceDomain, 3)
+        do j = 1, size(spaceDomain, 2)
+            do i = 1, size(spaceDomain, 1)
+             print *, spaceDomain(i, j, k)
             end do
         end do
     end do
 
     ! transform forward (will invalidate space domain data)
-    errorCode = spfft_transform_forward(transform, processingUnit, freqValues, 0)
+    errorCode = spfft_transform_forward(transform, processingUnit, frequencyElements, 0)
     if (errorCode /= SPFFT_SUCCESS) error stop
 
     print *, ""
     print *, "After forward transform (without scaling):"
-    do i = 1, size(freqValues)
-             print *, freqValues(i)
+    do i = 1, size(frequencyElements)
+             print *, frequencyElements(i)
     end do
 
     ! destroying the final transform will free the associated memory

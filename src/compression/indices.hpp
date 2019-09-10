@@ -121,6 +121,10 @@ inline auto convert_index_triplets(const bool hermitianSymmetry, const int dimX,
                                    const int dimZ, const int numValues, const int* xIndices,
                                    const int* yIndices, const int* zIndices, const int stride)
     -> std::pair<std::vector<int>, std::vector<int>> {
+  if (static_cast<SizeType>(numValues) >
+      static_cast<SizeType>(dimX) * static_cast<SizeType>(dimY) * static_cast<SizeType>(dimZ)) {
+    throw InvalidParameterError();
+  }
   // check if indices are non-negative or centered
   bool centeredIndices = false;
   for (int i = 0; i < numValues; ++i) {

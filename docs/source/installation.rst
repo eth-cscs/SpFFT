@@ -3,11 +3,21 @@ Installation
 
 Requirements
 ------------
-- C++ Compiler with C++11 support
-- CMake version 3.11 or greater
+* C++ Compiler with C++11 support. Supported compilers are:
+
+  * GCC 6 and later
+  * Clang 5 and later
+  * ICC 18.0 and later
+
+
+- CMake 3.11 and later
 - Library providing a FFTW 3.x interface (FFTW3 or Intel MKL)
 - For multi-threading: OpenMP support by the compiler
-- For GPU support: CUDA or ROCm
+- For compilation with GPU support:
+
+  * CUDA 9.0 and later for Nvidia hardware
+  * ROCm 2.6 and later for AMD hardware
+
 
 Build
 -----

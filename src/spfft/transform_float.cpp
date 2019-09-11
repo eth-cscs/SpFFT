@@ -283,6 +283,20 @@ SpfftError spfft_float_transform_local_z_offset(SpfftFloatTransform transform, i
   return SpfftError::SPFFT_SUCCESS;
 }
 
+SpfftError spfft_float_transform_local_slice_size(SpfftFloatTransform transform, int* size) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *size = reinterpret_cast<spfft::TransformFloat*>(transform)->local_slice_size();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
 SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform,
                                                     int* localZLength) {
   if (!transform) {

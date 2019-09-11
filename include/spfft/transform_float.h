@@ -168,6 +168,13 @@ SpfftError spfft_float_transform_local_z_length(SpfftFloatTransform transform, i
 /**
  * Access a transform parameter.
  * @param[in] transform Handle to the transform.
+ * @param[out] size Number of elements in the space domain slice held by the local MPI rank.
+ */
+SpfftError spfft_float_transform_local_slice_size(SpfftFloatTransform transform, int* size);
+
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
  * @param[out] globalSize Global number of elements in space domain. Equals dim_x() * dim_y() *
  * dim_z().
  * @return Error code or SPFFT_SUCCESS.

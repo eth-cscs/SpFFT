@@ -303,10 +303,16 @@ interface
     integer(c_int), intent(out) :: dimZ
   end function
 
-  integer(c_int) function spfft_local_z_length(transform, localZLength) bind(C)
+  integer(c_int) function spfft_transform_local_z_length(transform, localZLength) bind(C)
     use iso_c_binding
     type(c_ptr), value :: transform
     integer(c_int), intent(out) :: localZLength
+  end function
+
+  integer(c_int) function spfft_transform_local_slice_size(transform, size) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: transform
+    integer(c_int), intent(out) :: size
   end function
 
   integer(c_int) function spfft_transform_local_z_offset(transform, offset) bind(C)
@@ -425,10 +431,16 @@ interface
     integer(c_int), intent(out) :: dimZ
   end function
 
-  integer(c_int) function spfft_float_local_z_length(transform, localZLength) bind(C)
+  integer(c_int) function spfft_float_transform_local_z_length(transform, localZLength) bind(C)
     use iso_c_binding
     type(c_ptr), value :: transform
     integer(c_int), intent(out) :: localZLength
+  end function
+
+  integer(c_int) function spfft_float_transform_local_slice_size(transform, size) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: transform
+    integer(c_int), intent(out) :: size
   end function
 
   integer(c_int) function spfft_float_transform_local_z_offset(transform, offset) bind(C)

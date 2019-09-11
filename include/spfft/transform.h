@@ -165,6 +165,13 @@ SpfftError spfft_transform_local_z_length(SpfftTransform transform, int* localZL
 /**
  * Access a transform parameter.
  * @param[in] transform Handle to the transform.
+ * @param[out] size Number of elements in the space domain slice held by the local MPI rank.
+ */
+SpfftError spfft_transform_local_slice_size(SpfftTransform transform, int* size);
+
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
  * @param[out] offset Offset in z of the space domain slice held by the local MPI rank.
  * @return Error code or SPFFT_SUCCESS.
  */

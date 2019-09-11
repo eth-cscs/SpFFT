@@ -269,6 +269,20 @@ SpfftError spfft_transform_local_z_length(SpfftTransform transform, int* localZL
   return SpfftError::SPFFT_SUCCESS;
 }
 
+SpfftError spfft_transform_local_slice_size(SpfftTransform transform, int* size) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *size = reinterpret_cast<spfft::Transform*>(transform)->local_slice_size();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
 SpfftError spfft_transform_local_z_offset(SpfftTransform transform, int* offset) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;

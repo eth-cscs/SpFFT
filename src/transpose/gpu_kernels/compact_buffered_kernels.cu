@@ -29,6 +29,7 @@
 #include <cassert>
 #include "gpu_util/complex_conversion.cuh"
 #include "gpu_util/gpu_fft_api.hpp"
+#include "gpu_util/gpu_kernel_parameter.hpp"
 #include "gpu_util/gpu_runtime.hpp"
 #include "memory/array_view_utility.hpp"
 #include "memory/gpu_array_const_view.hpp"
@@ -63,9 +64,9 @@ static auto compact_buffered_pack_backward_launch(const gpu::StreamType stream,
                                                   const GPUArrayView2D<DATA_TYPE>& freqZData,
                                                   GPUArrayView1D<BUFFER_TYPE> buffer) -> void {
   assert(xyPlaneOffsets.size() == numXYPlanes.size());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((maxNumXYPlanes + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_outer(), 4320));
+                        std::min(freqZData.dim_outer(), gpu::GridSizeMedium));
   launch_kernel(compact_buffered_pack_backward_kernel<DATA_TYPE, BUFFER_TYPE>, threadGrid,
                 threadBlock, 0, stream, numXYPlanes, xyPlaneOffsets, freqZData, buffer);
 }
@@ -125,9 +126,9 @@ static auto compact_buffered_unpack_backward_launch(const gpu::StreamType stream
                                                     const GPUArrayView1D<int>& indices,
                                                     const GPUArrayView1D<BUFFER_TYPE>& buffer,
                                                     GPUArrayView3D<DATA_TYPE> freqXYData) -> void {
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqXYData.dim_outer() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(maxNumZSticks, 4320));
+                        std::min(maxNumZSticks, gpu::GridSizeMedium));
   launch_kernel(compact_buffered_unpack_backward_kernel<DATA_TYPE, BUFFER_TYPE>, threadGrid,
                 threadBlock, 0, stream, maxNumZSticks, numZSticks, indices, buffer,
                 GPUArrayView2D<DATA_TYPE>(freqXYData.data(), freqXYData.dim_outer(),
@@ -190,9 +191,9 @@ static auto compact_buffered_unpack_forward_launch(const gpu::StreamType stream,
                                                    const GPUArrayView1D<BUFFER_TYPE>& buffer,
                                                    GPUArrayView2D<DATA_TYPE> freqZData) -> void {
   assert(xyPlaneOffsets.size() == numXYPlanes.size());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((maxNumXYPlanes + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_outer(), 4320));
+                        std::min(freqZData.dim_outer(), gpu::GridSizeMedium));
   launch_kernel(compact_buffered_unpack_forward_kernel<DATA_TYPE, BUFFER_TYPE>, threadGrid,
                 threadBlock, 0, stream, numXYPlanes, xyPlaneOffsets, buffer, freqZData);
 }
@@ -252,9 +253,9 @@ static auto compact_buffered_pack_forward_launch(const gpu::StreamType stream,
                                                  const GPUArrayView1D<int>& indices,
                                                  const GPUArrayView3D<DATA_TYPE>& freqXYData,
                                                  GPUArrayView1D<BUFFER_TYPE> buffer) -> void {
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqXYData.dim_outer() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(maxNumZSticks, 4320));
+                        std::min(maxNumZSticks, gpu::GridSizeMedium));
   launch_kernel(compact_buffered_pack_forward_kernel<DATA_TYPE, BUFFER_TYPE>, threadGrid,
                 threadBlock, 0, stream, maxNumZSticks, numZSticks, indices,
                 GPUArrayConstView2D<DATA_TYPE>(freqXYData.data(), freqXYData.dim_outer(),

@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <cassert>
 #include "gpu_util/gpu_fft_api.hpp"
+#include "gpu_util/gpu_kernel_parameter.hpp"
 #include "gpu_util/gpu_runtime.hpp"
 #include "memory/array_view_utility.hpp"
 #include "memory/gpu_array_const_view.hpp"
@@ -54,9 +55,9 @@ auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& ind
                     const double* input,
                     GPUArrayView2D<typename gpu::fft::ComplexType<double>::type> output) -> void {
   assert(indices.size() <= output.size());
-  const dim3 threadBlock(256);
-  const dim3 threadGrid(
-      std::min(static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), 4320));
+  const dim3 threadBlock(gpu::BlockSizeMedium);
+  const dim3 threadGrid(std::min(
+      static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
   // const dim3 threadGrid(indices.size() < 4 ? 1 : indices.size() / 4);
   launch_kernel(decompress_kernel<double>, threadGrid, threadBlock, 0, stream, indices, input,
                 create_1d_view(output, 0, output.size()));
@@ -66,9 +67,9 @@ auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& ind
                     const float* input,
                     GPUArrayView2D<typename gpu::fft::ComplexType<float>::type> output) -> void {
   assert(indices.size() <= output.size());
-  const dim3 threadBlock(256);
-  const dim3 threadGrid(
-      std::min(static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), 4320));
+  const dim3 threadBlock(gpu::BlockSizeMedium);
+  const dim3 threadGrid(std::min(
+      static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
   launch_kernel(decompress_kernel<float>, threadGrid, threadBlock, 0, stream, indices, input,
                 create_1d_view(output, 0, output.size()));
 }
@@ -103,9 +104,9 @@ __global__ static void compress_kernel_scaled(
 auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indices,
                   GPUArrayView2D<typename gpu::fft::ComplexType<double>::type> input,
                   double* output, const bool useScaling, const double scalingFactor) -> void {
-  const dim3 threadBlock(256);
-  const dim3 threadGrid(
-      std::min(static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), 4320));
+  const dim3 threadBlock(gpu::BlockSizeMedium);
+  const dim3 threadGrid(std::min(
+      static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
 
   if (useScaling) {
     launch_kernel(compress_kernel_scaled<double>, threadGrid, threadBlock, 0, stream, indices,
@@ -119,9 +120,9 @@ auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indic
 auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indices,
                   GPUArrayView2D<typename gpu::fft::ComplexType<float>::type> input, float* output,
                   const bool useScaling, const float scalingFactor) -> void {
-  const dim3 threadBlock(256);
-  const dim3 threadGrid(
-      std::min(static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), 4320));
+  const dim3 threadBlock(gpu::BlockSizeMedium);
+  const dim3 threadGrid(std::min(
+      static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
   if (useScaling) {
     launch_kernel(compress_kernel_scaled<float>, threadGrid, threadBlock, 0, stream, indices,
                   create_1d_view(input, 0, input.size()), output, scalingFactor);

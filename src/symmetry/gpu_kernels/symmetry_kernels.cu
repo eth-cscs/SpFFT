@@ -25,8 +25,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#include <algorithm>
 #include <cassert>
 #include "gpu_util/gpu_fft_api.hpp"
+#include "gpu_util/gpu_kernel_parameter.hpp"
 #include "gpu_util/gpu_runtime.hpp"
 #include "memory/gpu_array_const_view.hpp"
 #include "memory/gpu_array_view.hpp"
@@ -41,10 +43,12 @@ __global__ static void symmetrize_plane_kernel(
   int idxMid = threadIdx.x + blockIdx.x * blockDim.x;
   if (idxMid < numIndices) {
     idxMid += startIndex;
-    auto value = data(blockIdx.y, idxMid, 0);
-    if (value.x != T(0) || value.y != T(0)) {
-      value.y = -value.y;
-      data(blockIdx.y, data.dim_mid() - idxMid, 0) = value;
+    for (int idxOuter = blockIdx.y; idxOuter < data.dim_outer(); idxOuter += gridDim.y) {
+      auto value = data(blockIdx.y, idxMid, 0);
+      if (value.x != T(0) || value.y != T(0)) {
+        value.y = -value.y;
+        data(idxOuter, data.dim_mid() - idxMid, 0) = value;
+      }
     }
   }
 }
@@ -56,16 +60,18 @@ auto symmetrize_plane_gpu(const gpu::StreamType stream,
   {
     const int startIndex = 1;
     const int numIndices = data.dim_mid() / 2;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x, data.dim_outer());
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x,
+                          std::min(data.dim_outer(), gpu::GridSizeMedium));
     launch_kernel(symmetrize_plane_kernel<double>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }
   {
     const int startIndex = data.dim_mid() / 2 + 1;
     const int numIndices = data.dim_mid() - startIndex;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x, data.dim_outer());
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x,
+                          std::min(data.dim_outer(), gpu::GridSizeMedium));
     launch_kernel(symmetrize_plane_kernel<double>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }
@@ -78,16 +84,18 @@ auto symmetrize_plane_gpu(const gpu::StreamType stream,
   {
     const int startIndex = 1;
     const int numIndices = data.dim_mid() / 2;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x, data.dim_outer());
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x,
+                          std::min(data.dim_outer(), gpu::GridSizeMedium));
     launch_kernel(symmetrize_plane_kernel<float>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }
   {
     const int startIndex = data.dim_mid() / 2 + 1;
     const int numIndices = data.dim_mid() - startIndex;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x, data.dim_outer());
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x,
+                          std::min(data.dim_outer(), gpu::GridSizeMedium));
     launch_kernel(symmetrize_plane_kernel<float>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }
@@ -98,9 +106,8 @@ __global__ static void symmetrize_stick_kernel(
     GPUArrayView1D<typename gpu::fft::ComplexType<T>::type> data, const int startIndex,
     const int numIndices) {
   assert(startIndex + numIndices <= data.size());
-  int idxInner = threadIdx.x + blockIdx.x * blockDim.x;
-  if (idxInner < numIndices) {
-    idxInner += startIndex;
+  for (int idxInner = threadIdx.x + blockIdx.x * blockDim.x + startIndex;
+       idxInner < numIndices + startIndex; idxInner += gridDim.x * blockDim.x) {
     auto value = data(idxInner);
     if (value.x != T(0) || value.y != T(0)) {
       value.y = -value.y;
@@ -116,16 +123,18 @@ auto symmetrize_stick_gpu(const gpu::StreamType stream,
   {
     const int startIndex = 1;
     const int numIndices = data.size() / 2;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x);
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid(std::min(
+        static_cast<int>((numIndices + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
     launch_kernel(symmetrize_stick_kernel<double>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }
   {
     const int startIndex = data.size() / 2 + 1;
     const int numIndices = data.size() - startIndex;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x);
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid(std::min(
+        static_cast<int>((numIndices + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
     launch_kernel(symmetrize_stick_kernel<double>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }
@@ -138,16 +147,18 @@ auto symmetrize_stick_gpu(const gpu::StreamType stream,
   {
     const int startIndex = 1;
     const int numIndices = data.size() / 2;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x);
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid(std::min(
+        static_cast<int>((numIndices + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
     launch_kernel(symmetrize_stick_kernel<float>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }
   {
     const int startIndex = data.size() / 2 + 1;
     const int numIndices = data.size() - startIndex;
-    const dim3 threadBlock(256);
-    const dim3 threadGrid((numIndices + threadBlock.x - 1) / threadBlock.x);
+    const dim3 threadBlock(gpu::BlockSizeSmall);
+    const dim3 threadGrid(std::min(
+        static_cast<int>((numIndices + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
     launch_kernel(symmetrize_stick_kernel<float>, threadGrid, threadBlock, 0, stream, data,
                   startIndex, numIndices);
   }

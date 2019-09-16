@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <cassert>
 #include "gpu_util/gpu_fft_api.hpp"
+#include "gpu_util/gpu_kernel_parameter.hpp"
 #include "gpu_util/gpu_runtime.hpp"
 #include "memory/array_view_utility.hpp"
 #include "memory/gpu_array_const_view.hpp"
@@ -65,9 +66,9 @@ auto local_transpose_backward(
   assert(indices.size() == freqZData.dim_outer());
   assert(indices.size() <= spaceDomain.dim_inner() * spaceDomain.dim_mid());
   assert(spaceDomain.dim_outer() == freqZData.dim_inner());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqZData.dim_outer() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_inner(), 2160));
+                        std::min(freqZData.dim_inner(), gpu::GridSizeMedium));
   launch_kernel(transpose_backward_kernel<typename gpu::fft::ComplexType<double>::type>, threadGrid,
                 threadBlock, 0, stream, indices, freqZData,
                 GPUArrayView2D<typename gpu::fft::ComplexType<double>::type>(
@@ -82,9 +83,9 @@ auto local_transpose_backward(
   assert(indices.size() == freqZData.dim_outer());
   assert(indices.size() <= spaceDomain.dim_inner() * spaceDomain.dim_mid());
   assert(spaceDomain.dim_outer() == freqZData.dim_inner());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqZData.dim_outer() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_inner(), 2160));
+                        std::min(freqZData.dim_inner(), gpu::GridSizeMedium));
   launch_kernel(transpose_backward_kernel<typename gpu::fft::ComplexType<float>::type>, threadGrid,
                 threadBlock, 0, stream, indices, freqZData,
                 GPUArrayView2D<typename gpu::fft::ComplexType<float>::type>(
@@ -117,9 +118,9 @@ auto local_transpose_backward(
   assert(indices.size() == freqZData.dim_outer());
   assert(indices.size() <= spaceDomain.dim_inner() * spaceDomain.dim_mid());
   assert(spaceDomain.dim_outer() == freqZData.dim_inner());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqZData.dim_inner() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_outer(), 2160));
+                        std::min(freqZData.dim_outer(), gpu::GridSizeMedium));
   launch_kernel(transpose_backward_kernel<typename gpu::fft::ComplexType<double>::type>, threadGrid,
                 threadBlock, 0, stream, indices, freqZData,
                 GPUArrayView2D<typename gpu::fft::ComplexType<double>::type>(
@@ -134,9 +135,9 @@ auto local_transpose_backward(
   assert(indices.size() == freqZData.dim_outer());
   assert(indices.size() <= spaceDomain.dim_inner() * spaceDomain.dim_mid());
   assert(spaceDomain.dim_outer() == freqZData.dim_inner());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqZData.dim_inner() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_outer(), 2160));
+                        std::min(freqZData.dim_outer(), gpu::GridSizeMedium));
   launch_kernel(transpose_backward_kernel<typename gpu::fft::ComplexType<float>::type>, threadGrid,
                 threadBlock, 0, stream, indices, freqZData,
                 GPUArrayView2D<typename gpu::fft::ComplexType<float>::type>(
@@ -170,9 +171,9 @@ auto local_transpose_forward(
   assert(indices.size() == freqZData.dim_outer());
   assert(indices.size() <= spaceDomain.dim_inner() * spaceDomain.dim_mid());
   assert(spaceDomain.dim_outer() == freqZData.dim_inner());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqZData.dim_inner() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_outer(), 2160));
+                        std::min(freqZData.dim_outer(), gpu::GridSizeMedium));
   launch_kernel(transpose_forward_kernel<typename gpu::fft::ComplexType<double>::type>, threadGrid,
                 threadBlock, 0, stream, indices,
                 GPUArrayConstView2D<typename gpu::fft::ComplexType<double>::type>(
@@ -188,9 +189,9 @@ auto local_transpose_forward(
   assert(indices.size() == freqZData.dim_outer());
   assert(indices.size() <= spaceDomain.dim_inner() * spaceDomain.dim_mid());
   assert(spaceDomain.dim_outer() == freqZData.dim_inner());
-  const dim3 threadBlock(128);
+  const dim3 threadBlock(gpu::BlockSizeSmall);
   const dim3 threadGrid((freqZData.dim_inner() + threadBlock.x - 1) / threadBlock.x,
-                        std::min(freqZData.dim_outer(), 2160));
+                        std::min(freqZData.dim_outer(), gpu::GridSizeMedium));
   launch_kernel(transpose_forward_kernel<typename gpu::fft::ComplexType<float>::type>, threadGrid,
                 threadBlock, 0, stream, indices,
                 GPUArrayConstView2D<typename gpu::fft::ComplexType<float>::type>(

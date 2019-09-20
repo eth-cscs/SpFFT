@@ -86,19 +86,33 @@ else()
 	set_target_properties(spfft PROPERTIES LINK_INTERFACE_LIBRARIES "${SPFFT_INTERFACE_LIBS}")
 endif()
 
+# set packge config names
+if(SPFFT_STATIC)
+	set(SPFFT_VERSION_FILE "SpFFTStaticConfigVersion.cmake")
+	set(SPFFT_CONFIG_FILE "SpFFTStaticConfig.cmake")
+	set(SPFFT_TARGETS_FILE "SpFFTStaticTargets.cmake")
+else()
+	set(SPFFT_VERSION_FILE "SpFFTSharedConfigVersion.cmake")
+	set(SPFFT_CONFIG_FILE "SpFFTSharedConfig.cmake")
+	set(SPFFT_TARGETS_FILE "SpFFTSharedTargets.cmake")
+endif()
+
 
 # generate cmake package
 include(CMakePackageConfigHelpers)
-message(STATUS "project: ${PROJECT_SOURCE_DIR}")
 write_basic_package_version_file(
-	"${PROJECT_BINARY_DIR}/SpFFTConfigVersion.cmake"
+	"${PROJECT_BINARY_DIR}/${SPFFT_VERSION_FILE}"
 	VERSION ${Upstream_VERSION}
 	COMPATIBILITY AnyNewerVersion
 )
-export(TARGETS spfft FILE ${PROJECT_BINARY_DIR}/SpFFTTargets.cmake)
+export(TARGETS spfft NAMESPACE SpFFT:: FILE ${PROJECT_BINARY_DIR}/${SPFFT_TARGETS_FILE})
+configure_file(${PROJECT_SOURCE_DIR}/cmake/${SPFFT_CONFIG_FILE}
+	"${PROJECT_BINARY_DIR}/${SPFFT_CONFIG_FILE}"
+	@ONLY
+)
 configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFTConfig.cmake
 	"${PROJECT_BINARY_DIR}/SpFFTConfig.cmake"
-	@ONLY
+	COPYONLY
 )
 
 # installation commands
@@ -106,11 +120,12 @@ if(SPFFT_INSTALL)
 	install(TARGETS spfft DESTINATION lib EXPORT SpFFTTargets)
 	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/spfft DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.f90")
 	install(FILES ${PROJECT_BINARY_DIR}/spfft/config.h DESTINATION include/spfft)
-	install(EXPORT SpFFTTargets DESTINATION lib/cmake/SpFFT)
+	install(EXPORT SpFFTTargets NAMESPACE SpFFT:: DESTINATION lib/cmake/SpFFT FILE ${SPFFT_TARGETS_FILE})
 	install(
 	  FILES
 		"${PROJECT_BINARY_DIR}/SpFFTConfig.cmake"
-		"${PROJECT_BINARY_DIR}/SpFFTConfigVersion.cmake"
+		"${PROJECT_BINARY_DIR}/${SPFFT_CONFIG_FILE}"
+		"${PROJECT_BINARY_DIR}/${SPFFT_VERSION_FILE}"
 	  DESTINATION
 	  lib/cmake/SpFFT
 	)

@@ -39,7 +39,6 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 	"OFF" "CUDA" "ROCM"
 	)
 
-
 # set preferred library type
 if (SPFFT_STATIC)
 	# prefer static over dynamic libraries with the find_library() command by changing the order
@@ -76,6 +75,17 @@ if(SPFFT_GPU_BACKEND)
 	endif()
 endif()
 mark_as_advanced(SPFFT_CUDA SPFFT_ROCM)
+
+# Hide symbols by default if tests are not build
+if(NOT SPFFT_BUILD_TESTS)
+	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+	set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+else()
+	# disable visibility macros if tests are build
+	list(APPEND SPFFT_DEFINITIONS -DSPFFT_STATIC_DEFINE)
+	set(CMAKE_CXX_VISIBILITY_PRESET default)
+	set(CMAKE_VISIBILITY_INLINES_HIDDEN 0)
+endif()
 
 # CUDA
 if(SPFFT_CUDA)

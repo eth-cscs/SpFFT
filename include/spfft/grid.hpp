@@ -41,12 +41,12 @@ namespace spfft {
 
 // Forward declaration for internal use
 template <typename T>
-class GridInternal;
+class SPFFT_NO_EXPORT GridInternal;
 
 /**
  * A Grid, which provides pre-allocated memory for double precision transforms.
  */
-class Grid {
+class SPFFT_EXPORT Grid {
 public:
   /**
    * Constructor for a local grid.

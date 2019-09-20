@@ -37,7 +37,7 @@ namespace spfft {
 /**
  * A generic error. Base type for all other exceptions.
  */
-class GenericError : public std::exception {
+class SPFFT_EXPORT GenericError : public std::exception {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Generic error"; }
 
@@ -47,7 +47,7 @@ public:
 /**
  * Overflow of integer values.
  */
-class OverflowError : public GenericError {
+class SPFFT_EXPORT OverflowError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Overflow error"; }
 
@@ -59,7 +59,7 @@ public:
 /**
  * Failed allocation on host.
  */
-class HostAllocationError : public GenericError {
+class SPFFT_EXPORT HostAllocationError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Host allocation error"; }
 
@@ -71,7 +71,7 @@ public:
 /**
  * Invalid parameter.
  */
-class InvalidParameterError : public GenericError {
+class SPFFT_EXPORT InvalidParameterError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Invalid parameter error"; }
 
@@ -83,7 +83,7 @@ public:
 /**
  * Duplicate indices given to transform. May indicate non-local z-coloumn between MPI ranks.
  */
-class DuplicateIndicesError : public GenericError {
+class SPFFT_EXPORT DuplicateIndicesError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Duplicate indices error"; }
 
@@ -95,7 +95,7 @@ public:
 /**
  * Invalid indices given to transform.
  */
-class InvalidIndicesError : public GenericError {
+class SPFFT_EXPORT InvalidIndicesError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Invalid indices error"; }
 
@@ -107,7 +107,7 @@ public:
 /**
  * Library not compiled with MPI support.
  */
-class MPISupportError : public GenericError {
+class SPFFT_EXPORT MPISupportError : public GenericError {
 public:
   auto what() const noexcept -> const char* override {
     return "SpFFT: Not compiled with MPI support error";
@@ -121,7 +121,7 @@ public:
 /**
  * MPI error. Only thrown if error code of MPI API calls is non-zero.
  */
-class MPIError : public GenericError {
+class SPFFT_EXPORT MPIError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: MPI error"; }
 
@@ -131,7 +131,7 @@ public:
 /**
  * Parameters differ between MPI ranks.
  */
-class MPIParameterMismatchError : public GenericError {
+class SPFFT_EXPORT MPIParameterMismatchError : public GenericError {
 public:
   auto what() const noexcept -> const char* override {
     return "SpFFT: Mismatched parameters between MPI ranks";
@@ -145,7 +145,7 @@ public:
 /**
  * Failed execution on host.
  */
-class HostExecutionError : public GenericError {
+class SPFFT_EXPORT HostExecutionError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Host execution error"; }
 
@@ -157,7 +157,7 @@ public:
 /**
  * FFTW library error.
  */
-class FFTWError : public GenericError {
+class SPFFT_EXPORT FFTWError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: FFTW error"; }
 
@@ -167,7 +167,7 @@ public:
 /**
  * Unknown internal error.
  */
-class InternalError : public GenericError {
+class SPFFT_EXPORT InternalError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Internal error"; }
 
@@ -180,7 +180,7 @@ public:
 /**
  * Generic GPU error. Base type for all GPU related exceptions.
  */
-class GPUError : public GenericError {
+class SPFFT_EXPORT GPUError : public GenericError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: GPU error"; }
 
@@ -190,7 +190,7 @@ public:
 /**
  * Library not compiled with GPU support.
  */
-class GPUSupportError : public GPUError {
+class SPFFT_EXPORT GPUSupportError : public GPUError {
 public:
   auto what() const noexcept -> const char* override {
     return "SpFFT: Not compiled with GPU support";
@@ -204,7 +204,7 @@ public:
 /**
  * Detected error on GPU from previous GPU API / kernel calls.
  */
-class GPUPrecedingError : public GPUError {
+class SPFFT_EXPORT GPUPrecedingError : public GPUError {
 public:
   auto what() const noexcept -> const char* override {
     return "SpFFT: Detected error from preceding gpu calls.";
@@ -218,7 +218,7 @@ public:
 /**
  * Failed allocation on GPU.
  */
-class GPUAllocationError : public GPUError {
+class SPFFT_EXPORT GPUAllocationError : public GPUError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: GPU allocation error"; }
 
@@ -230,7 +230,7 @@ public:
 /**
  * Failed to launch kernel on GPU.
  */
-class GPULaunchError : public GPUError {
+class SPFFT_EXPORT GPULaunchError : public GPUError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: GPU launch error"; }
 
@@ -242,7 +242,7 @@ public:
 /**
  * No GPU device detected.
  */
-class GPUNoDeviceError : public GPUError {
+class SPFFT_EXPORT GPUNoDeviceError : public GPUError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: no GPU available"; }
 
@@ -254,7 +254,7 @@ public:
 /**
  * Invalid value passed to GPU API.
  */
-class GPUInvalidValueError : public GPUError {
+class SPFFT_EXPORT GPUInvalidValueError : public GPUError {
 public:
   auto what() const noexcept -> const char* override {
     return "SpFFT: GPU call with invalid value";
@@ -268,7 +268,7 @@ public:
 /**
  * Invalid device pointer used.
  */
-class GPUInvalidDevicePointerError : public GPUError {
+class SPFFT_EXPORT GPUInvalidDevicePointerError : public GPUError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: Invalid GPU pointer"; }
 
@@ -280,7 +280,7 @@ public:
 /**
  * Failed to copy from / to GPU.
  */
-class GPUCopyError : public GPUError {
+class SPFFT_EXPORT GPUCopyError : public GPUError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: GPU Memory copy error"; }
 
@@ -292,7 +292,7 @@ public:
 /**
  * Failure in GPU FFT library call.
  */
-class GPUFFTError : public GPUError {
+class SPFFT_EXPORT GPUFFTError : public GPUError {
 public:
   auto what() const noexcept -> const char* override { return "SpFFT: GPU FFT error"; }
 

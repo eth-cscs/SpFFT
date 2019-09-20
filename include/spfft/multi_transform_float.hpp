@@ -46,9 +46,9 @@ namespace spfft {
  * @throw GenericError SpFFT error. Can be a derived type.
  * @throw std::exception Error from standard library calls. Can be a derived type.
  */
-void multi_transform_forward(int numTransforms, TransformFloat* transforms,
-                             SpfftProcessingUnitType* inputLocations, float** outputPointers,
-                             SpfftScalingType* scalingTypes);
+SPFFT_EXPORT void multi_transform_forward(int numTransforms, TransformFloat* transforms,
+                                          SpfftProcessingUnitType* inputLocations,
+                                          float** outputPointers, SpfftScalingType* scalingTypes);
 
 /**
  * Execute multiple independent backward transforms at once by internal pipelining.
@@ -60,8 +60,9 @@ void multi_transform_forward(int numTransforms, TransformFloat* transforms,
  * @throw GenericError SpFFT error. Can be a derived type.
  * @throw std::exception Error from standard library calls. Can be a derived type.
  */
-void multi_transform_backward(int numTransforms, TransformFloat* transforms, float** inputPointers,
-                              SpfftProcessingUnitType* outputLocations);
+SPFFT_EXPORT void multi_transform_backward(int numTransforms, TransformFloat* transforms,
+                                           float** inputPointers,
+                                           SpfftProcessingUnitType* outputLocations);
 #endif
 
 }  // namespace spfft

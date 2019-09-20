@@ -39,25 +39,23 @@
 namespace spfft {
 
 template <typename T>
-class TransformInternal;
-
-class Grid;
+class SPFFT_NO_EXPORT TransformInternal;
 
 template <typename TransformType>
-class MultiTransformInternal;
+class SPFFT_NO_EXPORT MultiTransformInternal;
 
 template <typename T>
-class GridInternal;
+class SPFFT_NO_EXPORT GridInternal;
 
 #ifdef SPFFT_SINGLE_PRECISION
 
-class GridFloat;
+class SPFFT_EXPORT GridFloat;
 
 /**
  * A transform in single precision with fixed dimensions. Shares memory with other transform created
  * from the same Grid object.
  */
-class TransformFloat {
+class SPFFT_EXPORT TransformFloat {
 public:
   using ValueType = float;
   /**
@@ -218,12 +216,13 @@ private:
   friend GridFloat;
   friend MultiTransformInternal<TransformFloat>;
 
-  TransformFloat(const std::shared_ptr<GridInternal<float>>& grid,
-                 SpfftProcessingUnitType executionUnit, SpfftTransformType transformType, int dimX,
-                 int dimY, int dimZ, int localZLength, int numLocalElements,
-                 SpfftIndexFormatType dataFormat, const int* indices);
+  SPFFT_NO_EXPORT TransformFloat(const std::shared_ptr<GridInternal<float>>& grid,
+                                 SpfftProcessingUnitType executionUnit,
+                                 SpfftTransformType transformType, int dimX, int dimY, int dimZ,
+                                 int localZLength, int numLocalElements,
+                                 SpfftIndexFormatType dataFormat, const int* indices);
 
-  explicit TransformFloat(std::shared_ptr<TransformInternal<float>> transform);
+  SPFFT_NO_EXPORT explicit TransformFloat(std::shared_ptr<TransformInternal<float>> transform);
 
   std::shared_ptr<TransformInternal<float>> transform_;
   /*! \endcond */

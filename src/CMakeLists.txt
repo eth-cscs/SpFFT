@@ -67,6 +67,14 @@ if(SPFFT_ROCM)
 	add_dependencies(spfft ${ROCM_TARGETS})
 endif()
 
+# generate export header to control symbol visibility
+include(GenerateExportHeader)
+generate_export_header(spfft)
+configure_file("${CMAKE_CURRENT_BINARY_DIR}/spfft_export.h"
+	"${PROJECT_BINARY_DIR}/spfft/spfft_export.h"
+	COPYONLY
+)
+
 target_compile_options(spfft PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
 target_include_directories(spfft PRIVATE ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 target_include_directories(spfft PRIVATE ${PROJECT_SOURCE_DIR}/include)
@@ -119,7 +127,7 @@ configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFTConfig.cmake
 if(SPFFT_INSTALL)
 	install(TARGETS spfft DESTINATION lib EXPORT SpFFTTargets)
 	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/spfft DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.f90")
-	install(FILES ${PROJECT_BINARY_DIR}/spfft/config.h DESTINATION include/spfft)
+	install(FILES ${PROJECT_BINARY_DIR}/spfft/config.h "${PROJECT_BINARY_DIR}/spfft/spfft_export.h" DESTINATION include/spfft)
 	install(EXPORT SpFFTTargets NAMESPACE SpFFT:: DESTINATION lib/cmake/SpFFT FILE ${SPFFT_TARGETS_FILE})
 	install(
 	  FILES

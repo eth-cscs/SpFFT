@@ -122,6 +122,14 @@ configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFTConfig.cmake
 	"${PROJECT_BINARY_DIR}/SpFFTConfig.cmake"
 	COPYONLY
 )
+configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFTConfigVersion.cmake
+	"${PROJECT_BINARY_DIR}/SpFFTConfigVersion.cmake"
+	COPYONLY
+)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFTTargets.cmake
+	"${PROJECT_BINARY_DIR}/SpFFTTargets.cmake"
+	COPYONLY
+)
 
 # installation commands
 if(SPFFT_INSTALL)
@@ -132,6 +140,8 @@ if(SPFFT_INSTALL)
 	install(
 	  FILES
 		"${PROJECT_BINARY_DIR}/SpFFTConfig.cmake"
+		"${PROJECT_BINARY_DIR}/SpFFTTargets.cmake"
+		"${PROJECT_BINARY_DIR}/SpFFTConfigVersion.cmake"
 		"${PROJECT_BINARY_DIR}/${SPFFT_CONFIG_FILE}"
 		"${PROJECT_BINARY_DIR}/${SPFFT_VERSION_FILE}"
 	  DESTINATION

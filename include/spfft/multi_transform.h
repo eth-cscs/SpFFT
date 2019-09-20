@@ -46,9 +46,10 @@ extern "C" {
  * @param[in] scalingTypes Scaling types for each transform.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_multi_transform_forward(int numTransforms, SpfftTransform* transforms,
-                                         SpfftProcessingUnitType* inputLocations,
-                                         double** outputPointers, SpfftScalingType* scalingTypes);
+SPFFT_EXPORT SpfftError spfft_multi_transform_forward(int numTransforms, SpfftTransform* transforms,
+                                                      SpfftProcessingUnitType* inputLocations,
+                                                      double** outputPointers,
+                                                      SpfftScalingType* scalingTypes);
 
 /**
  * Execute multiple independent backward transforms at once by internal pipelining.
@@ -59,9 +60,10 @@ SpfftError spfft_multi_transform_forward(int numTransforms, SpfftTransform* tran
  * @param[in] outputLocations Output locations for each transform.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_multi_transform_backward(int numTransforms, SpfftTransform* transforms,
-                                          double** inputPointers,
-                                          SpfftProcessingUnitType* outputLocations);
+SPFFT_EXPORT SpfftError spfft_multi_transform_backward(int numTransforms,
+                                                       SpfftTransform* transforms,
+                                                       double** inputPointers,
+                                                       SpfftProcessingUnitType* outputLocations);
 
 #ifdef __cplusplus
 }

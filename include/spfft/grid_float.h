@@ -58,9 +58,10 @@ typedef void* SpfftFloatGrid;
  * allowed to use. If smaller than 1, the OpenMP default value is used.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDimX, int maxDimY, int maxDimZ,
-                                   int maxNumLocalZColumns, SpfftProcessingUnitType processingUnit,
-                                   int maxNumThreads);
+SPFFT_EXPORT SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDimX, int maxDimY,
+                                                int maxDimZ, int maxNumLocalZColumns,
+                                                SpfftProcessingUnitType processingUnit,
+                                                int maxNumThreads);
 
 #ifdef SPFFT_MPI
 /**
@@ -82,12 +83,10 @@ SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDimX, int maxDim
  * SPFFT_EXCH_DEFAULT, SPFFT_EXCH_BUFFERED, SPFFT_EXCH_COMPACT_BUFFERED and SPFFT_EXCH_UNBUFFERED.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_create_distributed(SpfftFloatGrid* grid, int maxDimX, int maxDimY,
-                                               int maxDimZ, int maxNumLocalZColumns,
-                                               int maxLocalZLength,
-                                               SpfftProcessingUnitType processingUnit,
-                                               int maxNumThreads, MPI_Comm comm,
-                                               SpfftExchangeType exchangeType);
+SPFFT_EXPORT SpfftError spfft_float_grid_create_distributed(
+    SpfftFloatGrid* grid, int maxDimX, int maxDimY, int maxDimZ, int maxNumLocalZColumns,
+    int maxLocalZLength, SpfftProcessingUnitType processingUnit, int maxNumThreads, MPI_Comm comm,
+    SpfftExchangeType exchangeType);
 #endif
 
 /**
@@ -100,7 +99,7 @@ SpfftError spfft_float_grid_create_distributed(SpfftFloatGrid* grid, int maxDimX
  * @param[in] grid Handle to grid.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_destroy(SpfftFloatGrid grid);
+SPFFT_EXPORT SpfftError spfft_float_grid_destroy(SpfftFloatGrid grid);
 
 /**
  * Access a grid parameter.
@@ -108,7 +107,7 @@ SpfftError spfft_float_grid_destroy(SpfftFloatGrid grid);
  * @param[out] dimX Maximum dimension in x.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_max_dim_x(SpfftFloatGrid grid, int* dimX);
+SPFFT_EXPORT SpfftError spfft_float_grid_max_dim_x(SpfftFloatGrid grid, int* dimX);
 
 /**
  * Access a grid parameter.
@@ -116,7 +115,7 @@ SpfftError spfft_float_grid_max_dim_x(SpfftFloatGrid grid, int* dimX);
  * @param[out] dimY Maximum dimension in y.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_max_dim_y(SpfftFloatGrid grid, int* dimY);
+SPFFT_EXPORT SpfftError spfft_float_grid_max_dim_y(SpfftFloatGrid grid, int* dimY);
 
 /**
  * Access a grid parameter.
@@ -124,7 +123,7 @@ SpfftError spfft_float_grid_max_dim_y(SpfftFloatGrid grid, int* dimY);
  * @param[out] dimZ Maximum dimension in z.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_max_dim_z(SpfftFloatGrid grid, int* dimZ);
+SPFFT_EXPORT SpfftError spfft_float_grid_max_dim_z(SpfftFloatGrid grid, int* dimZ);
 
 /**
  * Access a grid parameter.
@@ -133,7 +132,8 @@ SpfftError spfft_float_grid_max_dim_z(SpfftFloatGrid grid, int* dimZ);
  * rank.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_max_num_local_z_columns(SpfftFloatGrid grid, int* maxNumLocalZColumns);
+SPFFT_EXPORT SpfftError spfft_float_grid_max_num_local_z_columns(SpfftFloatGrid grid,
+                                                                 int* maxNumLocalZColumns);
 
 /**
  * Access a grid parameter.
@@ -142,7 +142,8 @@ SpfftError spfft_float_grid_max_num_local_z_columns(SpfftFloatGrid grid, int* ma
  * rank.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_max_local_z_length(SpfftFloatGrid grid, int* maxLocalZLength);
+SPFFT_EXPORT SpfftError spfft_float_grid_max_local_z_length(SpfftFloatGrid grid,
+                                                            int* maxLocalZLength);
 
 /**
  * Access a grid parameter.
@@ -151,8 +152,8 @@ SpfftError spfft_float_grid_max_local_z_length(SpfftFloatGrid grid, int* maxLoca
  * or SPFFT_PU_GPU or SPFFT_PU_HOST | SPFFT_PU_GPU.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_processing_unit(SpfftFloatGrid grid,
-                                            SpfftProcessingUnitType* processingUnit);
+SPFFT_EXPORT SpfftError spfft_float_grid_processing_unit(SpfftFloatGrid grid,
+                                                         SpfftProcessingUnitType* processingUnit);
 
 /**
  * Access a grid parameter.
@@ -160,7 +161,7 @@ SpfftError spfft_float_grid_processing_unit(SpfftFloatGrid grid,
  * @param[out] deviceId The GPU device id used. Returns always 0, if no GPU support is enabled.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_device_id(SpfftFloatGrid grid, int* deviceId);
+SPFFT_EXPORT SpfftError spfft_float_grid_device_id(SpfftFloatGrid grid, int* deviceId);
 
 /**
  * Access a grid parameter.
@@ -169,7 +170,7 @@ SpfftError spfft_float_grid_device_id(SpfftFloatGrid grid, int* deviceId);
  * be less than the maximum given to the constructor. Always 1, if not compiled with OpenMP support.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_num_threads(SpfftFloatGrid grid, int* numThreads);
+SPFFT_EXPORT SpfftError spfft_float_grid_num_threads(SpfftFloatGrid grid, int* numThreads);
 
 #ifdef SPFFT_MPI
 /**
@@ -178,7 +179,7 @@ SpfftError spfft_float_grid_num_threads(SpfftFloatGrid grid, int* numThreads);
  * @param[out] comm The internal MPI communicator.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_grid_communicator(SpfftFloatGrid grid, MPI_Comm* comm);
+SPFFT_EXPORT SpfftError spfft_float_grid_communicator(SpfftFloatGrid grid, MPI_Comm* comm);
 #endif
 
 #ifdef __cplusplus

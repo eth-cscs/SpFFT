@@ -119,6 +119,22 @@ SpfftError spfft_float_grid_create_distributed(SpfftFloatGrid* grid, int maxDimX
   }
   return SpfftError::SPFFT_SUCCESS;
 }
+
+SPFFT_EXPORT SpfftError spfft_float_grid_create_distributed_fortran(
+    SpfftFloatGrid* grid, int maxDimX, int maxDimY, int maxDimZ, int maxNumLocalZSticks,
+    int maxLocalZLength, SpfftProcessingUnitType processingUnit, int maxNumThreads, int commFortran,
+    SpfftExchangeType exchangeType) {
+  try {
+    MPI_Comm comm = MPI_Comm_f2c(commFortran);
+    *grid = new spfft::GridFloat(maxDimX, maxDimY, maxDimZ, maxNumLocalZSticks, maxLocalZLength,
+                                 processingUnit, maxNumThreads, comm, exchangeType);
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
 #endif
 
 SpfftError spfft_float_grid_destroy(SpfftFloatGrid grid) {
@@ -264,7 +280,8 @@ SpfftError spfft_float_grid_communicator(SpfftFloatGrid grid, MPI_Comm* comm) {
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_grid_communicator_fortran(SpfftFloatGrid grid, int* commFortran) {
+SPFFT_EXPORT SpfftError spfft_float_grid_communicator_fortran(SpfftFloatGrid grid,
+                                                              int* commFortran) {
   if (!grid) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }

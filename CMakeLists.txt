@@ -39,7 +39,6 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 	"OFF" "CUDA" "ROCM"
 	)
 
-
 # set preferred library type
 if (SPFFT_STATIC)
 	# prefer static over dynamic libraries with the find_library() command by changing the order
@@ -59,6 +58,7 @@ set(SPFFT_EXTERNAL_COMPILE_OPTIONS)
 set(SPFFT_LIBS)
 set(SPFFT_EXTERNAL_LIBS)
 set(SPFFT_INTERFACE_LIBS)
+set(SPFFT_INTERFACE_INCLUDE_DIRS)
 set(SPFFT_INCLUDE_DIRS)
 set(SPFFT_EXTERNAL_INCLUDE_DIRS)
 
@@ -75,6 +75,17 @@ if(SPFFT_GPU_BACKEND)
 	endif()
 endif()
 mark_as_advanced(SPFFT_CUDA SPFFT_ROCM)
+
+# Hide symbols by default if tests are not build
+if(NOT SPFFT_BUILD_TESTS)
+	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+	set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+else()
+	# disable visibility macros if tests are build
+	list(APPEND SPFFT_DEFINITIONS -DSPFFT_STATIC_DEFINE)
+	set(CMAKE_CXX_VISIBILITY_PRESET default)
+	set(CMAKE_VISIBILITY_INLINES_HIDDEN 0)
+endif()
 
 # CUDA
 if(SPFFT_CUDA)
@@ -98,13 +109,17 @@ endif()
 if(SPFFT_MPI)
 	find_package(MPI REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS MPI::MPI_CXX)
+	# always add MPI to interface libraries, because mpi.h is included in public header files
 	list(APPEND SPFFT_INTERFACE_LIBS ${MPI_CXX_LIBRARIES})
+	list(APPEND SPFFT_INTERFACE_INCLUDE_DIRS ${MPI_CXX_INCLUDE_DIRS})
 endif()
 
 if(SPFFT_OMP)
 	find_package(OpenMP REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS OpenMP::OpenMP_CXX)
-	list(APPEND SPFFT_INTERFACE_LIBS ${OpenMP_CXX_LIBRARIES})
+	if(SPFFT_STATIC)
+		list(APPEND SPFFT_INTERFACE_LIBS ${OpenMP_CXX_LIBRARIES})
+	endif()
 endif()
 
 if(SPFFT_GPU_DIRECT)
@@ -117,11 +132,15 @@ endif()
 find_package(MKLSequential)
 if(MKLSequential_FOUND)
 	list(APPEND SPFFT_EXTERNAL_LIBS MKL::Sequential)
-	list(APPEND SPFFT_INTERFACE_LIBS ${MKLSequential_LIBRARIES})
+	if(SPFFT_STATIC)
+		list(APPEND SPFFT_INTERFACE_LIBS ${MKLSequential_LIBRARIES})
+	endif()
 else()
 	find_package(FFTW REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS FFTW::FFTW)
-	list(APPEND SPFFT_INTERFACE_LIBS ${FFTW_LIBRARIES})
+	if(SPFFT_STATIC)
+		list(APPEND SPFFT_INTERFACE_LIBS ${FFTW_LIBRARIES})
+	endif()
 	if(SPFFT_SINGLE_PRECISION AND NOT FFTW_FLOAT_FOUND)
 		message(FATAL_ERROR "FFTW library with single precision support NOT FOUND. Disable SPFFT_SINGLE_PRECISION or provide path to library.")
 	endif()

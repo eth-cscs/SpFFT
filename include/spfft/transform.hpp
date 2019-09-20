@@ -39,21 +39,21 @@
 namespace spfft {
 
 template <typename T>
-class TransformInternal;
+class SPFFT_NO_EXPORT TransformInternal;
 
-class Grid;
+class SPFFT_EXPORT Grid;
 
 template <typename TransformType>
-class MultiTransformInternal;
+class SPFFT_NO_EXPORT MultiTransformInternal;
 
 template <typename T>
-class GridInternal;
+class SPFFT_NO_EXPORT GridInternal;
 
 /**
  * A transform in double precision with fixed dimensions. Shares memory with other transform created
  * from the same Grid object.
  */
-class Transform {
+class SPFFT_EXPORT Transform {
 public:
   using ValueType = double;
 
@@ -215,12 +215,12 @@ private:
   friend Grid;
   friend MultiTransformInternal<Transform>;
 
-  Transform(const std::shared_ptr<GridInternal<double>>& grid,
-            SpfftProcessingUnitType executionUnit, SpfftTransformType transformType, int dimX,
-            int dimY, int dimZ, int localZLength, int numLocalElements,
-            SpfftIndexFormatType dataFormat, const int* indices);
+  SPFFT_NO_EXPORT Transform(const std::shared_ptr<GridInternal<double>>& grid,
+                            SpfftProcessingUnitType executionUnit, SpfftTransformType transformType,
+                            int dimX, int dimY, int dimZ, int localZLength, int numLocalElements,
+                            SpfftIndexFormatType dataFormat, const int* indices);
 
-  explicit Transform(std::shared_ptr<TransformInternal<double>> transform);
+  SPFFT_NO_EXPORT explicit Transform(std::shared_ptr<TransformInternal<double>> transform);
 
   std::shared_ptr<TransformInternal<double>> transform_;
   /*! \endcond */

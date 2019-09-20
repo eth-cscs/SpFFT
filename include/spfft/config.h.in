@@ -41,4 +41,6 @@
 #cmakedefine SPFFT_SINGLE_PRECISION
 #cmakedefine SPFFT_GPU_DIRECT
 
+#include "spfft/spfft_export.h"
+
 #endif

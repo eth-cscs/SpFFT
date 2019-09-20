@@ -64,11 +64,10 @@ typedef void* SpfftFloatTransform;
  * @param[in] indices Pointer to the frequency indices. Posive and negative indexing is supported.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_create(SpfftFloatTransform* transform, SpfftFloatGrid grid,
-                                        SpfftProcessingUnitType processingUnit,
-                                        SpfftTransformType transformType, int dimX, int dimY,
-                                        int dimZ, int localZLength, int numLocalElements,
-                                        SpfftIndexFormatType indexFormat, const int* indices);
+SPFFT_EXPORT SpfftError spfft_float_transform_create(
+    SpfftFloatTransform* transform, SpfftFloatGrid grid, SpfftProcessingUnitType processingUnit,
+    SpfftTransformType transformType, int dimX, int dimY, int dimZ, int localZLength,
+    int numLocalElements, SpfftIndexFormatType indexFormat, const int* indices);
 
 /**
  * Destroy a transform.
@@ -76,7 +75,7 @@ SpfftError spfft_float_transform_create(SpfftFloatTransform* transform, SpfftFlo
  * @param[in] transform Handle to the transform.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_destroy(SpfftFloatTransform transform);
+SPFFT_EXPORT SpfftError spfft_float_transform_destroy(SpfftFloatTransform transform);
 
 /**
  * Clone a transform.
@@ -86,8 +85,8 @@ SpfftError spfft_float_transform_destroy(SpfftFloatTransform transform);
  * grid.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_clone(SpfftFloatTransform transform,
-                                       SpfftFloatTransform* newTransform);
+SPFFT_EXPORT SpfftError spfft_float_transform_clone(SpfftFloatTransform transform,
+                                                    SpfftFloatTransform* newTransform);
 
 /**
  * Execute a forward transform from space domain to frequency domain.
@@ -101,9 +100,9 @@ SpfftError spfft_float_transform_clone(SpfftFloatTransform transform,
  * SPFFT_FULL_SCALING to scale by factor 1 / (dim_x() * dim_y() * dim_z()).
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_forward(SpfftFloatTransform transform,
-                                         SpfftProcessingUnitType inputLocation, float* output,
-                                         SpfftScalingType scaling);
+SPFFT_EXPORT SpfftError spfft_float_transform_forward(SpfftFloatTransform transform,
+                                                      SpfftProcessingUnitType inputLocation,
+                                                      float* output, SpfftScalingType scaling);
 
 /**
  * Execute a backward transform from frequency domain to space domain.
@@ -115,8 +114,9 @@ SpfftError spfft_float_transform_forward(SpfftFloatTransform transform,
  * SPFFT_PU_GPU (if GPU is set as execution unit).
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_backward(SpfftFloatTransform transform, const float* input,
-                                          SpfftProcessingUnitType outputLocation);
+SPFFT_EXPORT SpfftError spfft_float_transform_backward(SpfftFloatTransform transform,
+                                                       const float* input,
+                                                       SpfftProcessingUnitType outputLocation);
 /**
  * Provides access to the space domain data.
  *
@@ -129,9 +129,9 @@ SpfftError spfft_float_transform_backward(SpfftFloatTransform transform, const f
  * @throw std::exception Error from standard library calls. Can be a derived type.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_get_space_domain(SpfftFloatTransform transform,
-                                                  SpfftProcessingUnitType dataLocation,
-                                                  float** data);
+SPFFT_EXPORT SpfftError spfft_float_transform_get_space_domain(SpfftFloatTransform transform,
+                                                               SpfftProcessingUnitType dataLocation,
+                                                               float** data);
 
 /**
  * Access a transform parameter.
@@ -139,7 +139,7 @@ SpfftError spfft_float_transform_get_space_domain(SpfftFloatTransform transform,
  * @param[out] dimX Dimension in x.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_dim_x(SpfftFloatTransform transform, int* dimX);
+SPFFT_EXPORT SpfftError spfft_float_transform_dim_x(SpfftFloatTransform transform, int* dimX);
 
 /**
  * Access a transform parameter.
@@ -147,7 +147,7 @@ SpfftError spfft_float_transform_dim_x(SpfftFloatTransform transform, int* dimX)
  * @param[out] dimY Dimension in y.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_dim_y(SpfftFloatTransform transform, int* dimY);
+SPFFT_EXPORT SpfftError spfft_float_transform_dim_y(SpfftFloatTransform transform, int* dimY);
 
 /**
  * Access a transform parameter.
@@ -155,7 +155,7 @@ SpfftError spfft_float_transform_dim_y(SpfftFloatTransform transform, int* dimY)
  * @param[out] dimZ Dimension in z.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_dim_z(SpfftFloatTransform transform, int* dimZ);
+SPFFT_EXPORT SpfftError spfft_float_transform_dim_z(SpfftFloatTransform transform, int* dimZ);
 
 /**
  * Access a transform parameter.
@@ -163,14 +163,16 @@ SpfftError spfft_float_transform_dim_z(SpfftFloatTransform transform, int* dimZ)
  * @param[out] localZLength size in z of the slice in space domain on the local MPI rank.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_local_z_length(SpfftFloatTransform transform, int* localZLength);
+SPFFT_EXPORT SpfftError spfft_float_transform_local_z_length(SpfftFloatTransform transform,
+                                                             int* localZLength);
 
 /**
  * Access a transform parameter.
  * @param[in] transform Handle to the transform.
  * @param[out] size Number of elements in the space domain slice held by the local MPI rank.
  */
-SpfftError spfft_float_transform_local_slice_size(SpfftFloatTransform transform, int* size);
+SPFFT_EXPORT SpfftError spfft_float_transform_local_slice_size(SpfftFloatTransform transform,
+                                                               int* size);
 
 /**
  * Access a transform parameter.
@@ -179,8 +181,8 @@ SpfftError spfft_float_transform_local_slice_size(SpfftFloatTransform transform,
  * dim_z().
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform,
-                                             long long int* globalSize);
+SPFFT_EXPORT SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform,
+                                                          long long int* globalSize);
 
 /**
  * Access a transform parameter.
@@ -188,7 +190,8 @@ SpfftError spfft_float_transform_global_size(SpfftFloatTransform transform,
  * @param[out] offset Offset in z of the space domain slice held by the local MPI rank.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_local_z_offset(SpfftFloatTransform transform, int* offset);
+SPFFT_EXPORT SpfftError spfft_float_transform_local_z_offset(SpfftFloatTransform transform,
+                                                             int* offset);
 
 /**
  * Access a transform parameter.
@@ -196,8 +199,8 @@ SpfftError spfft_float_transform_local_z_offset(SpfftFloatTransform transform, i
  * @param[out] numLocalElements Number of local elements in frequency domain.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform,
-                                                    int* numLocalElements);
+SPFFT_EXPORT SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transform,
+                                                                 int* numLocalElements);
 
 /**
  * Access a transform parameter.
@@ -206,8 +209,8 @@ SpfftError spfft_float_transform_num_local_elements(SpfftFloatTransform transfor
  * * dim_z().
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform,
-                                                     long long int* numGlobalElements);
+SPFFT_EXPORT SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transform,
+                                                                  long long int* numGlobalElements);
 
 /**
  * Access a transform parameter.
@@ -215,7 +218,8 @@ SpfftError spfft_float_transform_num_global_elements(SpfftFloatTransform transfo
  * @param[out] deviceId The GPU device id used. Returns always 0, if no GPU support is enabled.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_device_id(SpfftFloatTransform transform, int* deviceId);
+SPFFT_EXPORT SpfftError spfft_float_transform_device_id(SpfftFloatTransform transform,
+                                                        int* deviceId);
 
 /**
  * Access a transform parameter.
@@ -224,7 +228,8 @@ SpfftError spfft_float_transform_device_id(SpfftFloatTransform transform, int* d
  * be less than the maximum given to the constructor. Always 1, if not compiled with OpenMP support.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_num_threads(SpfftFloatTransform transform, int* numThreads);
+SPFFT_EXPORT SpfftError spfft_float_transform_num_threads(SpfftFloatTransform transform,
+                                                          int* numThreads);
 
 #ifdef SPFFT_MPI
 /**
@@ -233,7 +238,8 @@ SpfftError spfft_float_transform_num_threads(SpfftFloatTransform transform, int*
  * @param[out] comm The internal MPI communicator.
  * @return Error code or SPFFT_SUCCESS.
  */
-SpfftError spfft_float_transform_communicator(SpfftFloatTransform transform, MPI_Comm* comm);
+SPFFT_EXPORT SpfftError spfft_float_transform_communicator(SpfftFloatTransform transform,
+                                                           MPI_Comm* comm);
 #endif
 
 #ifdef __cplusplus

@@ -383,7 +383,7 @@ SpfftError spfft_transform_communicator(SpfftTransform transform, MPI_Comm* comm
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_transform_communicator_fortran(SpfftGrid grid, int* commFortran) {
+SPFFT_EXPORT SpfftError spfft_transform_communicator_fortran(SpfftGrid grid, int* commFortran) {
   if (!grid) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }

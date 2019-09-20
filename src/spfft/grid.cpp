@@ -116,12 +116,10 @@ SpfftError spfft_grid_create_distributed(SpfftGrid* grid, int maxDimX, int maxDi
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_grid_create_distributed_fortran(SpfftGrid* grid, int maxDimX, int maxDimY,
-                                                 int maxDimZ, int maxNumLocalZSticks,
-                                                 int maxLocalZLength,
-                                                 SpfftProcessingUnitType processingUnit,
-                                                 int maxNumThreads, int commFortran,
-                                                 SpfftExchangeType exchangeType) {
+SPFFT_EXPORT SpfftError spfft_grid_create_distributed_fortran(
+    SpfftGrid* grid, int maxDimX, int maxDimY, int maxDimZ, int maxNumLocalZSticks,
+    int maxLocalZLength, SpfftProcessingUnitType processingUnit, int maxNumThreads, int commFortran,
+    SpfftExchangeType exchangeType) {
   try {
     MPI_Comm comm = MPI_Comm_f2c(commFortran);
     *grid = new spfft::Grid(maxDimX, maxDimY, maxDimZ, maxNumLocalZSticks, maxLocalZLength,
@@ -277,7 +275,7 @@ SpfftError spfft_grid_communicator(SpfftGrid grid, MPI_Comm* comm) {
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_grid_communicator_fortran(SpfftGrid grid, int* commFortran) {
+SPFFT_EXPORT SpfftError spfft_grid_communicator_fortran(SpfftGrid grid, int* commFortran) {
   if (!grid) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }

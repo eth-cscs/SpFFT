@@ -385,8 +385,8 @@ SpfftError spfft_float_transform_communicator(SpfftFloatTransform transform, MPI
   return SpfftError::SPFFT_SUCCESS;
 }
 
-SpfftError spfft_float_transform_communicator_fortran(SpfftFloatTransform transform,
-                                                      int* commFortran) {
+SPFFT_EXPORT SpfftError spfft_float_transform_communicator_fortran(SpfftFloatTransform transform,
+                                                                   int* commFortran) {
   if (!transform) {
     return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
   }

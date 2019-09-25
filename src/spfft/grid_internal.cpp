@@ -122,9 +122,9 @@ GridInternal<T>::GridInternal(int maxDimX, int maxDimY, int maxDimZ, int maxNumL
       exchangeType_(exchangeType) {
   // input check
   {
-    int intialized = 0;
-    MPI_Initialized(&intialized);
-    if (!intialized) {
+    int initialized = 0;
+    MPI_Initialized(&initialized);
+    if (!initialized) {
       throw MPIError();
     }
   }

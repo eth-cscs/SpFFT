@@ -55,7 +55,11 @@ public:
       // take ownership and call MPI_Type_free upon release
       type_ = std::shared_ptr<MPI_Datatype>(new MPI_Datatype(mpiType), [](MPI_Datatype* ptr) {
         assert(*ptr != MPI_DATATYPE_NULL);
-        MPI_Type_free(ptr);
+        int finalized = 0;
+        MPI_Finalized(&finalized);
+        if (!finalized) {
+          MPI_Type_free(ptr);
+        }
         delete ptr;
       });
     } else {

@@ -50,7 +50,11 @@ public:
     mpi_check_status(MPI_Comm_dup(comm, &newComm));
 
     comm_ = std::shared_ptr<MPI_Comm>(new MPI_Comm(newComm), [](MPI_Comm* ptr) {
-      MPI_Comm_free(ptr);
+      int finalized = 0;
+      MPI_Finalized(&finalized);
+      if (!finalized) {
+        MPI_Comm_free(ptr);
+      }
       delete ptr;
     });
 

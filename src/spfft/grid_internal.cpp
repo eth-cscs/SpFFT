@@ -121,6 +121,13 @@ GridInternal<T>::GridInternal(int maxDimX, int maxDimY, int maxDimZ, int maxNumL
       comm_(comm),
       exchangeType_(exchangeType) {
   // input check
+  {
+    int intialized = 0;
+    MPI_Initialized(&intialized);
+    if (!intialized) {
+      throw MPIError();
+    }
+  }
   if (static_cast<long long int>(maxDimX) * static_cast<long long int>(maxDimY) *
           static_cast<long long int>(maxNumLocalXYPlanes) >
       std::numeric_limits<int>::max()) {

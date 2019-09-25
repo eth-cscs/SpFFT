@@ -50,9 +50,9 @@ __global__ static void transpose_backward_kernel(const GPUArrayConstView1D<int> 
                                                  GPUArrayView2D<T> spaceDomainFlat) {
   // const int z = threadIdx.x + blockIdx.x * blockDim.x;
   const int stickIndex = threadIdx.x + blockIdx.x * blockDim.x;
-  const auto stickXYIndex = indices(stickIndex);
 
   if (stickIndex < indices.size()) {
+    const auto stickXYIndex = indices(stickIndex);
     for (int z = blockIdx.y; z < freqZData.dim_inner(); z += gridDim.y) {
       spaceDomainFlat(z, stickXYIndex) = freqZData(stickIndex, z);
     }

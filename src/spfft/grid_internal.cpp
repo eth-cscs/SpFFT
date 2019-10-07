@@ -71,11 +71,6 @@ GridInternal<T>::GridInternal(int maxDimX, int maxDimY, int maxDimZ, int maxNumL
     numThreads_ = omp_get_max_threads();
   }
 
-  // store device id
-#if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
-  gpu::check_status(gpu::get_device(&deviceId_));
-#endif
-
   // allocate memory
   if (executionUnit & SpfftProcessingUnitType::SPFFT_PU_HOST) {
     arrayHost1_ = HostArray<ComplexType>(static_cast<SizeType>(maxDimX * maxDimY * maxDimZ));
@@ -83,6 +78,9 @@ GridInternal<T>::GridInternal(int maxDimX, int maxDimY, int maxDimZ, int maxNumL
   }
   if (executionUnit & SpfftProcessingUnitType::SPFFT_PU_GPU) {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
+    // store device id
+    gpu::check_status(gpu::get_device(&deviceId_));
+
     if (arrayHost1_.empty()) {
       // not already created for CPU, which always requires at least as much memory
       arrayHost1_ = HostArray<ComplexType>(static_cast<SizeType>(maxNumLocalZSticks * maxDimZ));
@@ -183,10 +181,6 @@ GridInternal<T>::GridInternal(int maxDimX, int maxDimY, int maxDimZ, int maxNumL
   // mark as local if comm size is 1
   if (comm_.size() == 1) isLocal_ = true;
 
-    // store device id
-#if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
-  gpu::check_status(gpu::get_device(&deviceId_));
-#endif
 
   int requiredSize = 0;
   switch (exchangeType) {
@@ -216,6 +210,9 @@ GridInternal<T>::GridInternal(int maxDimX, int maxDimY, int maxDimZ, int maxNumL
   // GPU
   if (executionUnit & SpfftProcessingUnitType::SPFFT_PU_GPU) {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
+    // store device id
+    gpu::check_status(gpu::get_device(&deviceId_));
+
     arrayHost1_.pin_memory();
     arrayHost2_.pin_memory();
     arrayGPU1_ = GPUArray<typename gpu::fft::ComplexType<ValueType>::type>(

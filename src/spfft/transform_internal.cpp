@@ -46,11 +46,6 @@ TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
                                         std::shared_ptr<GridInternal<T>> grid,
                                         std::shared_ptr<Parameters> param)
     : executionUnit_(executionUnit), grid_(std::move(grid)), param_(std::move(param)) {
-#if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
-  // set device for current thread
-  GPUDeviceGuard(grid_->device_id());
-#endif
-
   // ----------------------
   // Input Check
   // ----------------------
@@ -98,6 +93,9 @@ TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
     } else {
       // GPU
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
+      // set device for current thread
+      GPUDeviceGuard(grid_->device_id());
+
       execGPU_.reset(new ExecutionGPU<T>(grid_->num_threads(), param_, grid_->array_host_1(),
                                          grid_->array_host_2(), grid_->array_gpu_1(),
                                          grid_->array_gpu_2(), grid_->fft_work_buffer()));
@@ -120,6 +118,9 @@ TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
     } else {
       // GPU
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
+      // set device for current thread
+      GPUDeviceGuard(grid_->device_id());
+
       execGPU_.reset(new ExecutionGPU<T>(grid_->communicator(), grid_->exchange_type(),
                                          grid_->num_threads(), param_, grid_->array_host_1(),
                                          grid_->array_host_2(), grid_->array_gpu_1(),

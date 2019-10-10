@@ -1,11 +1,11 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-lib_dir=${prefix}/@CMAKE_INSTALL_LIBDIR@
-include_dir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
-external_packages=@SPFFT_EXTERNAL_PKG_PACKAGES@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+external_packages=
 
 Name: SpFFT
 Description: Sparse 3D FFT library with MPI, OpenMP, CUDA and ROCm support
 Version: @PROJECT_VERSION@
-Libs: -L${lib_dir} -lspfft
-Cflags: -I${include_dir}
-Requires.private: ${external_packages}
+Libs: -L${libdir} -lspfft
+Cflags: -I${includedir}
+Requires.private: @SPFFT_EXTERNAL_PKG_PACKAGES@

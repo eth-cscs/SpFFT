@@ -130,6 +130,10 @@ configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFTTargets.cmake
 	"${PROJECT_BINARY_DIR}/SpFFTTargets.cmake"
 	COPYONLY
 )
+configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFT.pc.in
+	"${PROJECT_BINARY_DIR}/SpFFT.pc"
+	@ONLY
+)
 
 # installation commands
 if(SPFFT_INSTALL)
@@ -147,4 +151,5 @@ if(SPFFT_INSTALL)
 	  DESTINATION
 	  lib/cmake/SpFFT
 	)
+	install(FILES ${PROJECT_BINARY_DIR}/SpFFT.pc DESTINATION lib/pkgconfig)
 endif()

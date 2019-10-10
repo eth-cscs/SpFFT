@@ -48,8 +48,9 @@ void to_json(nlohmann::json& j, const std::list<::spfft::timing::TimingResult>& 
 
 using namespace spfft;
 
-void run_benchmark(const int dimX, const int dimY, const int dimZ, const int numLocalZSticks,
-                   const int numLocalXYPlanes, const SpfftProcessingUnitType executionUnit,
+void run_benchmark(const SpfftTransformType transformType, const int dimX, const int dimY,
+                   const int dimZ, const int numLocalZSticks, const int numLocalXYPlanes,
+                   const SpfftProcessingUnitType executionUnit,
                    const SpfftProcessingUnitType targetUnit, const int numThreads,
                    const SpfftExchangeType exchangeType, const std::vector<int>& indices,
                    const int numRepeats, const int numTransforms, double** freqValuesPTR) {
@@ -59,8 +60,8 @@ void run_benchmark(const int dimX, const int dimY, const int dimZ, const int num
               MPI_COMM_WORLD, exchangeType);
 
     auto transform = grid.create_transform(
-        executionUnit, SpfftTransformType::SPFFT_TRANS_C2C, dimX, dimY, dimZ, numLocalXYPlanes,
-        indices.size() / 3, SpfftIndexFormatType::SPFFT_INDEX_TRIPLETS, indices.data());
+        executionUnit, transformType, dimX, dimY, dimZ, numLocalXYPlanes, indices.size() / 3,
+        SpfftIndexFormatType::SPFFT_INDEX_TRIPLETS, indices.data());
     transforms.emplace_back(std::move(transform));
   }
   std::vector<SpfftProcessingUnitType> targetUnits(numTransforms, targetUnit);
@@ -124,19 +125,25 @@ int main(int argc, char** argv) {
   // }
 
   int numRepeats = 1;
-  int gridDimSize = 4;
   int numTransforms = 1;
   std::string outputFileName;
   std::string exchName;
   std::string procName;
+  std::string transformTypeName = "c2c";
   double sparsity = 1.0;
 
+  std::vector<int> dimensions;
+
   CLI::App app{"fft test"};
-  app.add_option("-n", gridDimSize, "Size of symmetric fft grid in each dimension")->required();
+  app.add_option("-d", dimensions, "Size of symmetric fft grid in each dimension")->required()->expected(3);
   app.add_option("-r", numRepeats, "Number of repeats")->required();
   app.add_option("-o", outputFileName, "Output file name")->required();
-  app.add_option("-t", numTransforms, "Number of transforms")->default_val("1");
+  app.add_option("-m", numTransforms, "Multiple transform number")->default_val("1");
   app.add_option("-s", sparsity, "Sparsity");
+  app.add_set("-t", transformTypeName,
+              std::set<std::string>{"c2c", "r2c"},
+              "Transform type")
+      ->default_val("c2c");
   app.add_set("-e", exchName,
               std::set<std::string>{"all", "compact", "compactFloat", "buffered", "bufferedFloat",
                                     "unbuffered"},
@@ -146,9 +153,17 @@ int main(int argc, char** argv) {
       ->required();
   CLI11_PARSE(app, argc, argv);
 
-  int dimX = gridDimSize;
-  int dimY = gridDimSize;
-  int dimZ = gridDimSize;
+  auto transformType = SPFFT_TRANS_C2C;
+  if(transformTypeName == "r2c") {
+    transformType = SPFFT_TRANS_R2C;
+  }
+
+  const int dimX = dimensions[0];
+  const int dimY = dimensions[1];
+  const int dimZ = dimensions[2];
+  const int dimXFreq = transformType == SPFFT_TRANS_R2C ? dimX / 2 + 1 : dimX;
+  const int dimYFreq = transformType == SPFFT_TRANS_R2C ? dimY / 2 + 1 : dimY;
+  const int dimZFreq = transformType == SPFFT_TRANS_R2C ? dimZ / 2 + 1 : dimZ;
 
   const int numThreads = omp_get_max_threads();
 
@@ -163,8 +178,8 @@ int main(int argc, char** argv) {
     // create all global x-y index pairs
     std::vector<std::pair<int, int>> xyIndicesGlobal;
     xyIndicesGlobal.reserve(dimX * dimY);
-    for (int x = 0; x < static_cast<int>(dimX * sparsity); ++x) {
-      for (int y = 0; y < static_cast<int>(dimY); ++y) {
+    for (int x = 0; x < dimXFreq * sparsity; ++x) {
+      for (int y = 0; y < (x == 0 ? dimYFreq : dimY); ++y) {
         xyIndicesGlobal.emplace_back(x, y);
       }
     }
@@ -215,19 +230,21 @@ int main(int argc, char** argv) {
   if (comm.rank() == 0) {
     std::cout << "Num MPI ranks: " << comm.size() << std::endl;
     std::cout << "Grid size: " << dimX << ", " << dimY << ", " << dimZ << std::endl;
+    std::cout << "Transform type: " << transformTypeName << std::endl;
+    std::cout << "Sparsity: " << sparsity << std::endl;
     std::cout << "Proc: " << procName << std::endl;
   }
 
   if (exchName == "all") {
-    run_benchmark(dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit, targetUnit,
-                  numThreads, SpfftExchangeType::SPFFT_EXCH_BUFFERED, xyzIndices, numRepeats,
-                  numTransforms, freqValuesPointers.data());
-    run_benchmark(dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit, targetUnit,
-                  numThreads, SpfftExchangeType::SPFFT_EXCH_COMPACT_BUFFERED, xyzIndices,
+    run_benchmark(transformType, dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit,
+                  targetUnit, numThreads, SpfftExchangeType::SPFFT_EXCH_BUFFERED, xyzIndices,
                   numRepeats, numTransforms, freqValuesPointers.data());
-    run_benchmark(dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit, targetUnit,
-                  numThreads, SpfftExchangeType::SPFFT_EXCH_UNBUFFERED, xyzIndices, numRepeats,
-                  numTransforms, freqValuesPointers.data());
+    run_benchmark(transformType, dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit,
+                  targetUnit, numThreads, SpfftExchangeType::SPFFT_EXCH_COMPACT_BUFFERED,
+                  xyzIndices, numRepeats, numTransforms, freqValuesPointers.data());
+    run_benchmark(transformType, dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit,
+                  targetUnit, numThreads, SpfftExchangeType::SPFFT_EXCH_UNBUFFERED, xyzIndices,
+                  numRepeats, numTransforms, freqValuesPointers.data());
   } else {
     auto exchangeType = SpfftExchangeType::SPFFT_EXCH_DEFAULT;
     if (exchName == "compact") {
@@ -242,8 +259,8 @@ int main(int argc, char** argv) {
       exchangeType = SpfftExchangeType::SPFFT_EXCH_UNBUFFERED;
     }
 
-    run_benchmark(dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit, targetUnit,
-                  numThreads, exchangeType, xyzIndices, numRepeats, numTransforms,
+    run_benchmark(transformType, dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit,
+                  targetUnit, numThreads, exchangeType, xyzIndices, numRepeats, numTransforms,
                   freqValuesPointers.data());
   }
 
@@ -273,6 +290,7 @@ int main(int argc, char** argv) {
                          {"dim_z", dimZ},
                          {"exchange_type", exchName},
                          {"num_repeats", numRepeats},
+                         {"transform_type", transformTypeName},
                          {"time", time}};
       std::ofstream file(outputFileName);
       file << std::setw(2) << j;

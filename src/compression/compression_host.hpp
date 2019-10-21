@@ -44,8 +44,7 @@ namespace spfft {
 // Handles packing and unpacking of sparse frequency values for single or double precision on Host
 class CompressionHost {
 public:
-  CompressionHost(const int numThreads, const std::shared_ptr<Parameters>& param)
-      : numThreads_(numThreads), param_(param) {}
+  explicit CompressionHost(const std::shared_ptr<Parameters>& param) : param_(param) {}
 
   // Pack values into output buffer
   template <typename T>
@@ -93,7 +92,6 @@ public:
   }
 
 private:
-  int numThreads_;
   std::shared_ptr<Parameters> param_;
 };
 }  // namespace spfft

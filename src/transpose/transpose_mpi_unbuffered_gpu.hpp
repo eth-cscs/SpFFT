@@ -76,11 +76,11 @@ private:
   MPICommunicatorHandle comm_;
   MPIRequestHandle mpiRequest_;
 
-  HostArrayView3D<ComplexType> spaceDomainData_;
-  HostArrayView2D<ComplexType> freqDomainData_;
+  HostArrayView3D<ComplexType> spaceDomainBufferHost_;
+  HostArrayView2D<ComplexType> freqDomainBufferHost_;
 
-  GPUArrayView3D<typename gpu::fft::ComplexType<ValueType>::type> spaceDomainDataGPU_;
-  GPUArrayView2D<typename gpu::fft::ComplexType<ValueType>::type> freqDomainDataGPU_;
+  GPUArrayView3D<typename gpu::fft::ComplexType<ValueType>::type> spaceDomainBufferGPU_;
+  GPUArrayView2D<typename gpu::fft::ComplexType<ValueType>::type> freqDomainBufferGPU_;
 
   SizeType numLocalXYPlanes_;
   GPUStreamHandle spaceDomainStream_;

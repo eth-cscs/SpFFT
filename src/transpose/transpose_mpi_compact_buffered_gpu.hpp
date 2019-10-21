@@ -33,6 +33,7 @@
 #include "gpu_util/gpu_fft_api.hpp"
 #include "gpu_util/gpu_stream_handle.hpp"
 #include "memory/gpu_array.hpp"
+#include "memory/gpu_array_view.hpp"
 #include "memory/host_array_view.hpp"
 #include "parameters/parameters.hpp"
 #include "spfft/config.h"

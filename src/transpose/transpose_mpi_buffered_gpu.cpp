@@ -174,38 +174,28 @@ auto TransposeMPIBufferedGPU<T, U>::exchange_backward_start(const bool nonBlocki
 
   gpu::check_status(gpu::stream_synchronize(freqDomainStream_.get()));
 
+#ifdef SPFFT_GPU_DIRECT
+  auto sendBufferPtr = freqDomainBufferGPU_.data();
+  auto recvBufferPtr = spaceDomainBufferGPU_.data();
+#else
+  auto sendBufferPtr = freqDomainBufferHost_.data();
+  auto recvBufferPtr = spaceDomainBufferHost_.data();
+#endif
+
   if (nonBlockingExchange) {
-#ifdef SPFFT_GPU_DIRECT
-    // exchange data
-    mpi_check_status(MPI_Ialltoall(
-        freqDomainBufferGPU_.data(), param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-        mpiTypeHandle_.get(), spaceDomainBufferGPU_.data(),
-        param_->max_num_z_sticks() * param_->max_num_xy_planes(), mpiTypeHandle_.get(), comm_.get(),
-        mpiRequest_.get_and_activate()));
-#else
-    // exchange data
-    mpi_check_status(MPI_Ialltoall(
-        freqDomainBufferHost_.data(), param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-        mpiTypeHandle_.get(), spaceDomainBufferHost_.data(),
-        param_->max_num_z_sticks() * param_->max_num_xy_planes(), mpiTypeHandle_.get(), comm_.get(),
-        mpiRequest_.get_and_activate()));
-#endif
+    // start non-blocking exchange
+    mpi_check_status(
+        MPI_Ialltoall(sendBufferPtr, param_->max_num_z_sticks() * param_->max_num_xy_planes(),
+                      mpiTypeHandle_.get(), recvBufferPtr,
+                      param_->max_num_z_sticks() * param_->max_num_xy_planes(),
+                      mpiTypeHandle_.get(), comm_.get(), mpiRequest_.get_and_activate()));
   } else {
-#ifdef SPFFT_GPU_DIRECT
-    // exchange data
-    mpi_check_status(MPI_Alltoall(freqDomainBufferGPU_.data(),
+    // blocking exchange
+    mpi_check_status(MPI_Alltoall(sendBufferPtr,
                                   param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-                                  mpiTypeHandle_.get(), spaceDomainBufferGPU_.data(),
-                                  param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-                                  mpiTypeHandle_.get(), comm_.get()));
-#else
-    // exchange data
-    mpi_check_status(MPI_Alltoall(freqDomainBufferHost_.data(),
-                                  param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-                                  mpiTypeHandle_.get(), spaceDomainBufferHost_.data(),
+                                  mpiTypeHandle_.get(), recvBufferPtr,
                                   param_->max_num_z_sticks() * param_->max_num_xy_planes(),
                                   mpiTypeHandle_.get(), comm_.get()));
-#endif
   }
 }
 
@@ -247,38 +237,28 @@ auto TransposeMPIBufferedGPU<T, U>::exchange_forward_start(const bool nonBlockin
 
   gpu::check_status(gpu::stream_synchronize(spaceDomainStream_.get()));
 
+#ifdef SPFFT_GPU_DIRECT
+  auto sendBufferPtr = spaceDomainBufferGPU_.data();
+  auto recvBufferPtr = freqDomainBufferGPU_.data();
+#else
+  auto sendBufferPtr = spaceDomainBufferHost_.data();
+  auto recvBufferPtr = freqDomainBufferHost_.data();
+#endif
+
   if (nonBlockingExchange) {
-#ifdef SPFFT_GPU_DIRECT
-    // exchange data
-    mpi_check_status(MPI_Ialltoall(
-        spaceDomainBufferGPU_.data(), param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-        mpiTypeHandle_.get(), freqDomainBufferGPU_.data(),
-        param_->max_num_z_sticks() * param_->max_num_xy_planes(), mpiTypeHandle_.get(), comm_.get(),
-        mpiRequest_.get_and_activate()));
-#else
-    // exchange data
-    mpi_check_status(MPI_Ialltoall(
-        spaceDomainBufferHost_.data(), param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-        mpiTypeHandle_.get(), freqDomainBufferHost_.data(),
-        param_->max_num_z_sticks() * param_->max_num_xy_planes(), mpiTypeHandle_.get(), comm_.get(),
-        mpiRequest_.get_and_activate()));
-#endif
+    // start non-blocking exchange
+    mpi_check_status(
+        MPI_Ialltoall(sendBufferPtr, param_->max_num_z_sticks() * param_->max_num_xy_planes(),
+                      mpiTypeHandle_.get(), recvBufferPtr,
+                      param_->max_num_z_sticks() * param_->max_num_xy_planes(),
+                      mpiTypeHandle_.get(), comm_.get(), mpiRequest_.get_and_activate()));
   } else {
-#ifdef SPFFT_GPU_DIRECT
-    // exchange data
-    mpi_check_status(MPI_Alltoall(spaceDomainBufferGPU_.data(),
+    // blocking exchange
+    mpi_check_status(MPI_Alltoall(sendBufferPtr,
                                   param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-                                  mpiTypeHandle_.get(), freqDomainBufferGPU_.data(),
-                                  param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-                                  mpiTypeHandle_.get(), comm_.get()));
-#else
-    // exchange data
-    mpi_check_status(MPI_Alltoall(spaceDomainBufferHost_.data(),
-                                  param_->max_num_z_sticks() * param_->max_num_xy_planes(),
-                                  mpiTypeHandle_.get(), freqDomainBufferHost_.data(),
+                                  mpiTypeHandle_.get(), recvBufferPtr,
                                   param_->max_num_z_sticks() * param_->max_num_xy_planes(),
                                   mpiTypeHandle_.get(), comm_.get()));
-#endif
   }
 }
 

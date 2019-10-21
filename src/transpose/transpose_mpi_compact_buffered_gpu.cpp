@@ -198,33 +198,23 @@ auto TransposeMPICompactBufferedGPU<T, U>::exchange_backward_start(const bool no
 
   gpu::check_status(gpu::stream_synchronize(freqDomainStream_.get()));
 
-  // exchange data
+#ifdef SPFFT_GPU_DIRECT
+  auto sendBufferPtr = freqDomainBufferGPU_.data();
+  auto recvBufferPtr = spaceDomainBufferGPU_.data();
+#else
+  auto sendBufferPtr = freqDomainBufferHost_.data();
+  auto recvBufferPtr = spaceDomainBufferHost_.data();
+#endif
+
   if (nonBlockingExchange) {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(MPI_Ialltoallv(freqDomainBufferGPU_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), mpiTypeHandle_.get(),
-                                    spaceDomainBufferGPU_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get(),
-                                    mpiRequest_.get_and_activate()));
-#else
-    mpi_check_status(MPI_Ialltoallv(freqDomainBufferHost_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), mpiTypeHandle_.get(),
-                                    spaceDomainBufferHost_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get(),
-                                    mpiRequest_.get_and_activate()));
-#endif
+    mpi_check_status(MPI_Ialltoallv(
+        sendBufferPtr, freqDomainCount_.data(), freqDomainDispls_.data(), mpiTypeHandle_.get(),
+        recvBufferPtr, spaceDomainCount_.data(), spaceDomainDispls_.data(), mpiTypeHandle_.get(),
+        comm_.get(), mpiRequest_.get_and_activate()));
   } else {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(MPI_Alltoallv(freqDomainBufferGPU_.data(), freqDomainCount_.data(),
-                                   freqDomainDispls_.data(), mpiTypeHandle_.get(),
-                                   spaceDomainBufferGPU_.data(), spaceDomainCount_.data(),
+    mpi_check_status(MPI_Alltoallv(sendBufferPtr, freqDomainCount_.data(), freqDomainDispls_.data(),
+                                   mpiTypeHandle_.get(), recvBufferPtr, spaceDomainCount_.data(),
                                    spaceDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get()));
-#else
-    mpi_check_status(MPI_Alltoallv(freqDomainBufferHost_.data(), freqDomainCount_.data(),
-                                   freqDomainDispls_.data(), mpiTypeHandle_.get(),
-                                   spaceDomainBufferHost_.data(), spaceDomainCount_.data(),
-                                   spaceDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get()));
-#endif
   }
 }
 
@@ -268,33 +258,26 @@ auto TransposeMPICompactBufferedGPU<T, U>::exchange_forward_start(const bool non
 
   gpu::check_status(gpu::stream_synchronize(spaceDomainStream_.get()));
 
-  // exchange data
+#ifdef SPFFT_GPU_DIRECT
+  auto sendBufferPtr = spaceDomainBufferGPU_.data();
+  auto recvBufferPtr = freqDomainBufferGPU_.data();
+#else
+  auto sendBufferPtr = spaceDomainBufferHost_.data();
+  auto recvBufferPtr = freqDomainBufferHost_.data();
+#endif
+
   if (nonBlockingExchange) {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(MPI_Ialltoallv(spaceDomainBufferGPU_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), mpiTypeHandle_.get(),
-                                    freqDomainBufferGPU_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get(),
-                                    mpiRequest_.get_and_activate()));
-#else
-    mpi_check_status(MPI_Ialltoallv(spaceDomainBufferHost_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), mpiTypeHandle_.get(),
-                                    freqDomainBufferHost_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get(),
-                                    mpiRequest_.get_and_activate()));
-#endif
+    // start non-blocking exchange
+    mpi_check_status(MPI_Ialltoallv(
+        sendBufferPtr, spaceDomainCount_.data(), spaceDomainDispls_.data(), mpiTypeHandle_.get(),
+        recvBufferPtr, freqDomainCount_.data(), freqDomainDispls_.data(), mpiTypeHandle_.get(),
+        comm_.get(), mpiRequest_.get_and_activate()));
   } else {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(MPI_Alltoallv(spaceDomainBufferGPU_.data(), spaceDomainCount_.data(),
-                                   spaceDomainDispls_.data(), mpiTypeHandle_.get(),
-                                   freqDomainBufferGPU_.data(), freqDomainCount_.data(),
-                                   freqDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get()));
-#else
-    mpi_check_status(MPI_Alltoallv(spaceDomainBufferHost_.data(), spaceDomainCount_.data(),
-                                   spaceDomainDispls_.data(), mpiTypeHandle_.get(),
-                                   freqDomainBufferHost_.data(), freqDomainCount_.data(),
-                                   freqDomainDispls_.data(), mpiTypeHandle_.get(), comm_.get()));
-#endif
+    // blocking exchange
+    mpi_check_status(MPI_Alltoallv(sendBufferPtr, spaceDomainCount_.data(),
+                                   spaceDomainDispls_.data(), mpiTypeHandle_.get(), recvBufferPtr,
+                                   freqDomainCount_.data(), freqDomainDispls_.data(),
+                                   mpiTypeHandle_.get(), comm_.get()));
   }
 }
 

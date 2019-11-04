@@ -30,14 +30,15 @@
 #define SPFFT_TIMING_HPP
 
 #include "spfft/config.h"
+
 #ifdef SPFFT_TIMING
 #include <chrono>
 #include <string>
-#include "timing/host_timing.hpp"
+#include "timing/rt_graph.hpp"
 
 namespace spfft {
 namespace timing {
-extern HostTiming GlobalHostTimer;
+extern ::rt_graph::Timer GlobalTimer;
 }  // namespace timing
 }  // namespace spfft
 
@@ -45,27 +46,18 @@ extern HostTiming GlobalHostTimer;
 #define HOST_TIMING_MACRO_CONCAT(x, y) HOST_TIMING_CONCAT_IMPL(x, y)
 
 #define HOST_TIMING_SCOPED(identifier)                        \
-  ::spfft::timing::HostTimingScoped HOST_TIMING_MACRO_CONCAT( \
-      scopedHostTimerMacroGenerated, __COUNTER__)(identifier, ::spfft::timing::GlobalHostTimer);
+  ::rt_graph::ScopedTiming HOST_TIMING_MACRO_CONCAT( \
+      scopedHostTimerMacroGenerated, __COUNTER__)(identifier, ::spfft::timing::GlobalTimer);
 
-#define HOST_TIMING_START(identifier) ::spfft::timing::GlobalHostTimer.start(identifier);
+#define HOST_TIMING_START(identifier) ::spfft::timing::GlobalTimer.start(identifier);
 
-#define HOST_TIMING_STOP(identifier) ::spfft::timing::GlobalHostTimer.stop(identifier);
-
-#define HOST_TIMING_PRINT() ::spfft::timing::GlobalHostTimer.print_timings();
-
-#define HOST_TIMING_EXPORT_JSON_STRING() ::spfft::timing::GlobalHostTimer.export_json()
-
-#define HOST_TIMING_PROCESS_TIMINGS() ::spfft::timing::GlobalHostTimer.process_timings()
+#define HOST_TIMING_STOP(identifier) ::spfft::timing::GlobalTimer.stop(identifier);
 
 #else
 
 #define HOST_TIMING_START(identifier)
 #define HOST_TIMING_STOP(identifier)
 #define HOST_TIMING_SCOPED(identifier)
-#define HOST_TIMING_PRINT()
-#define HOST_TIMING_EXPORT_JSON_STRING() std::string();
-#define HOST_TIMING_PROCESS_TIMINGS()
 
 #endif
 

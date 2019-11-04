@@ -179,7 +179,10 @@ int main(int argc, char** argv) {
   fftw_destroy_plan(plan3DBackward);
   fftw_destroy_plan(plan3DForward);
 
-  HOST_TIMING_PRINT();
-
+  std::cout << ::spfft::timing::GlobalTimer.process().print(
+                   {::rt_graph::Stat::Count, ::rt_graph::Stat::Total, ::rt_graph::Stat::Percentage,
+                    ::rt_graph::Stat::Mean, ::rt_graph::Stat::Median, ::rt_graph::Stat::Min,
+                    ::rt_graph::Stat::Max})
+            << std::endl;
   return 0;
 }

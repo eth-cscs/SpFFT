@@ -35,16 +35,16 @@
 #include "memory/gpu_array.hpp"
 #endif
 
-namespace std {
-void to_json(nlohmann::json& j, const std::list<::spfft::timing::TimingResult>& resList) {
-  for (const auto& res : resList) {
-    if (res.subNodes.empty())
-      j[res.identifier] = {{"values", res.timings}};
-    else
-      j[res.identifier] = {{"values", res.timings}, {"sub-timings", res.subNodes}};
-  }
-}
-}  // namespace std
+// namespace std {
+// void to_json(nlohmann::json& j, const std::list<::spfft::timing::TimingResult>& resList) {
+//   for (const auto& res : resList) {
+//     if (res.subNodes.empty())
+//       j[res.identifier] = {{"values", res.timings}};
+//     else
+//       j[res.identifier] = {{"values", res.timings}, {"sub-timings", res.subNodes}};
+//   }
+// }
+// }  // namespace std
 
 using namespace spfft;
 
@@ -266,13 +266,19 @@ int main(int argc, char** argv) {
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (comm.rank() == 0) {
-    HOST_TIMING_PRINT();
+    auto timingResults = ::spfft::timing::GlobalTimer.process();
+    std::cout << timingResults.print({::rt_graph::Stat::Count, ::rt_graph::Stat::Total,
+                                      ::rt_graph::Stat::Percentage,
+                                      ::rt_graph::Stat::ParentPercentage, ::rt_graph::Stat::Median,
+                                      ::rt_graph::Stat::Min, ::rt_graph::Stat::Max})
+              << std::endl;
     if (!outputFileName.empty()) {
       nlohmann::json j;
       const std::time_t t = std::time(nullptr);
       std::string time(std::ctime(&t));
       time.pop_back();
-      j["timings"] = HOST_TIMING_PROCESS_TIMINGS();
+
+      j["timings"] =nlohmann::json::parse(timingResults.json());
 #ifdef SPFFT_GPU_DIRECT
       const bool gpuDirectEnabled = true;
 #else

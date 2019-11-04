@@ -64,28 +64,17 @@ if(SPFFT_BUILD_TESTS)
 
 	list(APPEND SPFFT_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/tests)
 
-# testing executables
-	add_executable(main programs/main.cpp)
-	target_link_libraries(main PRIVATE ${SPFFT_LIBS} ${SPFFT_EXTERNAL_LIBS})
-	target_compile_options(main PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
-	target_include_directories(main PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
-
-	if(SPFFT_MPI)
-		add_executable(main_mpi programs/main_mpi.cpp)
-		target_link_libraries(main_mpi PRIVATE ${SPFFT_LIBS} ${SPFFT_EXTERNAL_LIBS})
-		target_compile_options(main_mpi PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
-		target_include_directories(main_mpi PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
-
-		add_executable(benchmark programs/benchmark.cpp)
-		target_link_libraries(benchmark PRIVATE ${SPFFT_LIBS} ${SPFFT_EXTERNAL_LIBS})
-		target_compile_options(benchmark PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
-		target_include_directories(benchmark PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
-	endif()
+	# benchmark executable
+	add_executable(benchmark programs/benchmark.cpp)
+	target_link_libraries(benchmark PRIVATE ${SPFFT_LIBS} ${SPFFT_EXTERNAL_LIBS})
+	target_compile_options(benchmark PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
+	target_include_directories(benchmark PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 
 	# if(SPFFT_CUDA)
 	#     set_property(TARGET main PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 	# endif()
 
+	# test executables
 	add_executable(run_local_tests
 		run_local_tests.cpp
 		local_tests/test_host_array.cpp

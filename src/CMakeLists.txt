@@ -1,7 +1,7 @@
 set(SPFFT_SOURCE_FILES
 	memory/aligned_allocation.cpp
 	timing/timing.cpp
-	timing/host_timing.cpp
+	timing/rt_graph.cpp
 	parameters/parameters.cpp
 	execution/execution_host.cpp
 	spfft/transform.cpp

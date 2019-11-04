@@ -26,10 +26,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "timing/host_timing.hpp"
+#include "timing/timing.hpp"
 
 namespace spfft {
 namespace timing {
-HostTiming GlobalHostTimer;
+
+#ifdef SPFFT_TIMING
+::rt_graph::Timer GlobalTimer;
+#endif
+
 }  // namespace timing
 }  // namespace spfft

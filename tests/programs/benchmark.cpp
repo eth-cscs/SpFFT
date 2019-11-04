@@ -9,25 +9,13 @@
 #include <random>
 #include <thread>
 #include <vector>
-#include "CLI/CLI.hpp"
 #include "fft/transform_1d_host.hpp"
+#include "memory/array_view_utility.hpp"
 #include "memory/host_array.hpp"
 #include "spfft/config.h"
-
-#include "nlohmann/json.hpp"
+#include "spfft/spfft.hpp"
 #include "timing/timing.hpp"
-
-#include <mpi.h>
-#include "memory/array_view_utility.hpp"
-#include "mpi_util/mpi_communicator_handle.hpp"
-#include "mpi_util/mpi_init_handle.hpp"
 #include "util/omp_definitions.hpp"
-
-#include "spfft/grid.hpp"
-#include "spfft/multi_transform.hpp"
-#include "spfft/transform.hpp"
-
-#include <unistd.h>  // for MPI debugging
 
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
 #include "gpu_util/gpu_runtime_api.hpp"
@@ -35,16 +23,17 @@
 #include "memory/gpu_array.hpp"
 #endif
 
-// namespace std {
-// void to_json(nlohmann::json& j, const std::list<::spfft::timing::TimingResult>& resList) {
-//   for (const auto& res : resList) {
-//     if (res.subNodes.empty())
-//       j[res.identifier] = {{"values", res.timings}};
-//     else
-//       j[res.identifier] = {{"values", res.timings}, {"sub-timings", res.subNodes}};
-//   }
-// }
-// }  // namespace std
+#ifdef SPFFT_MPI
+#include <mpi.h>
+#include "mpi_util/mpi_communicator_handle.hpp"
+#include "mpi_util/mpi_init_handle.hpp"
+#endif
+
+// external dependencies
+#include "CLI/CLI.hpp"
+#include "nlohmann/json.hpp"
+
+// #include <unistd.h>  // for MPI debugging
 
 using namespace spfft;
 
@@ -56,8 +45,12 @@ void run_benchmark(const SpfftTransformType transformType, const int dimX, const
                    const int numRepeats, const int numTransforms, double** freqValuesPTR) {
   std::vector<Transform> transforms;
   for (int t = 0; t < numTransforms; ++t) {
+#ifdef SPFFT_MPI
     Grid grid(dimX, dimY, dimZ, numLocalZSticks, numLocalXYPlanes, executionUnit, numThreads,
               MPI_COMM_WORLD, exchangeType);
+#else
+    Grid grid(dimX, dimY, dimZ, numLocalZSticks, executionUnit, numThreads);
+#endif
 
     auto transform = grid.create_transform(
         executionUnit, transformType, dimX, dimY, dimZ, numLocalXYPlanes, indices.size() / 3,
@@ -104,22 +97,30 @@ void run_benchmark(const SpfftTransformType transformType, const int dimX, const
 }
 
 int main(int argc, char** argv) {
+#ifdef SPFFT_MPI
   MPIInitHandle initHandle(argc, argv, true);
   MPICommunicatorHandle comm(MPI_COMM_WORLD);
+  const SizeType commRank = comm.rank();
+  const SizeType commSize = comm.size();
+#else
+  const SizeType commRank = 0;
+  const SizeType commSize = 1;
+#endif
+
 
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
   // set device for multi-gpu nodes
   int deviceCount = 0;
   gpu::check_status(gpu::get_device_count(&deviceCount));
   if (deviceCount > 1) {
-    gpu::check_status(gpu::set_device(comm.rank() % deviceCount));
+    gpu::check_status(gpu::set_device(commRank % deviceCount));
   }
 #endif
 
-  // if(comm.rank() == 0) {
+  // if(commRank == 0) {
   //   std::cout << "PID = " << getpid() << std::endl;
   // }
-  // bool waitLoop = comm.rank() == 0;
+  // bool waitLoop = commRank == 0;
   // while(waitLoop) {
   //   sleep(5);
   // }
@@ -135,7 +136,7 @@ int main(int argc, char** argv) {
   std::vector<int> dimensions;
 
   CLI::App app{"fft test"};
-  app.add_option("-d", dimensions, "Size of symmetric fft grid in each dimension")->required()->expected(3);
+  app.add_option("-d", dimensions, "Size of fft grid in each dimension")->required()->expected(3);
   app.add_option("-r", numRepeats, "Number of repeats")->required();
   app.add_option("-o", outputFileName, "Output file name")->required();
   app.add_option("-m", numTransforms, "Multiple transform number")->default_val("1");
@@ -149,7 +150,8 @@ int main(int argc, char** argv) {
                                     "unbuffered"},
               "Exchange type")
       ->required();
-  app.add_set("-p", procName, std::set<std::string>{"cpu", "gpu", "gpu-gpu"}, "Processing unit")
+  app.add_set("-p", procName, std::set<std::string>{"cpu", "gpu", "gpu-gpu"},
+              "Processing unit. With gpu-gpu, device memory is used as input and output.")
       ->required();
   CLI11_PARSE(app, argc, argv);
 
@@ -168,7 +170,7 @@ int main(int argc, char** argv) {
   const int numThreads = omp_get_max_threads();
 
   const SizeType numLocalXYPlanes =
-      (dimZ / comm.size()) + (comm.rank() < dimZ % comm.size() ? 1 : 0);
+      (dimZ / commSize) + (commRank < dimZ % commSize ? 1 : 0);
   int numLocalZSticks = 0;
 
   std::vector<int> xyzIndices;
@@ -185,11 +187,11 @@ int main(int argc, char** argv) {
     }
 
     // distribute z-sticks as evenly as possible
-    numLocalZSticks = (xyIndicesGlobal.size()) / comm.size() +
-                      (comm.rank() < (xyIndicesGlobal.size()) % comm.size() ? 1 : 0);
+    numLocalZSticks = (xyIndicesGlobal.size()) / commSize +
+                      (commRank < (xyIndicesGlobal.size()) % commSize ? 1 : 0);
     const int offset =
-        ((xyIndicesGlobal.size()) / comm.size()) * comm.rank() +
-        std::min(comm.rank(), static_cast<SizeType>(xyIndicesGlobal.size()) % comm.size());
+        ((xyIndicesGlobal.size()) / commSize) * commRank +
+        std::min(commRank, static_cast<SizeType>(xyIndicesGlobal.size()) % commSize);
 
     // assemble index triplets
     xyzIndices.reserve(numLocalZSticks);
@@ -227,12 +229,19 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  if (comm.rank() == 0) {
-    std::cout << "Num MPI ranks: " << comm.size() << std::endl;
+#ifdef SPFFT_GPU_DIRECT
+      const bool gpuDirectEnabled = true;
+#else
+      const bool gpuDirectEnabled = false;
+#endif
+
+  if (commRank == 0) {
+    std::cout << "Num MPI ranks: " << commSize << std::endl;
     std::cout << "Grid size: " << dimX << ", " << dimY << ", " << dimZ << std::endl;
     std::cout << "Transform type: " << transformTypeName << std::endl;
     std::cout << "Sparsity: " << sparsity << std::endl;
     std::cout << "Proc: " << procName << std::endl;
+    std::cout << "GPU Direct: " << (gpuDirectEnabled ? "Enabled" : "Disabled") << std::endl;
   }
 
   if (exchName == "all") {
@@ -264,8 +273,7 @@ int main(int argc, char** argv) {
                   freqValuesPointers.data());
   }
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (comm.rank() == 0) {
+  if (commRank == 0) {
     auto timingResults = ::spfft::timing::GlobalTimer.process();
     std::cout << timingResults.print({::rt_graph::Stat::Count, ::rt_graph::Stat::Total,
                                       ::rt_graph::Stat::Percentage,
@@ -279,17 +287,12 @@ int main(int argc, char** argv) {
       time.pop_back();
 
       j["timings"] =nlohmann::json::parse(timingResults.json());
-#ifdef SPFFT_GPU_DIRECT
-      const bool gpuDirectEnabled = true;
-#else
-      const bool gpuDirectEnabled = false;
-#endif
 
       const bool data_on_gpu = procName == "gpu-gpu";
       j["parameters"] = {{"proc", procName},
                          {"data_on_gpu", data_on_gpu},
                          {"gpu_direct", gpuDirectEnabled},
-                         {"num_ranks", comm.size()},
+                         {"num_ranks", commSize},
                          {"num_threads", numThreads},
                          {"dim_x", dimX},
                          {"dim_y", dimY},

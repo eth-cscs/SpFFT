@@ -62,6 +62,11 @@ add_library(spfft ${SPFFT_LIBRARY_TYPE}
 	${SPFFT_SOURCE_FILES}
 	)
 
+# Don't export any symbols of external static libaries. Only works on linux.
+if(UNIX AND NOT APPLE)
+	target_link_options(spfft PRIVATE "-Wl,--exclude-libs,ALL")
+endif()
+
 # add depency on ojbect generating targets for ROCM
 if(SPFFT_ROCM)
 	add_dependencies(spfft ${ROCM_TARGETS})

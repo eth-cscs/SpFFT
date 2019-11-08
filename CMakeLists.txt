@@ -106,7 +106,6 @@ if(SPFFT_ROCM)
 endif()
 
 
-
 if(SPFFT_MPI)
 	find_package(MPI REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS MPI::MPI_CXX)
@@ -132,7 +131,18 @@ endif()
 
 
 # Use MKL if available, otherwise require FFTW3
+if(UNIX AND NOT APPLE)
+	# prefer static MKL in Linux. Together with "-Wl,--exclude-libs,ALL",
+	# symbols are not visible for linking afterwards and no conflicts with other MKL versions of other libraries should exist.
+	set(_TMP_SAVE ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
+endif()
 find_package(MKLSequential)
+if(UNIX AND NOT APPLE)
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ${_TMP_SAVE})
+	unset(_TMP_SAVE)
+endif()
+
 if(MKLSequential_FOUND)
 	list(APPEND SPFFT_EXTERNAL_LIBS MKL::Sequential)
 	if(SPFFT_STATIC)

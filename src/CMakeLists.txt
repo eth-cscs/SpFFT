@@ -64,7 +64,11 @@ add_library(spfft ${SPFFT_LIBRARY_TYPE}
 
 # Don't export any symbols of external static libaries. Only works on linux.
 if(UNIX AND NOT APPLE)
-	target_link_options(spfft PRIVATE "-Wl,--exclude-libs,ALL")
+	if(${CMAKE_VERSION} VERSION_LESS "3.13.5") 
+		set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} "-Wl,--exclude-libs,ALL")
+	else()
+		target_link_options(spfft PRIVATE "-Wl,--exclude-libs,ALL")
+	endif()
 endif()
 
 # add depency on ojbect generating targets for ROCM

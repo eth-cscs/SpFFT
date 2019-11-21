@@ -1,7 +1,7 @@
 set(SPFFT_SOURCE_FILES
 	memory/aligned_allocation.cpp
 	timing/timing.cpp
-	timing/host_timing.cpp
+	timing/rt_graph.cpp
 	parameters/parameters.cpp
 	execution/execution_host.cpp
 	spfft/transform.cpp
@@ -30,6 +30,7 @@ if(SPFFT_CUDA OR SPFFT_ROCM)
 		)
 	list(APPEND SPFFT_SOURCE_FILES
 		execution/execution_gpu.cpp
+		gpu_util/gpu_fft_api.cpp
 		)
 	if(SPFFT_MPI)
 		list(APPEND SPFFT_SOURCE_FILES
@@ -61,6 +62,15 @@ endif()
 add_library(spfft ${SPFFT_LIBRARY_TYPE}
 	${SPFFT_SOURCE_FILES}
 	)
+
+# Don't export any symbols of external static libaries. Only works on linux.
+if(UNIX AND NOT APPLE)
+	if(${CMAKE_VERSION} VERSION_LESS "3.13.5") 
+		set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} "-Wl,--exclude-libs,ALL")
+	else()
+		target_link_options(spfft PRIVATE "-Wl,--exclude-libs,ALL")
+	endif()
+endif()
 
 # add depency on ojbect generating targets for ROCM
 if(SPFFT_ROCM)

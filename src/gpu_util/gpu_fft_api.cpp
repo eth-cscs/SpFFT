@@ -26,39 +26,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPFFT_TIMING_HPP
-#define SPFFT_TIMING_HPP
-
 #include "spfft/config.h"
-
-#ifdef SPFFT_TIMING
-#include <chrono>
-#include <string>
-#include "timing/rt_graph.hpp"
+#include "gpu_util/gpu_fft_api.hpp"
+// only declare namespace members if GPU support is enabled
+#if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
 
 namespace spfft {
-namespace timing {
-extern ::rt_graph::Timer GlobalTimer;
-}  // namespace timing
+namespace gpu {
+namespace fft {
+namespace TransformType {
+
+constexpr decltype(ComplexToComplex<double>::value) ComplexToComplex<double>::value;
+constexpr decltype(ComplexToComplex<float>::value) ComplexToComplex<float>::value;
+
+constexpr decltype(RealToComplex<double>::value) RealToComplex<double>::value;
+constexpr decltype(RealToComplex<float>::value) RealToComplex<float>::value;
+
+constexpr decltype(ComplexToReal<double>::value) ComplexToReal<double>::value;
+constexpr decltype(ComplexToReal<float>::value) ComplexToReal<float>::value;
+
+}  // namespace TransformType
+}  // namespace fft
+}  // namespace gpu
 }  // namespace spfft
-
-#define HOST_TIMING_CONCAT_IMPL(x, y) x##y
-#define HOST_TIMING_MACRO_CONCAT(x, y) HOST_TIMING_CONCAT_IMPL(x, y)
-
-#define HOST_TIMING_SCOPED(identifier)                        \
-  ::rt_graph::ScopedTiming HOST_TIMING_MACRO_CONCAT( \
-      scopedHostTimerMacroGenerated, __COUNTER__)(identifier, ::spfft::timing::GlobalTimer);
-
-#define HOST_TIMING_START(identifier) ::spfft::timing::GlobalTimer.start(identifier);
-
-#define HOST_TIMING_STOP(identifier) ::spfft::timing::GlobalTimer.stop(identifier);
-
-#else
-
-#define HOST_TIMING_START(identifier)
-#define HOST_TIMING_STOP(identifier)
-#define HOST_TIMING_SCOPED(identifier)
-
-#endif
 
 #endif

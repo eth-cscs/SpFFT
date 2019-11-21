@@ -45,7 +45,7 @@ template <typename T>
 TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
                                         std::shared_ptr<GridInternal<T>> grid,
                                         std::shared_ptr<Parameters> param)
-    : executionUnit_(executionUnit), grid_(std::move(grid)), param_(std::move(param)) {
+    : executionUnit_(executionUnit), param_(std::move(param)), grid_(std::move(grid)) {
   // ----------------------
   // Input Check
   // ----------------------

@@ -58,10 +58,10 @@ TransposeMPIUnbufferedGPU<T>::TransposeMPIUnbufferedGPU(
     GPUArrayView2D<typename gpu::fft::ComplexType<ValueType>::type> freqDomainDataGPU,
     GPUStreamHandle freqDomainStream)
     : comm_(std::move(comm)),
-      spaceDomainData_(spaceDomainData),
-      freqDomainData_(freqDomainData),
-      spaceDomainDataGPU_(spaceDomainDataGPU),
-      freqDomainDataGPU_(freqDomainDataGPU),
+      spaceDomainBufferHost_(spaceDomainData),
+      freqDomainBufferHost_(freqDomainData),
+      spaceDomainBufferGPU_(spaceDomainDataGPU),
+      freqDomainBufferGPU_(freqDomainDataGPU),
       numLocalXYPlanes_(spaceDomainData.dim_outer()),
       spaceDomainStream_(std::move(spaceDomainStream)),
       freqDomainStream_(std::move(freqDomainStream)) {
@@ -88,7 +88,7 @@ TransposeMPIUnbufferedGPU<T>::TransposeMPIUnbufferedGPU(
   for (SizeType r = 0; r < comm_.size(); ++r) {
     if (param->num_xy_planes(r) > 0 && numLocalZSticks > 0) {
       const int ndims = 2;
-      const int arrayOfSizes[] = {(int)numLocalZSticks, (int)freqDomainData_.dim_inner()};
+      const int arrayOfSizes[] = {(int)numLocalZSticks, (int)freqDomainBufferHost_.dim_inner()};
       const int arrayOfSubsizes[] = {(int)numLocalZSticks, (int)param->num_xy_planes(r)};
       const int arrayOfStarts[] = {(int)0, (int)param->xy_plane_offset(r)};
       const int order = MPI_ORDER_C;
@@ -117,8 +117,8 @@ TransposeMPIUnbufferedGPU<T>::TransposeMPIUnbufferedGPU(
     if (param->num_z_sticks(r) > 0 && numLocalXYPlanes > 0) {
       // data type for single z stick part
       MPIDatatypeHandle stridedZStickType = MPIDatatypeHandle::create_vector(
-          numLocalXYPlanes, 1, spaceDomainData_.dim_inner() * spaceDomainData_.dim_mid(),
-          complexType.get());
+          numLocalXYPlanes, 1,
+          spaceDomainBufferHost_.dim_inner() * spaceDomainBufferHost_.dim_mid(), complexType.get());
 
       const auto zStickXYIndices = param->z_stick_xy_indices(r);
 
@@ -151,21 +151,22 @@ template <typename T>
 auto TransposeMPIUnbufferedGPU<T>::pack_backward() -> void {
 #ifdef SPFFT_GPU_DIRECT
   gpu::check_status(gpu::memset_async(
-      static_cast<void*>(spaceDomainDataGPU_.data()), 0,
-      spaceDomainDataGPU_.size() * sizeof(typename decltype(spaceDomainDataGPU_)::ValueType),
+      static_cast<void*>(spaceDomainBufferGPU_.data()), 0,
+      spaceDomainBufferGPU_.size() * sizeof(typename decltype(spaceDomainBufferGPU_)::ValueType),
       spaceDomainStream_.get()));
 #else
-  copy_from_gpu_async(freqDomainStream_, freqDomainDataGPU_, freqDomainData_);
+  copy_from_gpu_async(freqDomainStream_, freqDomainBufferGPU_, freqDomainBufferHost_);
   // zero target data location (not all values are overwritten upon unpacking)
-  std::memset(static_cast<void*>(spaceDomainData_.data()), 0,
-              sizeof(typename decltype(spaceDomainData_)::ValueType) * spaceDomainData_.size());
+  std::memset(
+      static_cast<void*>(spaceDomainBufferHost_.data()), 0,
+      sizeof(typename decltype(spaceDomainBufferHost_)::ValueType) * spaceDomainBufferHost_.size());
 #endif
 }
 
 template <typename T>
 auto TransposeMPIUnbufferedGPU<T>::unpack_backward() -> void {
 #ifndef SPFFT_GPU_DIRECT
-  copy_to_gpu_async(spaceDomainStream_, spaceDomainData_, spaceDomainDataGPU_);
+  copy_to_gpu_async(spaceDomainStream_, spaceDomainBufferHost_, spaceDomainBufferGPU_);
 #endif
 }
 
@@ -175,32 +176,24 @@ auto TransposeMPIUnbufferedGPU<T>::exchange_backward_start(const bool nonBlockin
 
   gpu::check_status(gpu::stream_synchronize(freqDomainStream_.get()));
 
+#ifdef SPFFT_GPU_DIRECT
+  auto sendBufferPtr = freqDomainBufferGPU_.data();
+  auto recvBufferPtr = spaceDomainBufferGPU_.data();
+#else
+  auto sendBufferPtr = freqDomainBufferHost_.data();
+  auto recvBufferPtr = spaceDomainBufferHost_.data();
+#endif
+
   if (nonBlockingExchange) {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(MPI_Ialltoallw(freqDomainDataGPU_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), freqDomainTypes_.data(),
-                                    spaceDomainDataGPU_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), spaceDomainTypes_.data(),
-                                    comm_.get(), mpiRequest_.get_and_activate()));
-#else
-    mpi_check_status(MPI_Ialltoallw(freqDomainData_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), freqDomainTypes_.data(),
-                                    spaceDomainData_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), spaceDomainTypes_.data(),
-                                    comm_.get(), mpiRequest_.get_and_activate()));
-#endif
+    mpi_check_status(MPI_Ialltoallw(
+        sendBufferPtr, freqDomainCount_.data(), freqDomainDispls_.data(), freqDomainTypes_.data(),
+        recvBufferPtr, spaceDomainCount_.data(), spaceDomainDispls_.data(),
+        spaceDomainTypes_.data(), comm_.get(), mpiRequest_.get_and_activate()));
   } else {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(
-        MPI_Alltoallw(freqDomainDataGPU_.data(), freqDomainCount_.data(), freqDomainDispls_.data(),
-                      freqDomainTypes_.data(), spaceDomainDataGPU_.data(), spaceDomainCount_.data(),
-                      spaceDomainDispls_.data(), spaceDomainTypes_.data(), comm_.get()));
-#else
-    mpi_check_status(
-        MPI_Alltoallw(freqDomainData_.data(), freqDomainCount_.data(), freqDomainDispls_.data(),
-                      freqDomainTypes_.data(), spaceDomainData_.data(), spaceDomainCount_.data(),
-                      spaceDomainDispls_.data(), spaceDomainTypes_.data(), comm_.get()));
-#endif
+    mpi_check_status(MPI_Alltoallw(sendBufferPtr, freqDomainCount_.data(), freqDomainDispls_.data(),
+                                   freqDomainTypes_.data(), recvBufferPtr, spaceDomainCount_.data(),
+                                   spaceDomainDispls_.data(), spaceDomainTypes_.data(),
+                                   comm_.get()));
   }
 }
 
@@ -215,32 +208,24 @@ auto TransposeMPIUnbufferedGPU<T>::exchange_forward_start(const bool nonBlocking
 
   gpu::check_status(gpu::stream_synchronize(spaceDomainStream_.get()));
 
+#ifdef SPFFT_GPU_DIRECT
+  auto sendBufferPtr = spaceDomainBufferGPU_.data();
+  auto recvBufferPtr = freqDomainBufferGPU_.data();
+#else
+  auto sendBufferPtr = spaceDomainBufferHost_.data();
+  auto recvBufferPtr = freqDomainBufferHost_.data();
+#endif
+
   if (nonBlockingExchange) {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(MPI_Ialltoallw(spaceDomainDataGPU_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), spaceDomainTypes_.data(),
-                                    freqDomainDataGPU_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), freqDomainTypes_.data(), comm_.get(),
-                                    mpiRequest_.get_and_activate()));
-#else
-    mpi_check_status(MPI_Ialltoallw(spaceDomainData_.data(), spaceDomainCount_.data(),
-                                    spaceDomainDispls_.data(), spaceDomainTypes_.data(),
-                                    freqDomainData_.data(), freqDomainCount_.data(),
-                                    freqDomainDispls_.data(), freqDomainTypes_.data(), comm_.get(),
-                                    mpiRequest_.get_and_activate()));
-#endif
+    mpi_check_status(MPI_Ialltoallw(
+        sendBufferPtr, spaceDomainCount_.data(), spaceDomainDispls_.data(),
+        spaceDomainTypes_.data(), recvBufferPtr, freqDomainCount_.data(), freqDomainDispls_.data(),
+        freqDomainTypes_.data(), comm_.get(), mpiRequest_.get_and_activate()));
   } else {
-#ifdef SPFFT_GPU_DIRECT
-    mpi_check_status(MPI_Alltoallw(spaceDomainDataGPU_.data(), spaceDomainCount_.data(),
+    mpi_check_status(MPI_Alltoallw(sendBufferPtr, spaceDomainCount_.data(),
                                    spaceDomainDispls_.data(), spaceDomainTypes_.data(),
-                                   freqDomainDataGPU_.data(), freqDomainCount_.data(),
-                                   freqDomainDispls_.data(), freqDomainTypes_.data(), comm_.get()));
-#else
-    mpi_check_status(MPI_Alltoallw(spaceDomainData_.data(), spaceDomainCount_.data(),
-                                   spaceDomainDispls_.data(), spaceDomainTypes_.data(),
-                                   freqDomainData_.data(), freqDomainCount_.data(),
-                                   freqDomainDispls_.data(), freqDomainTypes_.data(), comm_.get()));
-#endif
+                                   recvBufferPtr, freqDomainCount_.data(), freqDomainDispls_.data(),
+                                   freqDomainTypes_.data(), comm_.get()));
   }
 }
 
@@ -252,14 +237,14 @@ auto TransposeMPIUnbufferedGPU<T>::exchange_forward_finalize() -> void {
 template <typename T>
 auto TransposeMPIUnbufferedGPU<T>::pack_forward() -> void {
 #ifndef SPFFT_GPU_DIRECT
-  copy_from_gpu_async(spaceDomainStream_, spaceDomainDataGPU_, spaceDomainData_);
+  copy_from_gpu_async(spaceDomainStream_, spaceDomainBufferGPU_, spaceDomainBufferHost_);
 #endif
 }
 
 template <typename T>
 auto TransposeMPIUnbufferedGPU<T>::unpack_forward() -> void {
 #ifndef SPFFT_GPU_DIRECT
-  copy_to_gpu_async(freqDomainStream_, freqDomainData_, freqDomainDataGPU_);
+  copy_to_gpu_async(freqDomainStream_, freqDomainBufferHost_, freqDomainBufferGPU_);
 #endif
 }
 

@@ -69,7 +69,7 @@ ExecutionHost<T>::ExecutionHost(const int numThreads, std::shared_ptr<Parameters
   transpose_.reset(new TransposeHost<T>(param, freqDomainXY, freqDomainData_));
 
   if (param->local_value_indices().size() > 0) {
-    compression_.reset(new CompressionHost(numThreads_, param));
+    compression_.reset(new CompressionHost(param));
   }
 
   if (numLocalZSticks > 0) {
@@ -161,7 +161,7 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
   }
 
   if (param->local_value_indices().size() > 0) {
-    compression_.reset(new CompressionHost(numThreads_, param));
+    compression_.reset(new CompressionHost(param));
   }
 
   if (numLocalZSticks > 0) {

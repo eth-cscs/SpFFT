@@ -41,7 +41,7 @@ namespace spfft {
 template <typename F, typename... ARGS>
 inline auto launch_kernel(F func, const dim3 threadGrid, const dim3 threadBlock,
                           const size_t sharedMemoryBytes, const gpu::StreamType stream,
-                          ARGS... args) -> void {
+                          ARGS&&... args) -> void {
 #ifndef NDEBUG
   gpu::device_synchronize();
   gpu::check_status(gpu::get_last_error());  // before
@@ -58,7 +58,7 @@ inline auto launch_kernel(F func, const dim3 threadGrid, const dim3 threadBlock,
 template <typename F, typename... ARGS>
 inline auto launch_kernel(F func, const dim3 threadGrid, const dim3 threadBlock,
                           const size_t sharedMemoryBytes, const gpu::StreamType stream,
-                          ARGS... args) -> void {
+                          ARGS&&... args) -> void {
 #ifndef NDEBUG
   gpu::device_synchronize();
   gpu::check_status(gpu::get_last_error());  // before

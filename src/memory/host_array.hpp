@@ -62,7 +62,7 @@ public:
   // constructor of each element of type T.
   // Throws exception upon allocation or element construction failure
   template <typename... ARGS>
-  HostArray(SizeType size, ARGS... args);
+  HostArray(SizeType size, ARGS&&... args);
 
   HostArray(const HostArray& array) = delete;
 
@@ -149,7 +149,7 @@ HostArray<T>::HostArray() noexcept : data_(nullptr), size_(0), pinned_(false) {}
 
 template <typename T>
 template <typename... ARGS>
-HostArray<T>::HostArray(SizeType size, ARGS... args)
+HostArray<T>::HostArray(SizeType size, ARGS&&... args)
     : data_(static_cast<T*>(memory::allocate_aligned(size * sizeof(T)))),
       size_(size),
       pinned_(false) {

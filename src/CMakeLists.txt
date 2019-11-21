@@ -30,6 +30,7 @@ if(SPFFT_CUDA OR SPFFT_ROCM)
 		)
 	list(APPEND SPFFT_SOURCE_FILES
 		execution/execution_gpu.cpp
+		gpu_util/gpu_fft_api.cpp
 		)
 	if(SPFFT_MPI)
 		list(APPEND SPFFT_SOURCE_FILES

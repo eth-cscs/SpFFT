@@ -385,6 +385,25 @@ interface
     integer(c_int), intent(out) :: comm
   end function
 
+  integer(c_int) function spfft_multi_transform_forward(numTransforms, transforms,&
+      inputLocations, outputPointers, scalingTypes) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputLocations
+    type(c_ptr), value :: outputPointers
+    type(c_ptr), value :: scalingTypes
+  end function
+
+  integer(c_int) function spfft_multi_transform_backward(numTransforms, transforms,&
+      inputPointers, outputLocations) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputPointers
+    type(c_ptr), value :: outputLocations
+  end function
+
   !--------------------------
   !     Transform Float
   !--------------------------
@@ -511,6 +530,25 @@ interface
     use iso_c_binding
     type(c_ptr), value :: transform
     integer(c_int), intent(out) :: comm
+  end function
+
+  integer(c_int) function spfft_float_multi_transform_forward(numTransforms, transforms,&
+      inputLocations, outputPointers, scalingTypes) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputLocations
+    type(c_ptr), value :: outputPointers
+    type(c_ptr), value :: scalingTypes
+  end function
+
+  integer(c_int) function spfft_float_multi_transform_backward(numTransforms, transforms,&
+      inputPointers, outputLocations) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputPointers
+    type(c_ptr), value :: outputLocations
   end function
 
 end interface

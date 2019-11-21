@@ -107,7 +107,7 @@ constexpr auto EventInterprocess = GPU_PREFIX(EventInterprocess);
 }  // namespace flag
 
 // ==================================
-// Error check functions
+// Error check function
 // ==================================
 inline auto check_status(StatusType error) -> void {
   if (error != status::Success) {
@@ -122,95 +122,95 @@ inline auto check_status(StatusType error) -> void {
 }
 
 // ==================================
-// Forwarding functions of to GPU API
+// Forwarding functions to GPU API
 // ==================================
 template <typename... ARGS>
-inline auto host_register(ARGS... args) -> StatusType {
+inline auto host_register(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(HostRegister)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto host_unregister(ARGS... args) -> StatusType {
+inline auto host_unregister(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(HostUnregister)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto stream_create_with_flags(ARGS... args) -> StatusType {
+inline auto stream_create_with_flags(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(StreamCreateWithFlags)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto stream_destroy(ARGS... args) -> StatusType {
+inline auto stream_destroy(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(StreamDestroy)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto stream_wait_event(ARGS... args) -> StatusType {
+inline auto stream_wait_event(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(StreamWaitEvent)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto event_create_with_flags(ARGS... args) -> StatusType {
+inline auto event_create_with_flags(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(EventCreateWithFlags)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto event_destroy(ARGS... args) -> StatusType {
+inline auto event_destroy(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(EventDestroy)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto event_record(ARGS... args) -> StatusType {
+inline auto event_record(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(EventRecord)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto malloc(ARGS... args) -> StatusType {
+inline auto malloc(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(Malloc)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto free(ARGS... args) -> StatusType {
+inline auto free(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(Free)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto memcpy(ARGS... args) -> StatusType {
+inline auto memcpy(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(Memcpy)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto memcpy_async(ARGS... args) -> StatusType {
+inline auto memcpy_async(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(MemcpyAsync)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto get_device(ARGS... args) -> StatusType {
+inline auto get_device(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(GetDevice)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto set_device(ARGS... args) -> StatusType {
+inline auto set_device(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(SetDevice)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto get_device_count(ARGS... args) -> StatusType {
+inline auto get_device_count(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(GetDeviceCount)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto stream_synchronize(ARGS... args) -> StatusType {
+inline auto stream_synchronize(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(StreamSynchronize)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto memset_async(ARGS... args) -> StatusType {
+inline auto memset_async(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(MemsetAsync)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto pointer_get_attributes(ARGS... args) -> StatusType {
+inline auto pointer_get_attributes(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(PointerGetAttributes)(std::forward<ARGS>(args)...);
 }
 

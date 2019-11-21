@@ -200,32 +200,32 @@ inline auto execute(HandleType& plan, ComplexFloatType* iData, ComplexFloatType*
 // Forwarding functions of to GPU API
 // ==================================
 template <typename... ARGS>
-inline auto create(ARGS... args) -> ResultType {
+inline auto create(ARGS&&... args) -> ResultType {
   return GPU_FFT_PREFIX(Create)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto make_plan_many(ARGS... args) -> ResultType {
+inline auto make_plan_many(ARGS&&... args) -> ResultType {
   return GPU_FFT_PREFIX(MakePlanMany)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto set_work_area(ARGS... args) -> ResultType {
+inline auto set_work_area(ARGS&&... args) -> ResultType {
   return GPU_FFT_PREFIX(SetWorkArea)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto destroy(ARGS... args) -> ResultType {
+inline auto destroy(ARGS&&... args) -> ResultType {
   return GPU_FFT_PREFIX(Destroy)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto set_stream(ARGS... args) -> ResultType {
+inline auto set_stream(ARGS&&... args) -> ResultType {
   return GPU_FFT_PREFIX(SetStream)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>
-inline auto set_auto_allocation(ARGS... args) -> ResultType {
+inline auto set_auto_allocation(ARGS&&... args) -> ResultType {
   return GPU_FFT_PREFIX(SetAutoAllocation)(std::forward<ARGS>(args)...);
 }
 

@@ -52,7 +52,7 @@ auto free_aligned(void* ptr) noexcept -> void;
 
 // construct numElements elements of type T with arguments args at location pointed to by ptr
 template <typename T, typename... ARGS>
-auto construct_elements_in_place(T* ptr, SizeType numElements, ARGS... args) -> void;
+auto construct_elements_in_place(T* ptr, SizeType numElements, ARGS&&... args) -> void;
 
 // deconstruct elements of trivially destructable type in array
 template <typename T,
@@ -70,7 +70,7 @@ auto deconstruct_elements(T* ptr,
 // Implementation
 // ======================
 template <typename T, typename... ARGS>
-auto construct_elements_in_place(T* ptr, SizeType numElements, ARGS... args) -> void {
+auto construct_elements_in_place(T* ptr, SizeType numElements, ARGS&&... args) -> void {
   SizeType constructIdx = 0;
   try {
     // construct all elements

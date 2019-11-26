@@ -63,6 +63,11 @@ add_library(spfft ${SPFFT_LIBRARY_TYPE}
 	${SPFFT_SOURCE_FILES}
 	)
 
+# build fortran module
+if(SPFFT_FORTRAN)
+	add_library(spfft_fortran OBJECT ${PROJECT_SOURCE_DIR}/include/spfft/spfft.f90)
+endif()
+
 # Don't export any symbols of external static libaries. Only works on linux.
 if(UNIX AND NOT APPLE)
 	if(${CMAKE_VERSION} VERSION_LESS "3.13.5") 
@@ -150,6 +155,8 @@ if(SPFFT_INSTALL)
 	install(TARGETS spfft DESTINATION lib EXPORT SpFFTTargets)
 	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/spfft DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.f90")
 	install(FILES ${PROJECT_BINARY_DIR}/spfft/config.h "${PROJECT_BINARY_DIR}/spfft/spfft_export.h" DESTINATION include/spfft)
+	install(FILES ${PROJECT_BINARY_DIR}/src/spfft.mod DESTINATION include/spfft)
+	install(EXPORT SpFFTTargets NAMESPACE SpFFT:: DESTINATION lib/cmake/SpFFT FILE ${SPFFT_TARGETS_FILE})
 	install(EXPORT SpFFTTargets NAMESPACE SpFFT:: DESTINATION lib/cmake/SpFFT FILE ${SPFFT_TARGETS_FILE})
 	install(
 	  FILES

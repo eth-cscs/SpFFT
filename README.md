@@ -59,6 +59,7 @@ make -j8 install
 | SPFFT_STATIC           | OFF     | Build as static library                          |
 | SPFFT_BUILD_TESTS      | OFF     | Build test executables for developement purposes |
 | SPFFT_INSTALL          | ON      | Add library to install target                    |
+| SPFFT_FORTRAN          | OFF     | Build Fortran interface module                   |
 
 ## Examples
 Further exmples for C++, C and Fortran can be found in the "examples" folder.

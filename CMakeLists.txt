@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.8 added CUDA language support without FindCUDA
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
 project(SpFFT LANGUAGES CXX VERSION 0.9.9)
+set(SPFFT_SO_VERSION 0)
+set(SPFFT_VERSION ${PROJECT_VERSION})
 
 # allow {module}_ROOT variables to be set
 if(POLICY CMP0074)
@@ -39,6 +41,9 @@ set(SPFFT_GPU_BACKEND "OFF" CACHE STRING "GPU backend")
 set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 	"OFF" "CUDA" "ROCM"
 	)
+
+# Get GNU standard install prefixes
+include(GNUInstallDirs)
 
 # set preferred library type
 if (SPFFT_STATIC)

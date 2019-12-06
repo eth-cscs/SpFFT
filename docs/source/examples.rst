@@ -248,7 +248,8 @@ Fortran
        ! create grid and transform
        errorCode = spfft_grid_create(grid, dimX, dimY, dimZ, maxNumLocalZColumns, processingUnit, maxNumThreads);
        if (errorCode /= SPFFT_SUCCESS) error stop
-       errorCode = spfft_transform_create(transform, grid, processingUnit, 0, dimX, dimY, dimZ, dimZ, size(frequencyElements), 0, indices)
+       errorCode = spfft_transform_create(transform, grid, processingUnit, 0, dimX, dimY, dimZ, dimZ,&
+	   size(frequencyElements), SPFFT_INDEX_TRIPLETS, indices)
        if (errorCode /= SPFFT_SUCCESS) error stop
 
        ! grid can be safely destroyed after creating all required transforms

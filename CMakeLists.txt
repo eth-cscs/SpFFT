@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.8 added CUDA language support without FindCUDA
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
 project(SpFFT LANGUAGES CXX VERSION 0.9.9)
+set(SPFFT_SO_VERSION 0)
+set(SPFFT_VERSION ${PROJECT_VERSION})
 
 # allow {module}_ROOT variables to be set
 if(POLICY CMP0074)
@@ -33,11 +35,15 @@ option(SPFFT_GPU_DIRECT "Compile with GPU direct (GPU aware MPI) support." OFF)
 option(SPFFT_BUILD_TESTS "Build tests" OFF)
 option(SPFFT_SINGLE_PRECISION "Enable single precision support" OFF)
 option(SPFFT_INSTALL "Enable CMake install commands" ON)
+option(SPFFT_FORTRAN "Compile fortran module" OFF)
 
 set(SPFFT_GPU_BACKEND "OFF" CACHE STRING "GPU backend")
 set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 	"OFF" "CUDA" "ROCM"
 	)
+
+# Get GNU standard install prefixes
+include(GNUInstallDirs)
 
 # set preferred library type
 if (SPFFT_STATIC)
@@ -88,6 +94,11 @@ else()
 	set(CMAKE_VISIBILITY_INLINES_HIDDEN 0)
 endif()
 
+# Fortran
+if(SPFFT_FORTRAN)
+	enable_language(Fortran)
+endif()
+
 # CUDA
 if(SPFFT_CUDA)
 	enable_language(CUDA)
@@ -107,7 +118,7 @@ endif()
 
 
 if(SPFFT_MPI)
-	find_package(MPI REQUIRED)
+	find_package(MPI COMPONENTS CXX REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS MPI::MPI_CXX)
 	# always add MPI to interface libraries, because mpi.h is included in public header files
 	if(SPFFT_STATIC)
@@ -117,7 +128,7 @@ if(SPFFT_MPI)
 endif()
 
 if(SPFFT_OMP)
-	find_package(OpenMP REQUIRED)
+	find_package(OpenMP COMPONENTS CXX REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS OpenMP::OpenMP_CXX)
 	if(SPFFT_STATIC)
 		list(APPEND SPFFT_INTERFACE_LIBS ${OpenMP_CXX_LIBRARIES})

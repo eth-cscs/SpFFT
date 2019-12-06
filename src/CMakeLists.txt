@@ -62,6 +62,13 @@ endif()
 add_library(spfft ${SPFFT_LIBRARY_TYPE}
 	${SPFFT_SOURCE_FILES}
 	)
+set_property(TARGET spfft PROPERTY VERSION ${SPFFT_VERSION})
+set_property(TARGET spfft PROPERTY SOVERSION ${SPFFT_SO_VERSION})
+
+# build fortran module
+if(SPFFT_FORTRAN)
+	add_library(spfft_fortran OBJECT ${PROJECT_SOURCE_DIR}/include/spfft/spfft.f90)
+endif()
 
 # Don't export any symbols of external static libaries. Only works on linux.
 if(UNIX AND NOT APPLE)
@@ -147,10 +154,10 @@ configure_file(${PROJECT_SOURCE_DIR}/cmake/SpFFT.pc.in
 
 # installation commands
 if(SPFFT_INSTALL)
-	install(TARGETS spfft DESTINATION lib EXPORT SpFFTTargets)
-	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/spfft DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.f90")
-	install(FILES ${PROJECT_BINARY_DIR}/spfft/config.h "${PROJECT_BINARY_DIR}/spfft/spfft_export.h" DESTINATION include/spfft)
-	install(EXPORT SpFFTTargets NAMESPACE SpFFT:: DESTINATION lib/cmake/SpFFT FILE ${SPFFT_TARGETS_FILE})
+	install(TARGETS spfft DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT SpFFTTargets)
+	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/spfft DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.f90")
+	install(FILES ${PROJECT_BINARY_DIR}/spfft/config.h "${PROJECT_BINARY_DIR}/spfft/spfft_export.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/spfft)
+	install(EXPORT SpFFTTargets NAMESPACE SpFFT:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SpFFT FILE ${SPFFT_TARGETS_FILE})
 	install(
 	  FILES
 		"${PROJECT_BINARY_DIR}/SpFFTConfig.cmake"
@@ -159,7 +166,12 @@ if(SPFFT_INSTALL)
 		"${PROJECT_BINARY_DIR}/${SPFFT_CONFIG_FILE}"
 		"${PROJECT_BINARY_DIR}/${SPFFT_VERSION_FILE}"
 	  DESTINATION
-	  lib/cmake/SpFFT
+	    ${CMAKE_INSTALL_LIBDIR}/cmake/SpFFT
 	)
-	install(FILES ${PROJECT_BINARY_DIR}/SpFFT.pc DESTINATION lib/pkgconfig)
+
+	install(FILES ${PROJECT_BINARY_DIR}/SpFFT.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+	if(SPFFT_FORTRAN)
+		install(FILES ${PROJECT_BINARY_DIR}/src/spfft.mod DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/spfft)
+	endif()
 endif()

@@ -19,7 +19,7 @@ For distributed computations, SpFFT uses a slab decomposition in space domain an
 - Unified interface for calculations on CPUs and GPUs
 - Support of Complex-To-Real and Real-To-Complex transforms, where the full hermitian symmetry property is utilized.
 - C++, C and Fortran interfaces
-- Paralleization and accelation is optional
+- Parallelization and acceleration are optional
 
 ### Interface Design
 To allow for pre-allocation and reuse of memory, the design is based on two classes:

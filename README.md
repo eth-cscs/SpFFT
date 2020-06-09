@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
 This work was supported by:
 
 
-|![ethz](docs/images/logo_ethz.png) | [Swiss Federal Institute of Technology in Zurich](https://www.ethz.ch/) |
+|![ethz](docs/images/logo_ethz.png) | [**Swiss Federal Institute of Technology in Zurich**](https://www.ethz.ch/) |
 |:----:|:----:|
-|![cscs](docs/images/logo_cscs.png) | [Swiss National Supercomputing Centre](https://www.cscs.ch/)            |
-|![max](docs/images/logo_max.png)  | [MAterials design at the eXascale](http://www.max-centre.eu) <br> (Horizon2020, grant agreement MaX CoE, No. 824143) |
+|![cscs](docs/images/logo_cscs.png) | [**Swiss National Supercomputing Centre**](https://www.cscs.ch/)            |
+|![max](docs/images/logo_max.png)  | [**MAterials design at the eXascale**](http://www.max-centre.eu) <br> (Horizon2020, grant agreement MaX CoE, No. 824143) |

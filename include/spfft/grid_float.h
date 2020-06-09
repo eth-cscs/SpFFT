@@ -66,6 +66,7 @@ SPFFT_EXPORT SpfftError spfft_float_grid_create(SpfftFloatGrid* grid, int maxDim
 #ifdef SPFFT_MPI
 /**
  * Constructor for a single precision distributed grid.
+ * Thread-safe if MPI thread support is set to MPI_THREAD_MULTIPLE.
  *
  * @param[out] grid Handle to grid.
  * @param[in] maxDimX Maximum dimension in x.

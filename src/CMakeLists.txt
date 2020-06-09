@@ -9,6 +9,7 @@ set(SPFFT_SOURCE_FILES
 	spfft/multi_transform.cpp
 	spfft/grid.cpp
 	spfft/grid_internal.cpp
+	fft/fftw_mutex.cpp
 	)
 
 if(SPFFT_SINGLE_PRECISION)

@@ -74,6 +74,20 @@ SPFFT_EXCH_UNBUFFERED
 
 | For both *SPFFT_EXCH_BUFFERED* and *SPFFT_EXCH_COMPACT_BUFFERED*, an exchange in single precision can be selected. With transforms in double precision, the number of bytes sent and received is halved. For execution on GPUs without GPUDirect, the data transfer between GPU and host also benefits. This option can provide a significant speedup, but incurs a slight accuracy loss. The double precision values are converted to and from single precision between the transform in z and the transform in x / y, while all actual calculations are still done in the selected precision.
 
+
+Thread-Safety
+-------------
+The creation of Grid and Transform objects is thread-safe only if:
+
+* No FFTW library calls are executed concurrently.
+* In the distributed case, MPI thread support is set to *MPI_THREAD_MULTIPLE*.
+
+
+The execution of transforms is thread-safe if
+
+* Each thread executes using its own Grid and associated Transform object.
+* In the distributed case, MPI thread support is set to *MPI_THREAD_MULTIPLE*.
+
 GPU
 ---
 | Saving transfer time between host and GPU is key to good performance for execution with GPUs. Ideally, both input and output is located on GPU memory. If host memory pointers are provided as input or output, it is helpful to use pinned memory through the CUDA or ROCm API.

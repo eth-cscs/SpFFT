@@ -31,10 +31,12 @@
 #include <fftw3.h>
 #include <cassert>
 #include <complex>
+#include <mutex>
 #include "spfft/config.h"
 #include "spfft/exceptions.hpp"
 #include "util/common_types.hpp"
 #include "util/type_check.hpp"
+#include "fft/fftw_mutex.hpp"
 
 namespace spfft {
 
@@ -58,8 +60,12 @@ public:
     if (input != output) {
       flags = flags | FFTW_DESTROY_INPUT;  // allow input override for out-of-place transform
     }
-    plan_ = fftw_plan_dft_1d(size, reinterpret_cast<fftw_complex*>(input),
-                             reinterpret_cast<fftw_complex*>(output), sign, flags);
+
+    {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      plan_ = fftw_plan_dft_1d(size, reinterpret_cast<fftw_complex*>(input),
+                               reinterpret_cast<fftw_complex*>(output), sign, flags);
+    }
     if (!plan_) throw FFTWError();
   }
 
@@ -76,17 +82,24 @@ public:
     if (input != output) {
       flags = flags | FFTW_DESTROY_INPUT;  // allow input override for out-of-place transform
     }
-    plan_ =
-        fftw_plan_many_dft(rank, n, (int)howmany, reinterpret_cast<fftw_complex*>(input), inembed,
-                           (int)istride, (int)idist, reinterpret_cast<fftw_complex*>(output),
-                           onembed, (int)ostride, (int)odist, sign, flags);
+
+    {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      plan_ =
+          fftw_plan_many_dft(rank, n, (int)howmany, reinterpret_cast<fftw_complex*>(input), inembed,
+                             (int)istride, (int)idist, reinterpret_cast<fftw_complex*>(output),
+                             onembed, (int)ostride, (int)odist, sign, flags);
+    }
     if (!plan_) throw FFTWError();
   }
 
   FFTWPlan(const FFTWPlan& other) = delete;
 
   FFTWPlan(FFTWPlan&& other) noexcept {
-    if (plan_) fftw_destroy_plan(plan_);
+    if (plan_) {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      fftw_destroy_plan(plan_);
+    }
     plan_ = other.plan_;
     other.plan_ = nullptr;
   }
@@ -94,7 +107,10 @@ public:
   auto operator=(const FFTWPlan& other) -> FFTWPlan& = delete;
 
   auto operator=(FFTWPlan&& other) noexcept -> FFTWPlan& {
-    if (plan_) fftw_destroy_plan(plan_);
+    if (plan_) {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      fftw_destroy_plan(plan_);
+    }
     plan_ = other.plan_;
     other.plan_ = nullptr;
     return *this;
@@ -134,7 +150,10 @@ public:
   }
 
   ~FFTWPlan() {
-    if (plan_) fftw_destroy_plan(plan_);
+    if (plan_) {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      fftw_destroy_plan(plan_);
+    }
     plan_ = nullptr;
   }
 

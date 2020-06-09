@@ -31,10 +31,12 @@
 #include <fftw3.h>
 #include <cassert>
 #include <complex>
+#include <mutex>
 #include "spfft/config.h"
 #include "spfft/exceptions.hpp"
 #include "util/common_types.hpp"
 #include "util/type_check.hpp"
+#include "fft/fftw_mutex.hpp"
 
 namespace spfft {
 
@@ -57,9 +59,12 @@ public:
     int inembed[] = {n[0]};
     int onembed[] = {n[0]};
     auto flags = FFTW_ESTIMATE | FFTW_DESTROY_INPUT;
-    plan_ = fftw_plan_many_dft_r2c(rank, n, (int)howmany, input, inembed, (int)istride, (int)idist,
-                                   reinterpret_cast<fftw_complex*>(output), onembed, (int)ostride,
-                                   (int)odist, flags);
+    {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      plan_ = fftw_plan_many_dft_r2c(rank, n, (int)howmany, input, inembed, (int)istride,
+                                     (int)idist, reinterpret_cast<fftw_complex*>(output), onembed,
+                                     (int)ostride, (int)odist, flags);
+    }
     if (!plan_) throw FFTWError();
   }
 
@@ -74,16 +79,22 @@ public:
     int inembed[] = {n[0]};
     int onembed[] = {n[0]};
     auto flags = FFTW_ESTIMATE | FFTW_DESTROY_INPUT;
-    plan_ = fftw_plan_many_dft_c2r(rank, n, (int)howmany, reinterpret_cast<fftw_complex*>(input),
-                                   inembed, (int)istride, (int)idist, output, onembed, (int)ostride,
-                                   (int)odist, flags);
+    {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      plan_ = fftw_plan_many_dft_c2r(rank, n, (int)howmany, reinterpret_cast<fftw_complex*>(input),
+                                     inembed, (int)istride, (int)idist, output, onembed,
+                                     (int)ostride, (int)odist, flags);
+    }
     if (!plan_) throw FFTWError();
   }
 
   FFTWRealPlan(const FFTWRealPlan& other) = delete;
 
   FFTWRealPlan(FFTWRealPlan&& other) noexcept {
-    if (plan_) fftw_destroy_plan(plan_);
+    if (plan_) {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      fftw_destroy_plan(plan_);
+    }
     plan_ = other.plan_;
     other.plan_ = nullptr;
   }
@@ -91,7 +102,10 @@ public:
   auto operator=(const FFTWRealPlan& other) -> FFTWRealPlan& = delete;
 
   auto operator=(FFTWRealPlan&& other) noexcept -> FFTWRealPlan& {
-    if (plan_) fftw_destroy_plan(plan_);
+    if (plan_){
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      fftw_destroy_plan(plan_);
+    }
     plan_ = other.plan_;
     other.plan_ = nullptr;
     return *this;
@@ -119,7 +133,10 @@ public:
   auto execute() -> void { fftw_execute(plan_); }
 
   ~FFTWRealPlan() {
-    if (plan_) fftw_destroy_plan(plan_);
+    if (plan_){
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      fftw_destroy_plan(plan_);
+    }
     plan_ = nullptr;
   }
 
@@ -146,9 +163,13 @@ public:
     int inembed[] = {n[0]};
     int onembed[] = {n[0]};
     auto flags = FFTW_ESTIMATE | FFTW_DESTROY_INPUT;
-    plan_ = fftwf_plan_many_dft_r2c(rank, n, (int)howmany, input, inembed, (int)istride, (int)idist,
-                                    reinterpret_cast<fftwf_complex*>(output), onembed, (int)ostride,
-                                    (int)odist, flags);
+
+    {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      plan_ = fftwf_plan_many_dft_r2c(rank, n, (int)howmany, input, inembed, (int)istride,
+                                      (int)idist, reinterpret_cast<fftwf_complex*>(output), onembed,
+                                      (int)ostride, (int)odist, flags);
+    }
     if (!plan_) throw FFTWError();
   }
 
@@ -163,9 +184,12 @@ public:
     int inembed[] = {n[0]};
     int onembed[] = {n[0]};
     auto flags = FFTW_ESTIMATE | FFTW_DESTROY_INPUT;
-    plan_ = fftwf_plan_many_dft_c2r(rank, n, (int)howmany, reinterpret_cast<fftwf_complex*>(input),
-                                    inembed, (int)istride, (int)idist, output, onembed,
-                                    (int)ostride, (int)odist, flags);
+    {
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      plan_ = fftwf_plan_many_dft_c2r(
+          rank, n, (int)howmany, reinterpret_cast<fftwf_complex*>(input), inembed, (int)istride,
+          (int)idist, output, onembed, (int)ostride, (int)odist, flags);
+    }
     if (!plan_) throw FFTWError();
   }
 
@@ -220,7 +244,10 @@ public:
   }
 
   ~FFTWRealPlan() {
-    if (plan_) fftwf_destroy_plan(plan_);
+    if (plan_){ 
+      std::lock_guard<std::mutex> guard(global_fftw_mutex());
+      fftwf_destroy_plan(plan_);
+    }
     plan_ = nullptr;
   }
 

@@ -40,16 +40,7 @@ if(SPFFT_CUDA OR SPFFT_ROCM)
 			transpose/transpose_mpi_unbuffered_gpu.cpp
 			)
 	endif()
-endif()
-
-if(SPFFT_CUDA)
 	list(APPEND SPFFT_SOURCE_FILES ${SPFFT_GPU_KERNELS})
-endif()
-
-if(SPFFT_ROCM)
-	rocm_generate_objects(ROCM_OBJECTS ROCM_TARGETS ${SPFFT_GPU_KERNELS} INCLUDE_DIRS ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS}
-		FLAGS -fPIC  -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906)
-	list(APPEND SPFFT_SOURCE_FILES ${ROCM_OBJECTS})
 endif()
 
 if(SPFFT_MPI)
@@ -60,9 +51,19 @@ if(SPFFT_MPI)
 		)
 endif()
 
-add_library(spfft ${SPFFT_LIBRARY_TYPE}
-	${SPFFT_SOURCE_FILES}
-	)
+if(SPFFT_ROCM)
+	set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} -fno-gpu-rdc)
+	set(HIP_HCC_FLAGS_RELEASE ${HIP_HCC_FLAGS_RELEASE} -Wno-everything)
+	if(CMAKE_CXX_STANDARD)
+		set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} -std=gnu++${CMAKE_CXX_STANDARD})
+	endif()
+			
+	# macro from FindHIP package, which compiles all .cu files with hipcc and cpp files with the set c++ compiler
+	HIP_ADD_LIBRARY(spfft ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
+else()
+	add_library(spfft ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
+endif()
+
 set_property(TARGET spfft PROPERTY VERSION ${SPFFT_VERSION})
 set_property(TARGET spfft PROPERTY SOVERSION ${SPFFT_SO_VERSION})
 
@@ -78,11 +79,6 @@ if(UNIX AND NOT APPLE)
 	else()
 		target_link_options(spfft PRIVATE "-Wl,--exclude-libs,ALL")
 	endif()
-endif()
-
-# add depency on ojbect generating targets for ROCM
-if(SPFFT_ROCM)
-	add_dependencies(spfft ${ROCM_TARGETS})
 endif()
 
 # generate export header to control symbol visibility

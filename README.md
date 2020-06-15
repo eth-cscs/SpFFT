@@ -5,8 +5,7 @@
 # SpFFT
 SpFFT - A 3D FFT library for sparse frequency domain data written in C++ with support for MPI, OpenMP, CUDA and ROCm.
 
-It was originally intended for transforms of data with spherical cutoff in frequency domain, as required by some computational material science codes.
-For distributed computations, SpFFT uses a slab decomposition in space domain and pencil decomposition in frequency domain (all sparse data within a pencil must be on one rank). 
+Inspired by the need of some computational material science applications with spherical cutoff data in frequency domain, SpFFT provides Fast Fourier Transformations of sparse frequency domain data. For distributed computations with MPI, slab decomposition in space domain and pencil decomposition in frequency domain (sparse data within a pencil / column must be on one rank) is used.
 
 <img src="docs/images/sparse_to_dense.png" alt="" width=70% />
 
@@ -15,17 +14,17 @@ For distributed computations, SpFFT uses a slab decomposition in space domain an
 ### Design Goals
 - Sparse frequency domain input
 - Reuse of pre-allocated memory
-- Support of negative indexing for frequency domain data
+- Support for shifted indexing with centered zero-frequency
+- Optional parallelization and GPU acceleration
 - Unified interface for calculations on CPUs and GPUs
-- Support of Complex-To-Real and Real-To-Complex transforms, where the full hermitian symmetry property is utilized.
+- Support of Complex-To-Real and Real-To-Complex transforms, where the full hermitian symmetry property is utilized
 - C++, C and Fortran interfaces
-- Parallelization and acceleration are optional
 
 ### Interface Design
 To allow for pre-allocation and reuse of memory, the design is based on two classes:
 
-- **Grid**: Allocates memory for transforms up to a given size in each dimension.
-- **Transform**: Is associated with a *Grid* and can have any size up to the *Grid* dimensions. A *Transform* holds a counted reference to the underlying *Grid*. Therefore, *Transforms* created with the same *Grid* share memory, which is only freed, once the *Grid* and all associated *Transforms* are destroyed.
+- **Grid**: Provides memory for transforms up to a given size.
+- **Transform**: Created with information on sparse input data and is associated with a *Grid*. Maximum size is limited by *Grid* dimensions. Internal reference counting to *Grid* objects guarantee a valid state until *Transform* object destruction.
 
 The user provides memory for storing sparse frequency domain data, while a *Transform* provides memory for space domain data. This implies, that executing a *Transform* will override the space domain data of all other *Transforms* associated with the same *Grid*.
 

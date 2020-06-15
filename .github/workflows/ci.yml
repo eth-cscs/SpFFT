@@ -1,0 +1,133 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  #########################
+  # Build and test with GCC
+  #########################
+  CPU:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [release, debug]
+        compiler: [g++]
+        use_omp: [true]
+        use_mpi: [true, false]
+        use_float: [true]
+        include:
+          - build_type: debug
+            compiler: clang++
+            use_omp: false
+            use_mpi: true
+            use_float: false
+
+    env:
+      USE_OMP: ${{ matrix.use_omp }}
+      USE_MPI: ${{ matrix.use_mpi }}
+      USE_FLOAT: ${{ matrix.use_float }}
+      BUILD_TYPE: ${{ matrix.build_type }}
+      COMPILER: ${{ matrix.compiler }}
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE
+    - uses: actions/checkout@v2
+
+
+    - name: Print build config
+      run: |
+        echo "Compiler: ${COMPILER}, Build type: ${BUILD_TYPE}, OpenMP: ${USE_OMP}, MPI: ${USE_MPI}, FLOAT: ${USE_FLOAT}"
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libfftw3-dev make g++ clang wget git make
+        cd ${HOME} && wget https://github.com/Kitware/CMake/releases/download/v3.11.4/cmake-3.11.4-Linux-x86_64.tar.gz && tar -xzvf cmake-3.11.4-Linux-x86_64.tar.gz
+
+    - name: Install MPI
+      if: ${{ matrix.use_mpi }}
+      run: |
+        sudo apt-get install -y mpi-default-dev
+
+    - name: Build and install
+      run: |
+        mkdir -p build
+        cd build
+        mkdir -p install_dir
+        export INSTALL_DIR=$(pwd)/install_dir
+        CXX=${COMPILER} ${HOME}/cmake-3.11.4-Linux-x86_64/bin/cmake .. -DSPFFT_BUILD_TESTS=OFF -DSPFFT_OMP=${USE_OMP} -DSPFFT_MPI=${USE_MPI} -DSPFFT_SINGLE_PRECISION=${USE_FLOAT} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+        make -j2
+        make VERBOSE=1 install
+        test -f ${INSTALL_DIR}/lib/libspfft.so
+        test -f ${INSTALL_DIR}/include/spfft/spfft.hpp
+        test -f ${INSTALL_DIR}/include/spfft/spfft.h
+
+    - name: Build tests
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        rm -rf build
+        mkdir -p build
+        cd build
+        CXX=${COMPILER} ${HOME}/cmake-3.11.4-Linux-x86_64/bin/cmake .. -DSPFFT_BUILD_TESTS=ON -DSPFFT_OMP=${USE_OMP} -DSPFFT_MPI=${USE_MPI} -DSPFFT_SINGLE_PRECISION=${USE_FLOAT} -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        make -j2
+
+    - name: Run tests
+      env:
+        OMPI_MCA_btl_vader_single_copy_mechanism: none
+      run: ${GITHUB_WORKSPACE}/build/tests/run_local_tests
+
+    - name: Run tests with MPI
+      if: ${{ matrix.use_mpi }}
+      env:
+        OMPI_MCA_btl_vader_single_copy_mechanism: none
+      run: mpirun -n 2 ${GITHUB_WORKSPACE}/build/tests/run_mpi_tests
+
+
+  #################
+  # Build with CUDA
+  #################
+  CUDA:
+    runs-on: ubuntu-18.04
+    container: nvidia/cuda:9.2-devel-ubuntu18.04
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y libfftw3-dev make g++ mpi-default-dev wget git make
+        cd ${HOME} && wget https://github.com/Kitware/CMake/releases/download/v3.14.6/cmake-3.14.6-Linux-x86_64.tar.gz && tar -xzvf cmake-3.14.6-Linux-x86_64.tar.gz
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        mkdir -p build
+        cd build
+        ${HOME}/cmake-3.14.6-Linux-x86_64/bin/cmake .. -DSPFFT_BUILD_TESTS=ON -DSPFFT_GPU_BACKEND=CUDA -DSPFFT_OMP=OFF
+        make -j2
+
+
+  #################
+  # Build with ROCm
+  #################
+  ROCM:
+    runs-on: ubuntu-18.04
+    container: adhocman/master:ubuntu18.04_rocm
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE
+    - uses: actions/checkout@v2
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        mkdir -p build
+        cd build
+        /root/cmake-3.11.4-Linux-x86_64/bin/cmake .. -DSPFFT_BUILD_TESTS=ON -DSPFFT_GPU_BACKEND=ROCM
+        make -j2
+
+

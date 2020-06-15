@@ -66,6 +66,11 @@ endif()
 
 set_property(TARGET spfft PROPERTY VERSION ${SPFFT_VERSION})
 set_property(TARGET spfft PROPERTY SOVERSION ${SPFFT_SO_VERSION})
+# All .cu files are self-contained. Device linking can have issues with propageted linker flags of other targets like MPI.
+if(SPFFT_CUDA)
+	set_property(TARGET spfft PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS OFF)
+	set_property(TARGET spfft PROPERTY CUDA_SEPARABLE_COMPILATION OFF)
+endif()
 
 # build fortran module
 if(SPFFT_FORTRAN)

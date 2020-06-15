@@ -47,6 +47,7 @@ typedef void* SpfftFloatTransform;
 
 /**
  * Creates a single precision transform from a single precision grid handle.
+ * Thread-safe if no FFTW calls are executed concurrently.
  *
  * @param[out] transform Handle to the transform.
  * @param[in] grid Handle to the grid, with which the transform is created.

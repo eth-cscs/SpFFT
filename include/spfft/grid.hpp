@@ -68,6 +68,7 @@ public:
 #ifdef SPFFT_MPI
   /**
    * Constructor for a distributed grid.
+   * Thread-safe if MPI thread support is set to MPI_THREAD_MULTIPLE.
    *
    * @param[in] maxDimX Maximum dimension in x.
    * @param[in] maxDimY Maximum dimension in y.
@@ -116,6 +117,7 @@ public:
 
   /**
    * Creates a transform from this grid object.
+   * Thread-safe if no FFTW calls are executed concurrently.
    *
    * @param[in] processingUnit The processing unit type to use. Must be either SPFFT_PU_HOST or
    * SPFFT_PU_GPU and be supported by the grid itself.

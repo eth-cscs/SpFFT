@@ -6,9 +6,9 @@
 
 SpFFT Documentation
 ===================
-| SpFFT - A 3D FFT library for sparse frequency domain data written in C++ with support for MPI, OpenMP, CUDA and ROCm. It was originally intended for transforms of data with spherical cutoff in frequency domain, as required by some computational material science codes.
+| SpFFT - A 3D FFT library for sparse frequency domain data written in C++ with support for MPI, OpenMP, CUDA and ROCm.
 
-| For distributed computations, SpFFT uses a slab decomposition in space domain and pencil decomposition in frequency domain (all sparse data within a pencil must be on one rank).
+| Inspired by the need of some computational material science applications with spherical cutoff data in frequency domain, SpFFT provides Fast Fourier Transformations of sparse frequency domain data. For distributed computations with MPI, slab decomposition in space domain and pencil decomposition in frequency domain (sparse data within a pencil / column must be on one rank) is used.
 
 .. figure:: ../images/sparse_to_dense.png
    :align: center
@@ -22,10 +22,10 @@ Design Goals
 - Sparse frequency domain input
 - Reuse of pre-allocated memory
 - Support of negative indexing for frequency domain data
-- Unified interface for calculations on CPUs and GPUs
-- Support of Complex-To-Real and Real-To-Complex transforms, where the full hermitian symmetry property is utilized.
-- C++, C and Fortran interfaces
 - Parallelization and acceleration are optional
+- Unified interface for calculations on CPUs and GPUs
+- Support of Complex-To-Real and Real-To-Complex transforms, where the full hermitian symmetry property is utilized
+- C++, C and Fortran interfaces
 
 Interface Design
 ----------------

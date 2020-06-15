@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/zeadreamplay/SpFFT/_apis/build/status/eth-cscs.SpFFT?branchName=master)](https://dev.azure.com/zeadreamplay/SpFFT/_build/latest?definitionId=3&branchName=master)
+[![CI](https://github.com/eth-cscs/SpFFT/workflows/CI/badge.svg)](https://github.com/eth-cscs/SpFFT/actions?query=workflow%3ACI)
 [![Documentation](https://readthedocs.org/projects/spfft/badge/?version=latest)](https://spfft.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://raw.githubusercontent.com/eth-cscs/SpFFT/master/LICENSE)
 

@@ -37,44 +37,33 @@ namespace spfft {
 template <typename T>
 auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T*> {
   gpu::PointerAttributes attr;
+  attr.devicePointer = nullptr;
+  attr.hostPointer = nullptr;
   auto status = gpu::pointer_get_attributes(&attr, static_cast<const void*>(inputPointer));
-  gpu::get_last_error();  // if pointer is not registered, error will be stored and has to be
-                          // cleared
 
-#ifdef SPFFT_ROCM
   if (status != gpu::status::Success) {
-#else
-  if (status == gpu::status::ErrorInvalidValue) {
+    gpu::get_last_error(); // clear error from error cache
+#ifndef SPFFT_ROCM
+    // Invalid value is always indicated before CUDA 11 for valid host pointers, which have not been
+    // registered. -> Don't throw error in this case.
+    if (status != gpu::status::ErrorInvalidValue)
+      gpu::check_status(status);
 #endif
+  }
+
+  if(attr.devicePointer == nullptr) {
     // not registered with cuda -> host pointer
     const T* devicePtr = nullptr;
     return {inputPointer, devicePtr};
   } else {
-    gpu::check_status(status);
     return {static_cast<const T*>(attr.hostPointer), static_cast<const T*>(attr.devicePointer)};
   }
 }
 
 template <typename T>
 auto translate_gpu_pointer(T* inputPointer) -> std::pair<T*, T*> {
-  gpu::PointerAttributes attr;
-  auto status = gpu::pointer_get_attributes(&attr, static_cast<const void*>(inputPointer));
-  gpu::get_last_error();  // if pointer is not registered, error will be stored and has to be
-                          // cleared
-
-  gpu::get_last_error();
-#ifdef SPFFT_ROCM
-  if (status != gpu::status::Success) {
-#else
-  if (status == gpu::status::ErrorInvalidValue) {
-#endif
-    // not registered with cuda -> host pointer
-    T* devicePtr = nullptr;
-    return {inputPointer, devicePtr};
-  } else {
-    gpu::check_status(status);
-    return {static_cast<T*>(attr.hostPointer), static_cast<T*>(attr.devicePointer)};
-  }
+  auto pointers = translate_gpu_pointer(static_cast<const T*>(inputPointer));
+  return {const_cast<T*>(pointers.first), const_cast<T*>(pointers.second)};
 }
 
 }  // namespace spfft

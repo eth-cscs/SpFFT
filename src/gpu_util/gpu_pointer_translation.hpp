@@ -51,7 +51,12 @@ auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T
     return {inputPointer, devicePtr};
   } else {
     gpu::check_status(status);
-    return {static_cast<const T*>(attr.hostPointer), static_cast<const T*>(attr.devicePointer)};
+    const T* hostPtr = static_cast<const T*>(attr.hostPointer);
+    const T* devicePtr = static_cast<const T*>(attr.devicePointer);
+    // cuda 11 returns cudaSuccess if ptr is on host and unregistered
+    if (attr.type == cudaMemoryTypeUnregistered)
+      hostPtr = inputPointer;
+    return {hostPtr, devicePtr};
   }
 }
 
@@ -73,7 +78,12 @@ auto translate_gpu_pointer(T* inputPointer) -> std::pair<T*, T*> {
     return {inputPointer, devicePtr};
   } else {
     gpu::check_status(status);
-    return {static_cast<T*>(attr.hostPointer), static_cast<T*>(attr.devicePointer)};
+    T* hostPtr = static_cast<T*>(attr.hostPointer);
+    T* devicePtr = static_cast<T*>(attr.devicePointer);
+    // cuda 11 returns cudaSuccess if ptr is on host and unregistered
+    if (attr.type == cudaMemoryTypeUnregistered)
+      hostPtr = inputPointer;
+    return {hostPtr, devicePtr};
   }
 }
 

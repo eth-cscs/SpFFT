@@ -41,6 +41,7 @@
 #include "memory/gpu_array_view.hpp"
 #include "spfft/config.h"
 #include "util/common_types.hpp"
+#include "symmetry/symmetry_gpu.hpp"
 
 namespace spfft {
 
@@ -55,38 +56,83 @@ public:
                      GPUStreamHandle stream, std::shared_ptr<GPUArray<char>> workBuffer)
       : stream_(std::move(stream)),
         workBuffer_(std::move(workBuffer)),
-        spaceDomainPtr_(spaceDomain.data()),
-        freqDomainPtr_(freqDomain.data()) {
+        spaceDomain_(spaceDomain),
+        freqDomain_(freqDomain) {
     assert(disjoint(spaceDomain, freqDomain));
     assert(workBuffer_);
     assert(spaceDomain.dim_outer() == freqDomain.dim_outer());
     assert(spaceDomain.dim_mid() == freqDomain.dim_mid());
     assert(spaceDomain.dim_inner() / 2 + 1 == freqDomain.dim_inner());
 
-    int rank = 2;
-    int n[2] = {spaceDomain.dim_mid(), spaceDomain.dim_inner()};
-    int nembedReal[2] = {spaceDomain.dim_mid(), spaceDomain.dim_inner()};
-    int nembedFreq[2] = {freqDomain.dim_mid(), freqDomain.dim_inner()};
-    int stride = 1;
-    int distReal = spaceDomain.dim_inner() * spaceDomain.dim_mid();
-    int distFreq = freqDomain.dim_inner() * freqDomain.dim_mid();
-    int batch = spaceDomain.dim_outer();
-
-    std::size_t worksizeForward = 0;
-    std::size_t worksizeBackward = 0;
-    // create plan
     gpu::fft::check_result(gpu::fft::create(&planForward_));
     gpu::fft::check_result(gpu::fft::create(&planBackward_));
 
     gpu::fft::check_result(gpu::fft::set_auto_allocation(planForward_, 0));
     gpu::fft::check_result(gpu::fft::set_auto_allocation(planBackward_, 0));
 
-    gpu::fft::check_result(gpu::fft::make_plan_many(
-        planForward_, rank, n, nembedReal, stride, distReal, nembedFreq, stride, distFreq,
-        gpu::fft::TransformType::RealToComplex<T>::value, batch, &worksizeForward));
-    gpu::fft::check_result(gpu::fft::make_plan_many(
-        planBackward_, rank, n, nembedFreq, stride, distFreq, nembedReal, stride, distReal,
-        gpu::fft::TransformType::ComplexToReal<T>::value, batch, &worksizeBackward));
+    std::size_t worksizeForward = 0;
+    std::size_t worksizeBackward = 0;
+
+    // Starting with CUDA 10.2, a bug with 2D R2C transforms of size (1, x) with x being a prime
+    // number was introduced. As workaround, create batched 1D transforms, if one dimension is 1.
+    if (spaceDomain.dim_mid() == 1) {
+      int rank = 1;
+      int n[1] = {spaceDomain.dim_inner()};
+      int nembedReal[1] = {spaceDomain.dim_inner()};
+      int nembedFreq[1] = {freqDomain.dim_inner()};
+      int stride = 1;
+      int distReal = spaceDomain.dim_inner();
+      int distFreq = freqDomain.dim_inner();
+      int batch = spaceDomain.dim_outer();
+
+      // create plan
+      gpu::fft::check_result(gpu::fft::make_plan_many(
+          planForward_, rank, n, nembedReal, stride, distReal, nembedFreq, stride, distFreq,
+          gpu::fft::TransformType::RealToComplex<T>::value, batch, &worksizeForward));
+      gpu::fft::check_result(gpu::fft::make_plan_many(
+          planBackward_, rank, n, nembedFreq, stride, distFreq, nembedReal, stride, distReal,
+          gpu::fft::TransformType::ComplexToReal<T>::value, batch, &worksizeBackward));
+
+    } else if (spaceDomain.dim_inner() == 1) {
+      // For consistency, the full result is required along the mid (y) dimension. Therefore, use
+      // hermitian symmetry to calculate missing values after R2C transform.
+      symm_.reset(new PlaneSymmetryGPU<T>(stream_, freqDomain));
+
+      int rank = 1;
+      int n[1] = {spaceDomain.dim_mid()};
+      int nembedReal[1] = {spaceDomain.dim_mid()};
+      int nembedFreq[1] = {freqDomain.dim_mid()};
+      int stride = 1;
+      int distReal = spaceDomain.dim_mid();
+      int distFreq = freqDomain.dim_mid();
+      int batch = spaceDomain.dim_outer();
+
+      // create plan
+      gpu::fft::check_result(gpu::fft::make_plan_many(
+          planForward_, rank, n, nembedReal, stride, distReal, nembedFreq, stride, distFreq,
+          gpu::fft::TransformType::RealToComplex<T>::value, batch, &worksizeForward));
+      gpu::fft::check_result(gpu::fft::make_plan_many(
+          planBackward_, rank, n, nembedFreq, stride, distFreq, nembedReal, stride, distReal,
+          gpu::fft::TransformType::ComplexToReal<T>::value, batch, &worksizeBackward));
+
+    } else {
+      int rank = 2;
+      int n[2] = {spaceDomain.dim_mid(), spaceDomain.dim_inner()};
+      int nembedReal[2] = {spaceDomain.dim_mid(), spaceDomain.dim_inner()};
+      int nembedFreq[2] = {freqDomain.dim_mid(), freqDomain.dim_inner()};
+      int stride = 1;
+      int distReal = spaceDomain.dim_inner() * spaceDomain.dim_mid();
+      int distFreq = freqDomain.dim_inner() * freqDomain.dim_mid();
+      int batch = spaceDomain.dim_outer();
+
+      // create plan
+      gpu::fft::check_result(gpu::fft::make_plan_many(
+          planForward_, rank, n, nembedReal, stride, distReal, nembedFreq, stride, distFreq,
+          gpu::fft::TransformType::RealToComplex<T>::value, batch, &worksizeForward));
+      gpu::fft::check_result(gpu::fft::make_plan_many(
+          planBackward_, rank, n, nembedFreq, stride, distFreq, nembedReal, stride, distReal,
+          gpu::fft::TransformType::ComplexToReal<T>::value, batch, &worksizeBackward));
+    }
 
     // set stream
     gpu::fft::check_result(gpu::fft::set_stream(planForward_, stream_.get()));
@@ -107,9 +153,11 @@ public:
         planForward_(std::move(transform.planForward_)),
         planBackward_(std::move(transform.planBackward_)),
         workBuffer_(std::move(transform.workBuffer_)),
-        spaceDomainPtr_(transform.spaceDomainPtr_),
-        freqDomainPtr_(transform.freqDomainPtr_) {
-    transform.plan_ = 0;
+        spaceDomain_(transform.spaceDomain_),
+        freqDomain_(transform.freqDomain_),
+        symm_(std::move(transform.symm_)) {
+    transform.planForward_ = 0;
+    transform.planBackward_ = 0;
   }
 
   ~TransformReal2DGPU() {
@@ -138,23 +186,36 @@ public:
     planForward_ = std::move(transform.planForward_);
     planBackward_ = std::move(transform.planBackward_);
     workBuffer_ = std::move(transform.workBuffer_);
-    spaceDomainPtr_ = transform.spaceDomainPtr_;
-    freqDomainPtr_ = transform.freqDomainPtr_;
+    spaceDomain_ = transform.spaceDomain_;
+    freqDomain_ = transform.freqDomain_;
+    symm_ = std::move(transform.symm_);
 
-    transform.plan_ = 0;
+    transform.planForward_ = 0;
+    transform.planBackward_ = 0;
     return *this;
   }
 
   inline auto device_id() const noexcept -> int { return stream_.device_id(); }
 
   auto forward() -> void override {
+    if(symm_) {
+      // Make sure buffer is zero before transform, such that the symmtry operation can identify
+      // elements, which have not been written to by the FFT
+      gpu::check_status(gpu::memset_async(
+          static_cast<void*>(freqDomain_.data()), 0,
+          freqDomain_.size() * sizeof(typename decltype(freqDomain_)::ValueType), stream_.get()));
+    }
     gpu::fft::check_result(gpu::fft::set_work_area(planForward_, workBuffer_->data()));
-    gpu::fft::check_result(gpu::fft::execute(planForward_, spaceDomainPtr_, freqDomainPtr_));
+    gpu::fft::check_result(
+        gpu::fft::execute(planForward_, spaceDomain_.data(), freqDomain_.data()));
+
+    if(symm_) symm_->apply();
   }
 
   auto backward() -> void override {
     gpu::fft::check_result(gpu::fft::set_work_area(planBackward_, workBuffer_->data()));
-    gpu::fft::check_result(gpu::fft::execute(planBackward_, freqDomainPtr_, spaceDomainPtr_));
+    gpu::fft::check_result(
+        gpu::fft::execute(planBackward_, freqDomain_.data(), spaceDomain_.data()));
   }
 
 private:
@@ -162,8 +223,9 @@ private:
   gpu::fft::HandleType planForward_ = 0;
   gpu::fft::HandleType planBackward_ = 0;
   std::shared_ptr<GPUArray<char>> workBuffer_;
-  T* spaceDomainPtr_;
-  typename gpu::fft::ComplexType<T>::type* freqDomainPtr_;
+  GPUArrayView3D<T> spaceDomain_;
+  GPUArrayView3D<typename gpu::fft::ComplexType<T>::type> freqDomain_;
+  std::unique_ptr<PlaneSymmetryGPU<T>> symm_;
 };
 }  // namespace spfft
 

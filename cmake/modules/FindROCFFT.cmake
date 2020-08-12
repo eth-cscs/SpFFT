@@ -56,7 +56,7 @@ endif()
 
 find_library(
     ROCFFT_LIBRARIES
-    NAMES "rocfft"
+    NAMES "rocfft" "rocfft-d"
     HINTS ${_ROCFFT_PATHS}
     PATH_SUFFIXES "rocfft/lib" "rocfft" 
 )

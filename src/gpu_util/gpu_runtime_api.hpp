@@ -99,6 +99,7 @@ constexpr auto MemoryTypeManaged = GPU_PREFIX(MemoryTypeManaged);
 
 constexpr auto MemcpyHostToDevice = GPU_PREFIX(MemcpyHostToDevice);
 constexpr auto MemcpyDeviceToHost = GPU_PREFIX(MemcpyDeviceToHost);
+constexpr auto MemcpyDeviceToDevice = GPU_PREFIX(MemcpyDeviceToDevice);
 
 constexpr auto EventDefault = GPU_PREFIX(EventDefault);
 constexpr auto EventBlockingSync = GPU_PREFIX(EventBlockingSync);
@@ -180,8 +181,18 @@ inline auto memcpy(ARGS&&... args) -> StatusType {
 }
 
 template <typename... ARGS>
+inline auto memcpy_2d(ARGS&&... args) -> StatusType {
+  return GPU_PREFIX(Memcpy2D)(std::forward<ARGS>(args)...);
+}
+
+template <typename... ARGS>
 inline auto memcpy_async(ARGS&&... args) -> StatusType {
   return GPU_PREFIX(MemcpyAsync)(std::forward<ARGS>(args)...);
+}
+
+template <typename... ARGS>
+inline auto memcpy_2d_async(ARGS&&... args) -> StatusType {
+  return GPU_PREFIX(Memcpy2DAsync)(std::forward<ARGS>(args)...);
 }
 
 template <typename... ARGS>

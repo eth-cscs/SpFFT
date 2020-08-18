@@ -56,7 +56,13 @@ auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T
     const T* devicePtr = nullptr;
     return {inputPointer, devicePtr};
   } else {
+#ifdef SPFFT_ROCM
+    // Bug with HIP (ROCm 3.5) causes attr.devicePointer to be set to the start of allocated memory
+    // -> pointers with offset are not correctly returned
+    return {static_cast<const T*>(nullptr), inputPointer};
+#else
     return {static_cast<const T*>(attr.hostPointer), static_cast<const T*>(attr.devicePointer)};
+#endif
   }
 }
 

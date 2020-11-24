@@ -32,6 +32,7 @@
 #include <complex>
 #include <set>
 #include <vector>
+#include <tuple>
 #include "fft/fftw_plan_1d.hpp"
 #include "fft/transform_interface.hpp"
 #include "memory/host_array_view.hpp"
@@ -46,7 +47,7 @@ namespace spfft {
 // innermost dimension (transposed)
 // The transforms are computed in batches aligned to inner 2d planes
 template <typename T>
-class Transform1DPlanesHost : public TransformHost {
+class Transform1DPlanesHost : public TransformHost<T> {
 public:
   static_assert(IsFloatOrDouble<T>::value, "Type T must be float or double");
   using ValueType = T;
@@ -108,25 +109,42 @@ public:
             idxSplit == numSplitsPerPlane - 1
                 ? numTransformsPerSplit + numTransformsPerPlane % numSplitsPerPlane
                 : numTransformsPerSplit;
-        transforms_.emplace_back(&(inputData(idxOuter, idxSplit * inputSplitStrideMid,
-                                             idxSplit * inputSplitStrideInner)),
-                                 &(outputData(idxOuter, idxSplit * outputSplitStrideMid,
-                                              idxSplit * outputSplitStrideInner)),
-                                 size, inputStride, outputStride, inputDist, outputDist, howmany,
-                                 sign);
+        transforms_.emplace_back(
+            FlexibleFFTWPlan<ValueType>{&(inputData(idxOuter, idxSplit * inputSplitStrideMid,
+                                                    idxSplit * inputSplitStrideInner)),
+                                        &(outputData(idxOuter, idxSplit * outputSplitStrideMid,
+                                                     idxSplit * outputSplitStrideInner)),
+                                        size, inputStride, outputStride, inputDist, outputDist,
+                                        howmany, sign},
+            inputData.index(idxOuter, idxSplit * inputSplitStrideMid,
+                            idxSplit * inputSplitStrideInner),
+            outputData.index(idxOuter, idxSplit * outputSplitStrideMid,
+                             idxSplit * outputSplitStrideInner));
       }
+    }
+  }
+
+  auto execute(const T* input, T* output) -> void override {
+    const ComplexType* inputComplex = reinterpret_cast<const ComplexType*>(input);
+    ComplexType* outputComplex = reinterpret_cast<ComplexType*>(output);
+    SPFFT_OMP_PRAGMA("omp for schedule(static)")
+    for (SizeType i = 0; i < transforms_.size(); ++i) {
+      auto& triplet = transforms_[i];
+      std::get<0>(triplet).execute(inputComplex + std::get<1>(triplet),
+                                   outputComplex + std::get<2>(triplet));
     }
   }
 
   auto execute() -> void override {
     SPFFT_OMP_PRAGMA("omp for schedule(static)")
     for (SizeType i = 0; i < transforms_.size(); ++i) {
-      transforms_[i].execute();
+      auto& triplet = transforms_[i];
+      std::get<0>(triplet).execute();
     }
   }
 
 private:
-  std::vector<FFTWPlan<ValueType>> transforms_;
+  std::vector<std::tuple<FlexibleFFTWPlan<ValueType>, SizeType, SizeType>> transforms_;
 };
 
 // Computes the FFT in 1D along either the innermost dimension (not transposed) or the second
@@ -134,7 +152,7 @@ private:
 // The transforms are computed in batches aligned to the outer and transform dimension.
 // The indices of transforms to be computed per plane can be provided as well.
 template <typename T>
-class Transform1DVerticalHost : public TransformHost {
+class Transform1DVerticalHost : public TransformHost<T> {
 public:
   static_assert(IsFloatOrDouble<T>::value, "Type T must be float or double");
   using ValueType = T;
@@ -178,21 +196,38 @@ public:
       const SizeType idxInnerInput = transposeInputData ? midIndex : 0;
       const SizeType idxMidOutput = transposeOutputData ? 0 : midIndex;
       const SizeType idxInnerOutput = transposeOutputData ? midIndex : 0;
-      transforms_.emplace_back(&(inputData(0, idxMidInput, idxInnerInput)),
-                               &(outputData(0, idxMidOutput, idxInnerOutput)), size, inputStride,
-                               outputStride, inputDist, outputDist, howmany, sign);
+      transforms_.emplace_back(
+          FlexibleFFTWPlan<ValueType>{&(inputData(0, idxMidInput, idxInnerInput)),
+                                      &(outputData(0, idxMidOutput, idxInnerOutput)), size,
+                                      inputStride, outputStride, inputDist, outputDist, howmany,
+                                      sign},
+          inputData.index(0, idxMidInput, idxInnerInput),
+          outputData.index(0, idxMidOutput, idxInnerOutput));
+    }
+  }
+
+  auto execute(const T* input, T* output) -> void override {
+    const ComplexType* inputComplex = reinterpret_cast<const ComplexType*>(input);
+    ComplexType* outputComplex = reinterpret_cast<ComplexType*>(output);
+
+    SPFFT_OMP_PRAGMA("omp for schedule(static)")
+    for (SizeType i = 0; i < transforms_.size(); ++i) {
+      auto& triplet = transforms_[i];
+      std::get<0>(triplet).execute(inputComplex + std::get<1>(triplet),
+                                   outputComplex + std::get<2>(triplet));
     }
   }
 
   auto execute() -> void override {
     SPFFT_OMP_PRAGMA("omp for schedule(static)")
     for (SizeType i = 0; i < transforms_.size(); ++i) {
-      transforms_[i].execute();
+      auto& triplet = transforms_[i];
+      std::get<0>(triplet).execute();
     }
   }
 
 private:
-  std::vector<FFTWPlan<ValueType>> transforms_;
+  std::vector<std::tuple<FlexibleFFTWPlan<ValueType>, SizeType, SizeType>> transforms_;
 };
 
 }  // namespace spfft

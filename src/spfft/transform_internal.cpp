@@ -136,16 +136,24 @@ TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
   }
 }
 
+
 template <typename T>
 auto TransformInternal<T>::forward(const SpfftProcessingUnitType inputLocation, T* output,
+                                   SpfftScalingType scaling) -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST &&
+      inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    throw InvalidParameterError();
+  }
+  this->forward(this->space_domain_data(inputLocation), output, scaling);
+}
+
+template <typename T>
+auto TransformInternal<T>::forward(const T* input, T* output,
                                    SpfftScalingType scaling) -> void {
   HOST_TIMING_SCOPED("forward")
   if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
     assert(execHost_);
-    if (inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      throw InvalidParameterError();
-    }
-    execHost_->forward_xy();
+    execHost_->forward_xy(input);
     execHost_->forward_exchange(false);
     execHost_->forward_z(output, scaling);
   } else {
@@ -172,12 +180,17 @@ auto TransformInternal<T>::clone() const -> TransformInternal<T> {
 
 template <typename T>
 auto TransformInternal<T>::forward_xy(const SpfftProcessingUnitType inputLocation) -> void {
-  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
-    assert(execHost_);
-    if (inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST && inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
       throw InvalidParameterError();
     }
-    execHost_->forward_xy();
+    this->forward_xy(this->space_domain_data(inputLocation));
+}
+
+template <typename T>
+auto TransformInternal<T>::forward_xy(const T* input) -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    assert(execHost_);
+    execHost_->forward_xy(input);
   } else {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
     assert(execGPU_);
@@ -226,21 +239,27 @@ auto TransformInternal<T>::forward_z(T* output, SpfftScalingType scaling) -> voi
 #endif
   }
 }
-
 template <typename T>
 auto TransformInternal<T>::backward(const T* input, const SpfftProcessingUnitType outputLocation)
+    -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST &&
+      outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    throw InvalidParameterError();
+  }
+  this->backward(input, this->space_domain_data(outputLocation));
+}
+
+template <typename T>
+auto TransformInternal<T>::backward(const T* input, T* output)
     -> void {
   HOST_TIMING_SCOPED("backward")
   // check if input is can be accessed from gpu
   if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
     assert(execHost_);
-    if (outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      throw InvalidParameterError();
-    }
 
     execHost_->backward_z(input);
     execHost_->backward_exchange(false);
-    execHost_->backward_xy();
+    execHost_->backward_xy(output);
   } else {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
     // set device for current thread
@@ -293,14 +312,20 @@ auto TransformInternal<T>::backward_exchange() -> void {
 
 template <typename T>
 auto TransformInternal<T>::backward_xy(const SpfftProcessingUnitType outputLocation) -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST &&
+      outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    throw InvalidParameterError();
+  }
+  this->backward_xy(this->space_domain_data(outputLocation));
+}
+
+template <typename T>
+auto TransformInternal<T>::backward_xy(T* output) -> void {
   // check if input is can be accessed from gpu
   if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
     assert(execHost_);
-    if (outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      throw InvalidParameterError();
-    }
 
-    execHost_->backward_xy();
+    execHost_->backward_xy(output);
   } else {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
     // set device for current thread

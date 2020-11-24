@@ -71,8 +71,17 @@ void TransformFloat::forward(SpfftProcessingUnitType inputLocation, float* outpu
   transform_->forward(inputLocation, output, scaling);
 }
 
+void TransformFloat::forward(const float* input, float* output,
+                             SpfftScalingType scaling) {
+  transform_->forward(input, output, scaling);
+}
+
 void TransformFloat::backward(const float* input, SpfftProcessingUnitType outputLocation) {
   transform_->backward(input, outputLocation);
+}
+
+void TransformFloat::backward(const float* input, float* ouput) {
+  transform_->backward(input, ouput);
 }
 
 SpfftTransformType TransformFloat::type() const { return transform_->type(); }

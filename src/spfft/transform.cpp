@@ -80,8 +80,17 @@ void Transform::forward(SpfftProcessingUnitType inputLocation, double* output,
   transform_->forward(inputLocation, output, scaling);
 }
 
+void Transform::forward(const double* input, double* output,
+                        SpfftScalingType scaling) {
+  transform_->forward(input, output, scaling);
+}
+
 void Transform::backward(const double* input, SpfftProcessingUnitType outputLocation) {
   transform_->backward(input, outputLocation);
+}
+
+void Transform::backward(const double* input, double* output) {
+  transform_->backward(input, output);
 }
 
 SpfftTransformType Transform::type() const { return transform_->type(); }

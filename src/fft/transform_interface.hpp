@@ -27,12 +27,15 @@
  */
 #ifndef SPFFT_TRANSFORM_INTERFACE_HPP
 #define SPFFT_TRANSFORM_INTERFACE_HPP
+#include <complex>
 #include "spfft/config.h"
 
 namespace spfft {
 
+template<typename T>
 class TransformHost {
 public:
+  virtual auto execute(const T* input, T* output) -> void = 0;
   virtual auto execute() -> void = 0;
   virtual ~TransformHost() = default;
 };

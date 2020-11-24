@@ -199,6 +199,20 @@ public:
                SpfftScalingType scaling = SPFFT_NO_SCALING);
 
   /**
+   * Execute a forward transform from space domain to frequency domain.
+   *
+   * @param[in] input Pointer to memory, to read space domain data from. Can
+   * be located at Host or GPU memory (if GPU is set as processing unit).
+   * @param[out] output Pointer to memory, where the frequency domain elements are written to. Can
+   * be located at Host or GPU memory (if GPU is set as processing unit).
+   * @param[in] scaling Controls scaling of output. SPFFT_NO_SCALING to disable or
+   * SPFFT_FULL_SCALING to scale by factor 1 / (dim_x() * dim_y() * dim_z()).
+   * @throw GenericError SpFFT error. Can be a derived type.
+   * @throw std::exception Error from standard library calls. Can be a derived type.
+   */
+  void forward(const double* input, double* output, SpfftScalingType scaling = SPFFT_NO_SCALING);
+
+  /**
    * Execute a backward transform from frequency domain to space domain.
    *
    * @param[in] input Input data in frequency domain. Must match the indices provided at transform
@@ -209,6 +223,18 @@ public:
    * @throw std::exception Error from standard library calls. Can be a derived type.
    */
   void backward(const double* input, SpfftProcessingUnitType outputLocation);
+
+  /**
+   * Execute a backward transform from frequency domain to space domain.
+   *
+   * @param[in] input Input data in frequency domain. Must match the indices provided at transform
+   * creation. Can be located at Host or GPU memory, if GPU is set as processing unit.
+   * @param[out] output Pointer to memory to write output in frequency domain to. Can be located at
+   * Host or GPU memory, if GPU is set as processing unit.
+   * @throw GenericError SpFFT error. Can be a derived type.
+   * @throw std::exception Error from standard library calls. Can be a derived type.
+   */
+  void backward(const double* input, double* output);
 
 private:
   /*! \cond PRIVATE */

@@ -49,7 +49,7 @@ template <typename T>
 class TransformReal2DGPU : public TransformGPU {
 public:
   using ValueType = T;
-  using ComplexType = gpu::fft::ComplexType<T>;
+  using ComplexType = typename gpu::fft::ComplexType<T>::type;
 
   TransformReal2DGPU(GPUArrayView3D<T> spaceDomain,
                      GPUArrayView3D<typename gpu::fft::ComplexType<T>::type> freqDomain,
@@ -198,44 +198,51 @@ public:
   inline auto device_id() const noexcept -> int { return stream_.device_id(); }
 
   auto forward() -> void override {
+    this->forward(spaceDomain_.data(), freqDomain_.data());
+  }
+
+  auto forward(const void* input, void* output) -> void override {
 #ifdef SPFFT_ROCM
     // workaround for bug with rocFFT for case 1x1xZ
     if (spaceDomain_.dim_mid() == 1 && spaceDomain_.dim_inner() == 1) {
       // make sure imaginary part is 0
       gpu::check_status(gpu::memset_async(
-          static_cast<void*>(freqDomain_.data()), 0,
+          static_cast<void*>(output), 0,
           freqDomain_.size() * sizeof(typename decltype(freqDomain_)::ValueType), stream_.get()));
       // copy real valued data into complex buffer -> from stride 1 to stride 2
-      gpu::check_status(gpu::memcpy_2d_async(static_cast<void*>(freqDomain_.data()), 2 * sizeof(T),
-                                             static_cast<const void*>(spaceDomain_.data()),
-                                             sizeof(T), sizeof(T), freqDomain_.dim_outer(),
-                                             gpu::flag::MemcpyDeviceToDevice, stream_.get()));
+      gpu::check_status(gpu::memcpy_2d_async(
+          static_cast<void*>(output), 2 * sizeof(T), static_cast<const void*>(input), sizeof(T),
+          sizeof(T), freqDomain_.dim_outer(), gpu::flag::MemcpyDeviceToDevice, stream_.get()));
       // no transform needed
       return;
     }
 #endif
 
-    if(symm_) {
+    if (symm_) {
       // Make sure buffer is zero before transform, such that the symmtry operation can identify
       // elements, which have not been written to by the FFT
       gpu::check_status(gpu::memset_async(
-          static_cast<void*>(freqDomain_.data()), 0,
+          static_cast<void*>(output), 0,
           freqDomain_.size() * sizeof(typename decltype(freqDomain_)::ValueType), stream_.get()));
     }
     gpu::fft::check_result(gpu::fft::set_work_area(planForward_, workBuffer_->data()));
-    gpu::fft::check_result(
-        gpu::fft::execute(planForward_, spaceDomain_.data(), freqDomain_.data()));
+    gpu::fft::check_result(gpu::fft::execute(planForward_, reinterpret_cast<const T*>(input),
+                                             reinterpret_cast<ComplexType*>(output)));
 
-    if(symm_) symm_->apply();
+    if (symm_) symm_->apply();
   }
 
   auto backward() -> void override {
+    this->backward(freqDomain_.data(), spaceDomain_.data());
+  }
+
+  auto backward(const void* input, void* output) -> void override {
 #ifdef SPFFT_ROCM
     // workaround for bug with rocFFT for case 1x1xZ
     if (spaceDomain_.dim_mid() == 1 && spaceDomain_.dim_inner() == 1) {
       // copy complex data into real valued buffer -> from stride 2 to stride 1
-      gpu::check_status(gpu::memcpy_2d_async(static_cast<void*>(spaceDomain_.data()), sizeof(T),
-                                             static_cast<const void*>(freqDomain_.data()),
+      gpu::check_status(gpu::memcpy_2d_async(static_cast<void*>(output), sizeof(T),
+                                             static_cast<const void*>(input),
                                              2 * sizeof(T), sizeof(T), freqDomain_.dim_outer(),
                                              gpu::flag::MemcpyDeviceToDevice, stream_.get()));
       // no transform needed
@@ -244,8 +251,8 @@ public:
 #endif
 
     gpu::fft::check_result(gpu::fft::set_work_area(planBackward_, workBuffer_->data()));
-    gpu::fft::check_result(
-        gpu::fft::execute(planBackward_, freqDomain_.data(), spaceDomain_.data()));
+    gpu::fft::check_result(gpu::fft::execute(
+        planBackward_, reinterpret_cast<const ComplexType*>(input), reinterpret_cast<T*>(output)));
   }
 
 private:

@@ -162,7 +162,7 @@ auto TransformInternal<T>::forward(const T* input, T* output,
     // set device for current thread
     GPUDeviceGuard(grid_->device_id());
 
-    execGPU_->forward_xy(inputLocation);
+    execGPU_->forward_xy(input);
     execGPU_->forward_exchange(false);
     execGPU_->forward_z(output, scaling);
     execGPU_->synchronize();
@@ -197,7 +197,7 @@ auto TransformInternal<T>::forward_xy(const T* input) -> void {
     // set device for current thread
     GPUDeviceGuard(grid_->device_id());
 
-    execGPU_->forward_xy(inputLocation);
+    execGPU_->forward_xy(input);
 #else
     throw GPUSupportError();
 #endif
@@ -266,7 +266,7 @@ auto TransformInternal<T>::backward(const T* input, T* output)
     GPUDeviceGuard(grid_->device_id());
     execGPU_->backward_z(input);
     execGPU_->backward_exchange(false);
-    execGPU_->backward_xy(outputLocation);
+    execGPU_->backward_xy(output);
     execGPU_->synchronize();
 #else
     throw GPUSupportError();
@@ -330,7 +330,7 @@ auto TransformInternal<T>::backward_xy(T* output) -> void {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
     // set device for current thread
     GPUDeviceGuard(grid_->device_id());
-    execGPU_->backward_xy(outputLocation);
+    execGPU_->backward_xy(output);
 #else
     throw GPUSupportError();
 #endif

@@ -170,30 +170,30 @@ inline auto check_result(ResultType error) -> void {
 // ==================================
 // Execution function overload
 // ==================================
-inline auto execute(HandleType& plan, ComplexDoubleType* iData, double* oData) -> ResultType {
-  return GPU_FFT_PREFIX(ExecZ2D)(plan, iData, oData);
+inline auto execute(HandleType& plan, const ComplexDoubleType* iData, double* oData) -> ResultType {
+  return GPU_FFT_PREFIX(ExecZ2D)(plan, const_cast<ComplexDoubleType*>(iData), oData);
 }
 
-inline auto execute(HandleType& plan, ComplexFloatType* iData, float* oData) -> ResultType {
-  return GPU_FFT_PREFIX(ExecC2R)(plan, iData, oData);
+inline auto execute(HandleType& plan, const ComplexFloatType* iData, float* oData) -> ResultType {
+  return GPU_FFT_PREFIX(ExecC2R)(plan, const_cast<ComplexFloatType*>(iData), oData);
 }
 
-inline auto execute(HandleType& plan, double* iData, ComplexDoubleType* oData) -> ResultType {
-  return GPU_FFT_PREFIX(ExecD2Z)(plan, iData, oData);
+inline auto execute(HandleType& plan, const double* iData, ComplexDoubleType* oData) -> ResultType {
+  return GPU_FFT_PREFIX(ExecD2Z)(plan, const_cast<double*>(iData), oData);
 }
 
-inline auto execute(HandleType& plan, float* iData, ComplexFloatType* oData) -> ResultType {
-  return GPU_FFT_PREFIX(ExecR2C)(plan, iData, oData);
+inline auto execute(HandleType& plan, const float* iData, ComplexFloatType* oData) -> ResultType {
+  return GPU_FFT_PREFIX(ExecR2C)(plan, const_cast<float*>(iData), oData);
 }
 
-inline auto execute(HandleType& plan, ComplexDoubleType* iData, ComplexDoubleType* oData,
+inline auto execute(HandleType& plan, const ComplexDoubleType* iData, ComplexDoubleType* oData,
                     int direction) -> ResultType {
-  return GPU_FFT_PREFIX(ExecZ2Z)(plan, iData, oData, direction);
+  return GPU_FFT_PREFIX(ExecZ2Z)(plan, const_cast<ComplexDoubleType*>(iData), oData, direction);
 }
 
-inline auto execute(HandleType& plan, ComplexFloatType* iData, ComplexFloatType* oData,
+inline auto execute(HandleType& plan, const ComplexFloatType* iData, ComplexFloatType* oData,
                     int direction) -> ResultType {
-  return GPU_FFT_PREFIX(ExecC2C)(plan, iData, oData, direction);
+  return GPU_FFT_PREFIX(ExecC2C)(plan, const_cast<ComplexFloatType*>(iData), oData, direction);
 }
 
 // ==================================

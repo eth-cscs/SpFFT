@@ -43,7 +43,9 @@ public:
 class TransformGPU {
 public:
   virtual auto forward() -> void = 0;
+  virtual auto forward(const void* input, void* output) -> void = 0;
   virtual auto backward() -> void = 0;
+  virtual auto backward(const void* input, void* output) -> void = 0;
   virtual ~TransformGPU() = default;
 };
 

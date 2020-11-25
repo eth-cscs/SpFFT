@@ -78,13 +78,13 @@ public:
   // The output is located on the GPU.
   auto forward_z(T* output, const SpfftScalingType scalingType) -> void;
   auto forward_exchange(const bool nonBlockingExchange) -> void;
-  auto forward_xy(const SpfftProcessingUnitType inputLocation) -> void;
+  auto forward_xy(const T* input) -> void;
 
   // transform backward into a given memory location (Host or GPU).
   // The input is taken from the GPU.
   auto backward_z(const T* input) -> void;
   auto backward_exchange(const bool nonBlockingExchange) -> void;
-  auto backward_xy(const SpfftProcessingUnitType outputLocation) -> void;
+  auto backward_xy(T* output) -> void;
 
   auto synchronize() -> void;
 
@@ -113,6 +113,7 @@ private:
 
   GPUArrayView2D<typename gpu::fft::ComplexType<T>::type> freqDomainDataGPU_;
   GPUArrayView1D<T> freqDomainCompressedDataGPU_;
+  GPUArrayView3D<typename gpu::fft::ComplexType<T>::type> freqDomainXYGPU_;
 };
 }  // namespace spfft
 #endif

@@ -276,6 +276,42 @@ interface
     integer(c_int), dimension(*), intent(in) :: indices
   end function
 
+  integer(c_int) function spfft_transform_create_independent(transform, maxNumThreads, &
+      processingUnit, transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, &
+      indices) bind(C)
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
+  integer(c_int) function spfft_transform_create_independent_distributed(transform, &
+      maxNumThreads, comm, exchangeType, processingUnit, transformType, &
+      dimX, dimY, dimZ, localZLength, numLocalElements, indexFormat, indices) &
+      bind(C, name="spfft_transform_create_independent_distributed_fortran")
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: comm
+    integer(c_int), value :: exchangeType
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: localZLength
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
   integer(c_int) function spfft_transform_destroy(transform) bind(C)
     use iso_c_binding
     type(c_ptr), value :: transform
@@ -412,6 +448,42 @@ interface
     use iso_c_binding
     type(c_ptr), intent(out) :: transform
     type(c_ptr), value :: grid
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: localZLength
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
+  integer(c_int) function spfft_float_transform_create_independent(transform, maxNumThreads, &
+      processingUnit, transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, &
+      indices) bind(C)
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
+  integer(c_int) function spfft_float_transform_create_independent_distributed(transform, &
+      maxNumThreads, comm, exchangeType, processingUnit, transformType, &
+      dimX, dimY, dimZ, localZLength, numLocalElements, indexFormat, indices) &
+      bind(C, name="spfft_float_transform_create_independent_distributed_fortran")
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: comm
+    integer(c_int), value :: exchangeType
     integer(c_int), value :: processingUnit
     integer(c_int), value :: transformType
     integer(c_int), value :: dimX

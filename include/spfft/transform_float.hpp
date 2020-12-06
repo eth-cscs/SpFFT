@@ -58,6 +58,55 @@ class SPFFT_EXPORT GridFloat;
 class SPFFT_EXPORT TransformFloat {
 public:
   using ValueType = float;
+
+  /**
+   * Create a transform without a grid handle.
+   * Thread-safe if no FFTW calls are executed concurrently.
+   *
+   * @param[in] maxNumThreads The maximum number of threads to use.
+   * @param[in] processingUnit The processing unit type to use. Must be either SPFFT_PU_HOST or
+   * SPFFT_PU_GPU.
+   * @param[in] transformType The transform type (complex to complex or real to complex). Can be
+   * SPFFT_TRANS_C2C or SPFFT_TRANS_R2C.
+   * @param[in] dimX The dimension in x.
+   * @param[in] dimY The dimension in y.
+   * @param[in] dimZ The dimension in z.
+   * @param[in] numLocalElements The number of elements in frequency domain.
+   * @param[in] indexFormat The index format. Only SPFFT_INDEX_TRIPLETS currently supported.
+   * @param[in] indices Pointer to frequency indices. Centered indexing is allowed.
+   */
+  TransformFloat(int maxNumThreads, SpfftProcessingUnitType processingUnit,
+                 SpfftTransformType transformType, int dimX, int dimY, int dimZ,
+                 int numLocalElements, SpfftIndexFormatType indexFormat, const int* indices);
+
+#ifdef SPFFT_MPI
+  /**
+   * Create a distributed transform without a grid handle.
+   * Thread-safe if no FFTW calls are executed concurrently.
+   *
+   * @param[in] maxNumThreads The maximum number of threads to use.
+   * @param[in] comm The MPI communicator to use. Will be duplicated for internal use.
+   * @param[in] exchangeType The type of MPI exchange to use. Possible values are
+   * SPFFT_EXCH_DEFAULT, SPFFT_EXCH_BUFFERED, SPFFT_EXCH_COMPACT_BUFFERED and SPFFT_EXCH_UNBUFFERED.
+   * @param[in] processingUnit The processing unit type to use. Must be either SPFFT_PU_HOST or
+   * SPFFT_PU_GPU.
+   * @param[in] transformType The transform type (complex to complex or real to complex). Can be
+   * SPFFT_TRANS_C2C or SPFFT_TRANS_R2C.
+   * @param[in] dimX The dimension in x.
+   * @param[in] dimY The dimension in y.
+   * @param[in] dimZ The dimension in z.
+   * @param[in] localZLength The length in z in space domain of the local MPI rank.
+   * @param[in] numLocalElements The number of elements in frequency domain of the local MPI
+   * rank.
+   * @param[in] indexFormat The index format. Only SPFFT_INDEX_TRIPLETS currently supported.
+   * @param[in] indices Pointer to frequency indices. Centered indexing is allowed.
+   */
+  TransformFloat(int maxNumThreads, MPI_Comm comm, SpfftExchangeType exchangeType,
+                 SpfftProcessingUnitType processingUnit, SpfftTransformType transformType, int dimX,
+                 int dimY, int dimZ, int localZLength, int numLocalElements,
+                 SpfftIndexFormatType indexFormat, const int* indices);
+#endif
+
   /**
    * Default copy constructor.
    */

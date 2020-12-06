@@ -27,12 +27,15 @@
  */
 
 #include "spfft/transform.hpp"
-#include "mpi_util/mpi_communicator_handle.hpp"
 #include "parameters/parameters.hpp"
 #include "spfft/grid.hpp"
 #include "spfft/grid_internal.hpp"
 #include "spfft/transform.h"
 #include "spfft/transform_internal.hpp"
+
+#ifdef SPFFT_MPI
+#include "mpi_util/mpi_communicator_handle.hpp"
+#endif
 
 namespace spfft {
 

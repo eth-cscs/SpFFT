@@ -31,6 +31,10 @@
 #include "spfft/transform_float.h"
 #include "spfft/transform_internal.hpp"
 
+#ifdef SPFFT_MPI
+#include "mpi_util/mpi_communicator_handle.hpp"
+#endif
+
 #ifdef SPFFT_SINGLE_PRECISION
 namespace spfft {
 TransformFloat::TransformFloat(const std::shared_ptr<GridInternal<float>>& grid,

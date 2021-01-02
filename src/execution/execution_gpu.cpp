@@ -51,7 +51,9 @@ ExecutionGPU<T>::ExecutionGPU(const int numThreads, std::shared_ptr<Parameters> 
                               GPUArray<typename gpu::fft::ComplexType<T>::type>& gpuArray2,
                               const std::shared_ptr<GPUArray<char>>& fftWorkBuffer)
     : stream_(false),
-      event_(false),
+      externalStream_(nullptr),
+      startEvent_(false),
+      endEvent_(false),
       numThreads_(numThreads),
       scalingFactor_(static_cast<T>(
           1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))),
@@ -122,7 +124,9 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
                               GPUArray<typename gpu::fft::ComplexType<T>::type>& gpuArray2,
                               const std::shared_ptr<GPUArray<char>>& fftWorkBuffer)
     : stream_(false),
-      event_(false),
+      externalStream_(nullptr),
+      startEvent_(false),
+      endEvent_(false),
       numThreads_(numThreads),
       scalingFactor_(static_cast<T>(
           1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))),
@@ -253,6 +257,9 @@ auto ExecutionGPU<T>::forward_xy(const T* input) -> void {
     throw GPUPrecedingError();
   }
 
+  startEvent_.record(externalStream_);
+  startEvent_.stream_wait(stream_.get());
+
   const T* inputPtrHost = nullptr;
   const T* inputPtrGPU = nullptr;
   std::tie(inputPtrHost, inputPtrGPU) = translate_gpu_pointer(input);
@@ -260,9 +267,6 @@ auto ExecutionGPU<T>::forward_xy(const T* input) -> void {
 
   // XY
   if (transformXY_) {
-    // Add explicit default stream synchronization
-    event_.record(nullptr);
-    event_.stream_wait(stream_.get());
 
     if (inputPtrHost) {
       gpu::check_status(gpu::memcpy_async(static_cast<void*>(spaceDomainDataExternalGPU_.data()),
@@ -317,6 +321,9 @@ auto ExecutionGPU<T>::forward_z(T* output, const SpfftScalingType scalingType) -
                              scalingType == SpfftScalingType::SPFFT_FULL_SCALING, scalingFactor_);
     }
   }
+
+  endEvent_.record(stream_.get());
+  endEvent_.stream_wait(externalStream_);
 }
 
 template <typename T>
@@ -326,6 +333,9 @@ auto ExecutionGPU<T>::backward_z(const T* input) -> void {
     throw GPUPrecedingError();
   }
 
+  startEvent_.record(externalStream_);
+  startEvent_.stream_wait(stream_.get());
+
   // decompress
   if (compression_) {
     const T* inputPtrHost = nullptr;
@@ -333,8 +343,8 @@ auto ExecutionGPU<T>::backward_z(const T* input) -> void {
     std::tie(inputPtrHost, inputPtrGPU) = translate_gpu_pointer(input);
 
     // Add explicit default stream synchronization
-    event_.record(nullptr);
-    event_.stream_wait(stream_.get());
+    startEvent_.record(nullptr);
+    startEvent_.stream_wait(stream_.get());
 
     if (inputPtrGPU == nullptr) {
       // input on HOST
@@ -389,6 +399,9 @@ auto ExecutionGPU<T>::backward_xy(T* output) -> void {
                             gpu::flag::MemcpyDeviceToHost, stream_.get()));
     }
   }
+
+  endEvent_.record(stream_.get());
+  endEvent_.stream_wait(externalStream_);
 }
 
 template <typename T>

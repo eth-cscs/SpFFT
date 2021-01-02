@@ -282,6 +282,21 @@ SpfftError spfft_transform_forward(SpfftTransform transform, SpfftProcessingUnit
   return SpfftError::SPFFT_SUCCESS;
 }
 
+SpfftError spfft_transform_forward_ptr(SpfftTransform transform, const double* input,
+                                       double* output, SpfftScalingType scaling) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    reinterpret_cast<spfft::Transform*>(transform)->forward(input, output, scaling);
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
 SpfftError spfft_transform_backward(SpfftTransform transform, const double* input,
                                     SpfftProcessingUnitType outputLocation) {
   if (!transform) {
@@ -289,6 +304,21 @@ SpfftError spfft_transform_backward(SpfftTransform transform, const double* inpu
   }
   try {
     reinterpret_cast<spfft::Transform*>(transform)->backward(input, outputLocation);
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_transform_backward_ptr(SpfftTransform transform, const double* input,
+                                        double* output) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    reinterpret_cast<spfft::Transform*>(transform)->backward(input, output);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {

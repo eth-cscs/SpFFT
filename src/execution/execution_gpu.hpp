@@ -35,6 +35,7 @@
 #include "fft/transform_interface.hpp"
 #include "gpu_util/gpu_event_handle.hpp"
 #include "gpu_util/gpu_fft_api.hpp"
+#include "gpu_util/gpu_runtime_api.hpp"
 #include "gpu_util/gpu_stream_handle.hpp"
 #include "memory/gpu_array.hpp"
 #include "memory/gpu_array_view.hpp"
@@ -94,9 +95,19 @@ public:
   // The space domain data on GPU
   auto space_domain_data_gpu() -> GPUArrayView3D<T>;
 
+  auto get_external_stream() -> gpu::StreamType {
+    return externalStream_;
+  }
+
+  auto set_external_stream(gpu::StreamType stream) -> void {
+    externalStream_ = stream;
+  }
+
 private:
   GPUStreamHandle stream_;
-  GPUEventHandle event_;
+  gpu::StreamType externalStream_;
+  GPUEventHandle startEvent_;
+  GPUEventHandle endEvent_;
   int numThreads_;
   T scalingFactor_;
   std::unique_ptr<TransformGPU> transformZ_;

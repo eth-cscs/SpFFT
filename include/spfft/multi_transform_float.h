@@ -46,11 +46,25 @@ extern "C" {
  * @param[in] scalingTypes Scaling types for each transform.
  * @return Error code or SPFFT_SUCCESS.
  */
-SPFFT_EXPORT SpfftError spfft_float_multi_transform_forward(int numTransforms,
-                                                            SpfftFloatTransform* transforms,
-                                                            SpfftProcessingUnitType* inputLocations,
-                                                            float** outputPointers,
-                                                            SpfftScalingType* scalingTypes);
+SPFFT_EXPORT SpfftError spfft_float_multi_transform_forward(
+    int numTransforms, SpfftFloatTransform* transforms,
+    const SpfftProcessingUnitType* inputLocations, float* const* outputPointers,
+    const SpfftScalingType* scalingTypes);
+
+/**
+ * Execute multiple independent forward transforms at once by internal pipelining.
+ *
+ * @param[in] numTransforms Number of transforms to execute.
+ * @param[in] transforms Transforms to execute.
+ * @param[in] inputPointers Input pointers for each transform.
+ * @param[out] outputPointers Output pointers for each transform.
+ * @param[in] scalingTypes Scaling types for each transform.
+ * @throw GenericError SpFFT error. Can be a derived type.
+ * @throw std::exception Error from standard library calls. Can be a derived type.
+ */
+SPFFT_EXPORT SpfftError spfft_float_multi_transform_forward_ptr(
+    int numTransforms, SpfftFloatTransform* transforms, const float* const* inputPointers,
+    float* const* outputPointers, const SpfftScalingType* scalingTypes);
 
 /**
  * Execute multiple independent backward transforms at once by internal pipelining.
@@ -62,8 +76,23 @@ SPFFT_EXPORT SpfftError spfft_float_multi_transform_forward(int numTransforms,
  * @return Error code or SPFFT_SUCCESS.
  */
 SPFFT_EXPORT SpfftError spfft_float_multi_transform_backward(
-    int numTransforms, SpfftFloatTransform* transforms, float** inputPointers,
-    SpfftProcessingUnitType* outputLocations);
+    int numTransforms, SpfftFloatTransform* transforms, const float* const* inputPointers,
+    const SpfftProcessingUnitType* outputLocations);
+
+/**
+ * Execute multiple independent backward transforms at once by internal pipelining.
+ *
+ * @param[in] numTransforms Number of transforms to execute.
+ * @param[in] transforms Transforms to execute.
+ * @param[in] inputPointers Input pointers for each transform.
+ * @param[in] outputPointers Output pointers for each transform.
+ * @throw GenericError SpFFT error. Can be a derived type.
+ * @throw std::exception Error from standard library calls. Can be a derived type.
+ */
+SPFFT_EXPORT SpfftError spfft_float_multi_transform_backward_ptr(int numTransforms,
+                                                                 SpfftFloatTransform* transforms,
+                                                                 const float* const* inputPointers,
+                                                                 float* const* outputPointers);
 
 #ifdef __cplusplus
 }

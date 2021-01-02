@@ -161,6 +161,22 @@ SPFFT_EXPORT SpfftError spfft_float_transform_forward(SpfftFloatTransform transf
                                                       float* output, SpfftScalingType scaling);
 
 /**
+ * Execute a forward transform from space domain to frequency domain.
+ *
+ * @param[in] transform Handle to the transform.
+ * @param[in] input Pointer to memory, to read space domain data from. Can
+ * be located at Host or GPU memory (if GPU is set as processing unit).
+ * @param[out] output Pointer to memory, where the frequency domain elements are written to. Can
+ * be located at Host or GPU memory (if GPU is set as processing unit).
+ * @param[in] scaling Controls scaling of output. SPFFT_NO_SCALING to disable or
+ * SPFFT_FULL_SCALING to scale by factor 1 / (dim_x() * dim_y() * dim_z()).
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_forward_ptr(SpfftFloatTransform transform,
+                                                          const float* input, float* output,
+                                                          SpfftScalingType scaling);
+
+/**
  * Execute a backward transform from frequency domain to space domain.
  *
  * @param[in] transform Handle to the transform.
@@ -173,6 +189,20 @@ SPFFT_EXPORT SpfftError spfft_float_transform_forward(SpfftFloatTransform transf
 SPFFT_EXPORT SpfftError spfft_float_transform_backward(SpfftFloatTransform transform,
                                                        const float* input,
                                                        SpfftProcessingUnitType outputLocation);
+
+/**
+ * Execute a backward transform from frequency domain to space domain.
+ *
+ * @param[in] transform Handle to the transform.
+ * @param[in] input Input data in frequency domain. Must match the indices provided at transform
+ * @param[out] output Pointer to memory to write output in frequency domain to. Can be located at
+ * Host or GPU memory, if GPU is set as processing unit.
+ * creation. Can be located at Host or GPU memory, if GPU is set as processing unit.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_backward_ptr(SpfftFloatTransform transform,
+                                                           const float* input, float* output);
+
 /**
  * Provides access to the space domain data.
  *

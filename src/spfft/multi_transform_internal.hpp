@@ -28,6 +28,7 @@
 #ifndef SPFFT_MULTI_TRANSFORM_INTERNAL_HPP
 #define SPFFT_MULTI_TRANSFORM_INTERNAL_HPP
 
+#include <vector>
 #include "spfft/exceptions.hpp"
 #include "spfft/transform.hpp"
 #include "spfft/transform_internal.hpp"
@@ -45,8 +46,22 @@ public:
   using ValueType = typename TransformType::ValueType;
 
   inline static auto forward(const int numTransforms, TransformType* transforms,
-                             SpfftProcessingUnitType* inputLocations, ValueType** outputPointers,
-                             SpfftScalingType* scalingTypes) -> void {
+                             const SpfftProcessingUnitType* inputLocations,
+                             ValueType* const* outputPointers, const SpfftScalingType* scalingTypes)
+      -> void {
+    std::vector<ValueType*> inputPointers(numTransforms);
+    for(int i = 0; i < numTransforms; ++i) {
+      inputPointers[i] = transforms[i].space_domain_data(inputLocations[i]);
+    }
+
+    MultiTransformInternal<TransformType>::forward(numTransforms, transforms, inputPointers.data(),
+                                                   outputPointers, scalingTypes);
+  }
+
+  inline static auto forward(const int numTransforms, TransformType* transforms,
+                             const ValueType* const* inputPointers,
+                             ValueType* const* outputPointers, const SpfftScalingType* scalingTypes)
+      -> void {
     HOST_TIMING_SCOPED("forward")
 
     // transforms must not share grids
@@ -61,14 +76,14 @@ public:
     // launch all gpu transforms first
     for (int t = 0; t < numTransforms; ++t) {
       if (transforms[t].transform_->processing_unit() == SPFFT_PU_GPU) {
-        transforms[t].transform_->forward_xy(inputLocations[t]);
+        transforms[t].transform_->forward_xy(inputPointers[t]);
       }
     }
 
     // launch all cpu transforms including MPI exchange
     for (int t = 0; t < numTransforms; ++t) {
       if (transforms[t].transform_->processing_unit() != SPFFT_PU_GPU) {
-        transforms[t].transform_->forward_xy(inputLocations[t]);
+        transforms[t].transform_->forward_xy(inputPointers[t]);
         transforms[t].transform_->forward_exchange();
       }
     }
@@ -95,8 +110,20 @@ public:
   }
 
   inline static auto backward(const int numTransforms, TransformType* transforms,
-                              ValueType** inputPointers, SpfftProcessingUnitType* outputLocations)
-      -> void {
+                              const ValueType* const* inputPointers,
+                              const SpfftProcessingUnitType* outputLocations) -> void {
+    std::vector<ValueType*> outputPointers(numTransforms);
+    for(int i = 0; i < numTransforms; ++i) {
+      outputPointers[i] = transforms[i].space_domain_data(outputLocations[i]);
+    }
+
+    MultiTransformInternal<TransformType>::backward(numTransforms, transforms, inputPointers,
+                                                    outputPointers.data());
+  }
+
+  inline static auto backward(const int numTransforms, TransformType* transforms,
+                              const ValueType* const* inputPointers,
+                              ValueType* const* outputPointers) -> void {
     HOST_TIMING_SCOPED("backward")
 
     // transforms must not share grids
@@ -127,14 +154,14 @@ public:
     for (int t = 0; t < numTransforms; ++t) {
       if (transforms[t].transform_->processing_unit() == SPFFT_PU_GPU) {
         transforms[t].transform_->backward_exchange();
-        transforms[t].transform_->backward_xy(outputLocations[t]);
+        transforms[t].transform_->backward_xy(outputPointers[t]);
       }
     }
 
     // launch all remaining cpu transforms
     for (int t = 0; t < numTransforms; ++t) {
       if (transforms[t].transform_->processing_unit() != SPFFT_PU_GPU) {
-        transforms[t].transform_->backward_xy(outputLocations[t]);
+        transforms[t].transform_->backward_xy(outputPointers[t]);
       }
     }
 

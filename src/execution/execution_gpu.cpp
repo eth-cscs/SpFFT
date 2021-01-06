@@ -321,9 +321,6 @@ auto ExecutionGPU<T>::forward_z(T* output, const SpfftScalingType scalingType) -
                              scalingType == SpfftScalingType::SPFFT_FULL_SCALING, scalingFactor_);
     }
   }
-
-  endEvent_.record(stream_.get());
-  endEvent_.stream_wait(externalStream_);
 }
 
 template <typename T>
@@ -400,13 +397,16 @@ auto ExecutionGPU<T>::backward_xy(T* output) -> void {
     }
   }
 
-  endEvent_.record(stream_.get());
-  endEvent_.stream_wait(externalStream_);
 }
 
 template <typename T>
-auto ExecutionGPU<T>::synchronize() -> void {
-  gpu::stream_synchronize(stream_.get());
+auto ExecutionGPU<T>::synchronize(SpfftExecType mode) -> void {
+  if (mode == SPFFT_EXEC_ASYNCHRONOUS) {
+    endEvent_.record(stream_.get());
+    endEvent_.stream_wait(externalStream_);
+  } else {
+    gpu::stream_synchronize(stream_.get());
+  }
 }
 
 template <typename T>

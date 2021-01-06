@@ -45,7 +45,7 @@ template <typename T>
 TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
                                         std::shared_ptr<GridInternal<T>> grid,
                                         std::shared_ptr<Parameters> param)
-    : executionUnit_(executionUnit), param_(std::move(param)), grid_(std::move(grid)) {
+    : executionUnit_(executionUnit), execMode_(SPFFT_EXEC_SYNCHRONOUS), param_(std::move(param)), grid_(std::move(grid)) {
   // ----------------------
   // Input Check
   // ----------------------
@@ -165,7 +165,7 @@ auto TransformInternal<T>::forward(const T* input, T* output,
     execGPU_->forward_xy(input);
     execGPU_->forward_exchange(false);
     execGPU_->forward_z(output, scaling);
-    execGPU_->synchronize();
+    execGPU_->synchronize(execMode_);
 #else
     throw GPUSupportError();
 #endif
@@ -267,7 +267,7 @@ auto TransformInternal<T>::backward(const T* input, T* output)
     execGPU_->backward_z(input);
     execGPU_->backward_exchange(false);
     execGPU_->backward_xy(output);
-    execGPU_->synchronize();
+    execGPU_->synchronize(execMode_);
 #else
     throw GPUSupportError();
 #endif
@@ -358,7 +358,7 @@ auto TransformInternal<T>::space_domain_data(SpfftProcessingUnitType location) -
 template <typename T>
 auto TransformInternal<T>::synchronize() -> void {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
-  if (execGPU_) execGPU_->synchronize();
+  if (execGPU_) execGPU_->synchronize(execMode_);
 #endif
 }
 

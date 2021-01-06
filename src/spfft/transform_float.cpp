@@ -155,6 +155,10 @@ int TransformFloat::device_id() const { return transform_->device_id(); }
 
 int TransformFloat::num_threads() const { return transform_->num_threads(); }
 
+SpfftExecType TransformFloat::execution_mode() const {return transform_->execution_mode();}
+
+void TransformFloat::set_execution_mode(SpfftExecType mode) {return transform_->set_execution_mode(mode);}
+
 #ifdef SPFFT_MPI
 MPI_Comm TransformFloat::communicator() const { return transform_->communicator(); }
 #endif
@@ -491,6 +495,36 @@ SpfftError spfft_float_transform_num_threads(SpfftFloatTransform transform, int*
   }
   try {
     *numThreads = reinterpret_cast<spfft::TransformFloat*>(transform)->num_threads();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_float_transform_execution_mode(SpfftFloatTransform transform,
+                                                SpfftExecType* mode) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *mode = reinterpret_cast<spfft::TransformFloat*>(transform)->execution_mode();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_float_transform_set_execution_mode(SpfftFloatTransform transform,
+                                                    SpfftExecType mode) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    reinterpret_cast<spfft::TransformFloat*>(transform)->set_execution_mode(mode);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {

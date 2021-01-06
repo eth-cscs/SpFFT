@@ -211,6 +211,19 @@ public:
    */
   int num_threads() const;
 
+  /**
+   * Access a transform parameter.
+   * @return The execution mode. Only affects execution on GPU. Defaults to SPFFT_EXEC_SYNCHRONOUS.
+   */
+  SpfftExecType execution_mode() const;
+
+  /**
+   * Set a transform parameter.
+   * @param[in] mode The execution mode to change to. Only affects execution on GPU.
+   * Defaults to SPFFT_EXEC_SYNCHRONOUS.
+   */
+  void set_execution_mode(SpfftExecType mode);
+
 #ifdef SPFFT_MPI
   /**
    * Access a transform parameter.

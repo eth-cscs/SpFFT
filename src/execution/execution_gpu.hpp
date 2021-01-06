@@ -87,7 +87,7 @@ public:
   auto backward_exchange(const bool nonBlockingExchange) -> void;
   auto backward_xy(T* output) -> void;
 
-  auto synchronize() -> void;
+  auto synchronize(SpfftExecType mode) -> void;
 
   // The space domain data on Host
   auto space_domain_data_host() -> HostArrayView3D<T>;

@@ -50,6 +50,9 @@ integer(c_int), parameter ::                  &
     SPFFT_NO_SCALING                    = 0,  &
     SPFFT_FULL_SCALING                  = 1,  &
 
+    SPFFT_EXEC_SYNCHRONOUS              = 0,  &
+    SPFFT_EXEC_ASYNCHRONOUS             = 1,  &
+
     SPFFT_SUCCESS                       = 0,  &
     SPFFT_UNKNOWN_ERROR                 = 1,  &
     SPFFT_INVALID_HANDLE_ERROR          = 2,  &
@@ -248,6 +251,18 @@ interface
     use iso_c_binding
     type(c_ptr), value :: grid
     integer(c_int), intent(out) :: numThreads
+  end function
+
+  integer(c_int) function spfft_transform_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), intent(out) :: mode
+  end function
+
+  integer(c_int) function spfft_transform_set_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), value :: mode
   end function
 
   integer(c_int) function spfft_float_grid_communicator(grid, comm) &
@@ -648,6 +663,18 @@ interface
     use iso_c_binding
     type(c_ptr), value :: transform
     integer(c_int), intent(out) :: numThreads
+  end function
+
+  integer(c_int) function spfft_float_transform_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), intent(out) :: mode
+  end function
+
+  integer(c_int) function spfft_float_transform_set_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), value :: mode
   end function
 
   integer(c_int) function spfft_float_transform_communicator(transform, comm) &

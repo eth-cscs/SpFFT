@@ -317,6 +317,26 @@ SPFFT_EXPORT SpfftError spfft_float_transform_device_id(SpfftFloatTransform tran
 SPFFT_EXPORT SpfftError spfft_float_transform_num_threads(SpfftFloatTransform transform,
                                                           int* numThreads);
 
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
+ * @param[out] mode The execution mode. Only affects execution on GPU.
+ * Defaults to SPFFT_EXEC_SYNCHRONOUS.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_execution_mode(SpfftFloatTransform transform,
+                                                             SpfftExecType* mode);
+
+/**
+ * Set a transform parameter.
+ * @param[in] transform Handle to the transform.
+ * @param[int] mode The execution mode to change to. Only affects execution on GPU.
+ * Defaults to SPFFT_EXEC_SYNCHRONOUS.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_set_execution_mode(SpfftFloatTransform transform,
+                                                                 SpfftExecType mode);
+
 #ifdef SPFFT_MPI
 /**
  * Access a transform parameter.

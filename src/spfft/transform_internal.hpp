@@ -76,6 +76,10 @@ public:
 
   inline auto global_size() const -> long long int { return param_->global_size(); }
 
+  inline auto execution_mode() const -> SpfftExecType { return execMode_;}
+
+  inline auto set_execution_mode(SpfftExecType mode) -> void { execMode_ = mode;}
+
   inline auto shared_grid(const TransformInternal<T>& other) const -> bool {
     return other.grid_ == grid_;
   }
@@ -130,7 +134,8 @@ public:
 
 private:
   SpfftProcessingUnitType executionUnit_;
-  std::shared_ptr<Parameters> param_;
+  SpfftExecType execMode_;
+  std::shared_ptr<Parameters> param_; // Only for immutable parameters
   std::shared_ptr<GridInternal<T>> grid_;
 
   std::unique_ptr<ExecutionHost<T>> execHost_;

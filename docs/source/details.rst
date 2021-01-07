@@ -13,7 +13,6 @@ Transform Definition
 - :math:`\omega_{N}^{k,n} = e^{2\pi i \frac{k n}{N}}`: *Backward* transform from frequency domain to space domain
 
 
-
 Complex Number Format
 ---------------------
 SpFFT always assumes an interleaved format in double or single precision. The alignment of memory provided for space domain data is guaranteed to fulfill to the requirements for std::complex (for C++11), C complex types and GPU complex types of CUDA or ROCm.
@@ -90,9 +89,14 @@ The execution of transforms is thread-safe if
 
 GPU
 ---
-| Saving transfer time between host and GPU is key to good performance for execution with GPUs. Ideally, both input and output is located on GPU memory. If host memory pointers are provided as input or output, it is helpful to use pinned memory through the CUDA or ROCm API.
+| Saving transfer time between host and GPU is key to good performance for execution with GPUs. Ideally, both input and output is located on GPU memory. If host memory pointers are provided as input or output, it is beneficial to use pinned memory through the CUDA or ROCm API.
 
 | If available, GPU aware MPI can be utilized, to safe on the otherwise required transfers between host and GPU in preparation of the MPI exchange. This can greatly impact performance and is enabled by compiling the library with the CMake option SPFFT_GPU_DIRECT set to ON.
 
 .. note:: Additional environment variables may have to be set for some MPI implementations, to allow GPUDirect usage.
 .. note:: The execution of a transform is synchronized with the default stream.
+
+Multi-GPU
+---------
+Multi-GPU support is not available for individual transform operations, but each Grid / Transform can be associated to a different GPU. At creation time, the current GPU id is stored internally and used for operations later on. So by either using the asynchronous execution mode or using the multi-transform functionality, multiple GPUs can be used at the same time.
+

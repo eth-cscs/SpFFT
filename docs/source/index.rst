@@ -34,7 +34,7 @@ To allow for pre-allocation and reuse of memory, the design is based on two clas
 - **Grid**: Allocates memory for transforms up to a given size in each dimension.
 - **Transform**: Is associated with a *Grid* and can have any size up to the *Grid* dimensions. A *Transform* holds a counted reference to the underlying *Grid*. Therefore, *Transforms* created with the same *Grid* share memory, which is only freed, once the *Grid* and all associated *Transforms* are destroyed.
 
-The user provides memory for storing sparse frequency domain data, while a *Transform* provides memory for space domain data. This implies, that executing a *Transform* will override the space domain data of all other *Transforms* associated with the same *Grid*.
+A transform can be computed in-place and out-of-place. Addtionally, an internally allocated work buffer can optionally be used for input / output of space domain data.
 
 .. note::
    The creation of Grids and Transforms, as well as the forward and backward execution may entail MPI calls and must be synchronized between all ranks.
@@ -73,8 +73,6 @@ The user provides memory for storing sparse frequency domain data, while a *Tran
    transform_float_c
    multi_transform_c
    errors_c
-
-
 
 
 

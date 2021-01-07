@@ -15,21 +15,21 @@ int main(int argc, char** argv) {
   // Use default OpenMP value
   const int numThreads = -1;
 
-  // use all elements in this example.
+  // Use all elements in this example.
   const int numFrequencyElements = dimX * dimY * dimZ;
 
   // Slice length in space domain. Equivalent to dimZ for non-distributed case.
   const int localZLength = dimZ;
 
-  // interleaved complex numbers
+  // Interleaved complex numbers
   std::vector<double> frequencyElements;
   frequencyElements.reserve(2 * numFrequencyElements);
 
-  // indices of frequency elements
+  // Indices of frequency elements
   std::vector<int> indices;
   indices.reserve(dimX * dimY * dimZ * 3);
 
-  // initialize frequency domain values and indices
+  // Initialize frequency domain values and indices
   double initValue = 0.0;
   for (int xIndex = 0; xIndex < dimX; ++xIndex) {
     for (int yIndex = 0; yIndex < dimY; ++yIndex) {
@@ -53,31 +53,48 @@ int main(int argc, char** argv) {
     std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
   }
 
-  // create local Grid. For distributed computations, a MPI Communicator has to be provided
+  // Create local Grid. For distributed computations, a MPI Communicator has to be provided
   spfft::Grid grid(dimX, dimY, dimZ, dimX * dimY, SPFFT_PU_HOST, numThreads);
 
-  // create transform
+  // Create transform.
+  // Note: A transform handle can be created without a grid if no resource sharing is desired.
   spfft::Transform transform =
       grid.create_transform(SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY, dimZ, localZLength,
                             numFrequencyElements, SPFFT_INDEX_TRIPLETS, indices.data());
 
-  // Get pointer to space domain data. Alignment fullfills requirements for std::complex.
-  // Can also be read as std::complex elements (guaranteed by the standard to be binary compatible
-  // since C++11).
-  double* spaceDomain = transform.space_domain_data(SPFFT_PU_HOST);
 
-  // transform backward
+  ///////////////////////////////////////////////////
+  // Option A: Reuse internal buffer for space domain
+  ///////////////////////////////////////////////////
+
+  // Transform backward
   transform.backward(frequencyElements.data(), SPFFT_PU_HOST);
+
+  // Get pointer to buffer with space domain data. Is guaranteed to be castable to a valid
+  // std::complex pointer. Using the internal working buffer as input / output can help reduce
+  // memory usage.
+  double* spaceDomainPtr = transform.space_domain_data(SPFFT_PU_HOST);
 
   std::cout << std::endl << "After backward transform:" << std::endl;
   for (int i = 0; i < transform.local_slice_size(); ++i) {
-    std::cout << spaceDomain[2 * i] << ", " << spaceDomain[2 * i + 1] << std::endl;
+    std::cout << spaceDomainPtr[2 * i] << ", " << spaceDomainPtr[2 * i + 1] << std::endl;
   }
 
-  // transform forward
-  transform.forward(SPFFT_PU_HOST, frequencyElements.data(), SPFFT_NO_SCALING);
+  /////////////////////////////////////////////////
+  // Option B: Use external buffer for space domain
+  /////////////////////////////////////////////////
 
-  std::cout << std::endl << "After forward transform (without scaling):" << std::endl;
+  std::vector<double> spaceDomainVec(2 * transform.local_slice_size());
+
+  // Transform backward
+  transform.backward(frequencyElements.data(), spaceDomainVec.data());
+
+  // Transform forward
+  transform.forward(spaceDomainVec.data(), frequencyElements.data(), SPFFT_NO_SCALING);
+
+  // Note: In-place transforms are also supported by passing the same pointer for input and output.
+
+  std::cout << std::endl << "After forward transform (without normalization):" << std::endl;
   for (int i = 0; i < numFrequencyElements; ++i) {
     std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
   }

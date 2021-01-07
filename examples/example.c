@@ -68,8 +68,14 @@ int main(int argc, char** argv) {
   status = spfft_grid_destroy(grid);
   if (status != SPFFT_SUCCESS) exit(status);
 
-  /* get pointer to space domain data. Alignment is guaranteed to fullfill requirements C complex
-   types */
+
+  /**************************************************
+   Option A: Reuse internal buffer for space domain
+  ***************************************************/
+
+  /* Get pointer to buffer with space domain data. Is guaranteed to be castable to a valid
+     complex type pointer. Using the internal working buffer as input / output can help reduce
+     memory usage.*/
   double* spaceDomain;
   status = spfft_transform_get_space_domain(transform, SPFFT_PU_HOST, &spaceDomain);
   if (status != SPFFT_SUCCESS) exit(status);
@@ -84,11 +90,23 @@ int main(int argc, char** argv) {
   }
   printf("\n");
 
-  /* transform forward */
-  status = spfft_transform_forward(transform, SPFFT_PU_HOST, frequencyElements, SPFFT_NO_SCALING);
+
+  /**********************************************
+   Option B: Use external buffer for space domain
+  ***********************************************/
+  spaceDomain = (double*)malloc(2 * sizeof(double) * dimX * dimY * dimZ);
+
+  /* transform backward */
+  status = spfft_transform_backward_ptr(transform, frequencyElements, spaceDomain);
   if (status != SPFFT_SUCCESS) exit(status);
 
-  printf("After forward transform (without scaling):\n");
+  /* transform forward */
+  status = spfft_transform_forward_ptr(transform, spaceDomain, frequencyElements, SPFFT_NO_SCALING);
+  if (status != SPFFT_SUCCESS) exit(status);
+
+  /* Note: In-place transforms are also supported by passing the same pointer for input and output. */
+
+  printf("After forward transform (without normalization):\n");
   for (size_t i = 0; i < dimX * dimY * dimZ; ++i) {
     printf("%f, %f\n", frequencyElements[2 * i], frequencyElements[2 * i + 1]);
   }
@@ -96,6 +114,9 @@ int main(int argc, char** argv) {
   /* destroying the final transform will free the associated memory */
   status = spfft_transform_destroy(transform);
   if (status != SPFFT_SUCCESS) exit(status);
+
+  free(spaceDomain);
+  free(frequencyElements);
 
   return 0;
 }

@@ -124,6 +124,7 @@ typedef enum SpfftProcessingUnitType SpfftProcessingUnitType;
 typedef enum SpfftTransformType SpfftTransformType;
 typedef enum SpfftIndexFormatType SpfftIndexFormatType;
 typedef enum SpfftScalingType SpfftScalingType;
+typedef enum SpfftExecType SpfftExecType;
 /*! \endcond */
 #endif  // cpp
 #endif

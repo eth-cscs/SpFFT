@@ -351,7 +351,7 @@ interface
     use iso_c_binding
     type(c_ptr), value :: transform
     complex(c_double), dimension(*), intent(in) :: input
-    c_double, dimension(*), intent(out) :: output
+    real(c_double), dimension(*), intent(out) :: output
   end function
 
   integer(c_int) function spfft_transform_forward(transform, inputLocation, &
@@ -367,7 +367,7 @@ interface
                                   output, scaling) bind(C)
     use iso_c_binding
     type(c_ptr), value :: transform
-    c_double, dimension(*), intent(in) :: input
+    real(c_double), dimension(*), intent(in) :: input
     complex(c_double), dimension(*), intent(out) :: output
     integer(c_int), value :: scaling
   end function
@@ -570,7 +570,7 @@ interface
     use iso_c_binding
     type(c_ptr), value :: transform
     complex(c_float), dimension(*), intent(in) :: input
-    c_float, dimension(*), intent(out) :: output
+    real(c_float), dimension(*), intent(out) :: output
   end function
 
   integer(c_int) function spfft_float_transform_forward(transform, inputLocation, &
@@ -586,7 +586,7 @@ interface
                                   output, scaling) bind(C)
     use iso_c_binding
     type(c_ptr), value :: transform
-    c_float, dimension(*), intent(in) :: input
+    real(c_float), dimension(*), intent(in) :: input
     complex(c_float), dimension(*), intent(out) :: output
     integer(c_int), value :: scaling
   end function
@@ -719,7 +719,7 @@ interface
     integer(c_int), value :: numTransforms
     type(c_ptr), value :: transforms
     type(c_ptr), value :: inputPointers
-    type(c_ptr), value :: outputLocations
+    type(c_ptr), value :: outputPointers
   end function
 
 end interface

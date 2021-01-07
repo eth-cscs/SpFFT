@@ -116,8 +116,8 @@ if(SPFFT_ROCM)
 	endif()
 	find_package(HIP REQUIRED)
 	find_package(HIPLIBS REQUIRED)
-	find_package(ROCFFT REQUIRED)
-	list(APPEND SPFFT_EXTERNAL_LIBS HIPLIBS::hiplibs ROCFFT::rocfft)
+	find_package(rocfft REQUIRED)
+	list(APPEND SPFFT_EXTERNAL_LIBS HIPLIBS::hiplibs roc::rocfft)
 	list(APPEND SPFFT_EXTERNAL_COMPILE_OPTIONS -D__HIP_PLATFORM_HCC__) # required for parsing HIP headers with another compiler
 endif()
 

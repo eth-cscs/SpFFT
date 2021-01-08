@@ -34,16 +34,17 @@ Example:
 
 CMake options
 -------------
-====================== ======= ================================================
+====================== ======= =============================================================
 Option                 Default Description
-====================== ======= ================================================
+====================== ======= =============================================================
 SPFFT_MPI              ON      Enable MPI support
 SPFFT_OMP              ON      Enable multi-threading with OpenMP
 SPFFT_GPU_BACKEND      OFF     Select GPU backend. Can be OFF, CUDA or ROCM
 SPFFT_GPU_DIRECT       OFF     Use GPU aware MPI with GPUDirect
 SPFFT_SINGLE_PRECISION OFF     Enable single precision support
 SPFFT_STATIC           OFF     Build as static library
+SPFFT_FFTW_LIB         AUTO    Library providing a FFTW interface. Can be AUTO, MKL or FFTW
 SPFFT_BUILD_TESTS      OFF     Build test executables for developement purposes
 SPFFT_INSTALL          ON      Add library to install target
 SPFFT_FORTRAN          OFF     Build Fortran interface module
-====================== ======= ================================================
+====================== ======= ============================================================

@@ -42,6 +42,11 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 	"OFF" "CUDA" "ROCM"
 	)
 
+set(SPFFT_FFTW_LIB "AUTO" CACHE STRING "Library providing a FFTW interface")
+set_property(CACHE SPFFT_FFTW_LIB PROPERTY STRINGS
+	"AUTO" "FFTW" "MKL"
+	)
+
 # Get GNU standard install prefixes
 include(GNUInstallDirs)
 
@@ -145,27 +150,36 @@ if(SPFFT_GPU_DIRECT)
 endif()
 
 
-
-# Use MKL if available, otherwise require FFTW3
-if(UNIX AND NOT APPLE)
-	# prefer static MKL in Linux. Together with "-Wl,--exclude-libs,ALL",
-	# symbols are not visible for linking afterwards and no conflicts with other MKL versions of other libraries should exist.
-	set(_TMP_SAVE ${CMAKE_FIND_LIBRARY_SUFFIXES})
-	set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
-endif()
-find_package(MKLSequential)
-if(UNIX AND NOT APPLE)
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ${_TMP_SAVE})
-	unset(_TMP_SAVE)
+# FFTW library must be found if not set to AUTO
+set(_SPFFT_FIND_FFTW_LIB_OPTION)
+if(NOT ${SPFFT_FFTW_LIB} STREQUAL "AUTO")
+	set(_SPFFT_FIND_FFTW_LIB_OPTION REQUIRED)
 endif()
 
-if(MKLSequential_FOUND)
-	list(APPEND SPFFT_EXTERNAL_LIBS MKL::Sequential)
-	if(SPFFT_STATIC)
-		list(APPEND SPFFT_INTERFACE_LIBS ${MKLSequential_LIBRARIES})
+# Look for MKL first
+if(${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "MKL")
+	# Use MKL if available, otherwise require FFTW3
+	if(UNIX AND NOT APPLE)
+		# prefer static MKL in Linux. Together with "-Wl,--exclude-libs,ALL",
+		# symbols are not visible for linking afterwards and no conflicts with other MKL versions of other libraries should exist.
+		set(_TMP_SAVE ${CMAKE_FIND_LIBRARY_SUFFIXES})
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
 	endif()
-	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES mkl-dynamic-lp64-seq)
-else()
+	find_package(MKLSequential ${_SPFFT_FIND_FFTW_LIB_OPTION})
+	if(UNIX AND NOT APPLE)
+		set(CMAKE_FIND_LIBRARY_SUFFIXES ${_TMP_SAVE})
+		unset(_TMP_SAVE)
+	endif()
+	if(TARGET MKL::Sequential)
+		if(SPFFT_STATIC)
+			list(APPEND SPFFT_INTERFACE_LIBS ${MKLSequential_LIBRARIES})
+		endif()
+		list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES mkl-dynamic-lp64-seq)
+	endif()
+endif()
+
+# Look for FFTW library if required
+if(NOT TARGET MKL::Sequential)
 	find_package(FFTW REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS FFTW::FFTW)
 	if(SPFFT_STATIC)
@@ -176,7 +190,6 @@ else()
 	endif()
 	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES fftw3)
 endif()
-
 
 if(SPFFT_BUILD_TESTS)
 	# enable timing with testing

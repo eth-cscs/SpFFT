@@ -127,7 +127,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mkdir -p build
         cd build
-        /root/cmake-3.11.4-Linux-x86_64/bin/cmake .. -DSPFFT_BUILD_TESTS=ON -DSPFFT_GPU_BACKEND=ROCM
+        /root/cmake-3.11.4-Linux-x86_64/bin/cmake .. -DSPFFT_BUILD_TESTS=ON -DSPFFT_GPU_BACKEND=ROCM -DCMAKE_PREFIX_PATH=/opt/rocm
         make -j2
 
 

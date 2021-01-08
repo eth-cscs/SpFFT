@@ -16,7 +16,7 @@ Requirements
 - For compilation with GPU support:
 
   * CUDA 9.0 and later for Nvidia hardware
-  * ROCm 2.6 and later for AMD hardware
+  * ROCm 3.5 and later for AMD hardware
 
 
 Build

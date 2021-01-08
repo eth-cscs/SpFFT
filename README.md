@@ -46,7 +46,7 @@ Documentation can be found [here](https://spfft.readthedocs.io/en/latest/).
 - For multi-threading: OpenMP support by the compiler
 - For compilation with GPU support:
   - CUDA 9.0 and later for Nvidia hardware
-  - ROCm 2.6 and later for AMD hardware
+  - ROCm 3.5 and later for AMD hardware
 
 ## Installation
 The build system follows the standard CMake workflow. Example:

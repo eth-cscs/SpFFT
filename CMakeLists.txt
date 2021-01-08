@@ -110,17 +110,17 @@ endif()
 
 # ROCM
 if(SPFFT_ROCM)
+	find_package(hip CONFIG REQUIRED)
+	find_package(rocfft CONFIG REQUIRED)
+	list(APPEND SPFFT_EXTERNAL_LIBS hip::host roc::rocfft)
+
+	# FindHIP module provides compilation command for GPU code
+	find_package(HIP MODULE REQUIRED)
 	if(NOT HIP_HCC_FLAGS)
 		message(STATUS "Using default AMD gpu targets: gfx803, gfx900, gfx906. Set HIP_HCC_FLAGS to override.")
 		set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906)
 	endif()
-	find_package(HIP REQUIRED)
-	find_package(HIPLIBS REQUIRED)
-	find_package(ROCFFT REQUIRED)
-	list(APPEND SPFFT_EXTERNAL_LIBS HIPLIBS::hiplibs ROCFFT::rocfft)
-	list(APPEND SPFFT_EXTERNAL_COMPILE_OPTIONS -D__HIP_PLATFORM_HCC__) # required for parsing HIP headers with another compiler
 endif()
-
 
 if(SPFFT_MPI)
 	find_package(MPI COMPONENTS CXX REQUIRED)

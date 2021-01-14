@@ -105,14 +105,6 @@ target_include_directories(spfft INTERFACE ${SPFFT_INTERFACE_INCLUDE_DIRS})
 target_include_directories(spfft INTERFACE $<INSTALL_INTERFACE:include>) # for install(EXPORT ...)
 target_include_directories(spfft INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>) # for export(...)
 
-# set list of interface libries for exporting (workaround for bug with exporting static library:
-# cmake uses MPI_CXX and OpenMP::OpenMP_CXX targets, which are not known externally)
-if(POLICY CMP0022)
-	set_target_properties(spfft PROPERTIES INTERFACE_LINK_LIBRARIES "${SPFFT_INTERFACE_LIBS}")
-else()
-	set_target_properties(spfft PROPERTIES LINK_INTERFACE_LIBRARIES "${SPFFT_INTERFACE_LIBS}")
-endif()
-
 # set packge config names
 if(SPFFT_STATIC)
 	set(SPFFT_VERSION_FILE "SpFFTStaticConfigVersion.cmake")
@@ -172,6 +164,10 @@ if(SPFFT_INSTALL)
 	)
 
 	install(FILES ${PROJECT_BINARY_DIR}/SpFFT.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+	install(DIRECTORY "${PROJECT_SOURCE_DIR}/cmake/modules"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/spfft"
+        FILES_MATCHING PATTERN "*.cmake")
 
 	if(SPFFT_FORTRAN)
 		install(FILES ${PROJECT_BINARY_DIR}/src/spfft.mod DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/spfft)

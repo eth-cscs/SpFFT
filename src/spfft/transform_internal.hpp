@@ -76,6 +76,10 @@ public:
 
   inline auto global_size() const -> long long int { return param_->global_size(); }
 
+  inline auto execution_mode() const -> SpfftExecType { return execMode_;}
+
+  inline auto set_execution_mode(SpfftExecType mode) -> void { execMode_ = mode;}
+
   inline auto shared_grid(const TransformInternal<T>& other) const -> bool {
     return other.grid_ == grid_;
   }
@@ -90,8 +94,14 @@ public:
   auto forward(const SpfftProcessingUnitType inputLocation, T* output, SpfftScalingType scaling)
       -> void;
 
+  // full forward transform with blocking communication
+  auto forward(const T* input, T* output, SpfftScalingType scaling) -> void;
+
   // transform in x and y
   auto forward_xy(const SpfftProcessingUnitType inputLocation) -> void;
+
+  // transform in x and y
+  auto forward_xy(const T* input) -> void;
 
   // start non-blocking exchange
   auto forward_exchange() -> void;
@@ -102,8 +112,14 @@ public:
   // full backward transform with blocking communication
   auto backward(const T* input, const SpfftProcessingUnitType outputLocation) -> void;
 
+  // full backward transform with blocking communication
+  auto backward(const T* input, T* output) -> void;
+
   // transform in x and y
   auto backward_xy(const SpfftProcessingUnitType outputLocation) -> void;
+
+  // transform in x and y
+  auto backward_xy(T* output) -> void;
 
   // start non-blocking exchange
   auto backward_exchange() -> void;
@@ -118,7 +134,8 @@ public:
 
 private:
   SpfftProcessingUnitType executionUnit_;
-  std::shared_ptr<Parameters> param_;
+  SpfftExecType execMode_;
+  std::shared_ptr<Parameters> param_; // Only for immutable parameters
   std::shared_ptr<GridInternal<T>> grid_;
 
   std::unique_ptr<ExecutionHost<T>> execHost_;

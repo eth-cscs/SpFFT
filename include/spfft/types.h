@@ -105,6 +105,17 @@ enum SpfftScalingType {
   SPFFT_FULL_SCALING
 };
 
+enum SpfftExecType {
+  /**
+   * Fully synchronous execution
+   */
+  SPFFT_EXEC_SYNCHRONOUS,
+  /**
+   * Asynchronous execution on GPU
+   */
+  SPFFT_EXEC_ASYNCHRONOUS
+};
+
 #ifndef __cplusplus
 /*! \cond PRIVATE */
 // C only
@@ -113,6 +124,7 @@ typedef enum SpfftProcessingUnitType SpfftProcessingUnitType;
 typedef enum SpfftTransformType SpfftTransformType;
 typedef enum SpfftIndexFormatType SpfftIndexFormatType;
 typedef enum SpfftScalingType SpfftScalingType;
+typedef enum SpfftExecType SpfftExecType;
 /*! \endcond */
 #endif  // cpp
 #endif

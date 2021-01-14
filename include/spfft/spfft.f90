@@ -50,6 +50,9 @@ integer(c_int), parameter ::                  &
     SPFFT_NO_SCALING                    = 0,  &
     SPFFT_FULL_SCALING                  = 1,  &
 
+    SPFFT_EXEC_SYNCHRONOUS              = 0,  &
+    SPFFT_EXEC_ASYNCHRONOUS             = 1,  &
+
     SPFFT_SUCCESS                       = 0,  &
     SPFFT_UNKNOWN_ERROR                 = 1,  &
     SPFFT_INVALID_HANDLE_ERROR          = 2,  &
@@ -250,6 +253,18 @@ interface
     integer(c_int), intent(out) :: numThreads
   end function
 
+  integer(c_int) function spfft_transform_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), intent(out) :: mode
+  end function
+
+  integer(c_int) function spfft_transform_set_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), value :: mode
+  end function
+
   integer(c_int) function spfft_float_grid_communicator(grid, comm) &
       bind(C, name="spfft_float_grid_communicator_fortran")
     use iso_c_binding
@@ -265,6 +280,42 @@ interface
     use iso_c_binding
     type(c_ptr), intent(out) :: transform
     type(c_ptr), value :: grid
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: localZLength
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
+  integer(c_int) function spfft_transform_create_independent(transform, maxNumThreads, &
+      processingUnit, transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, &
+      indices) bind(C)
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
+  integer(c_int) function spfft_transform_create_independent_distributed(transform, &
+      maxNumThreads, comm, exchangeType, processingUnit, transformType, &
+      dimX, dimY, dimZ, localZLength, numLocalElements, indexFormat, indices) &
+      bind(C, name="spfft_transform_create_independent_distributed_fortran")
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: comm
+    integer(c_int), value :: exchangeType
     integer(c_int), value :: processingUnit
     integer(c_int), value :: transformType
     integer(c_int), value :: dimX
@@ -295,11 +346,28 @@ interface
     integer(c_int), value :: outputLocation
   end function
 
+  integer(c_int) function spfft_transform_backward_ptr(transform, input, &
+                                  output) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: transform
+    complex(c_double), dimension(*), intent(in) :: input
+    real(c_double), dimension(*), intent(out) :: output
+  end function
+
   integer(c_int) function spfft_transform_forward(transform, inputLocation, &
                                   output, scaling) bind(C)
     use iso_c_binding
     type(c_ptr), value :: transform
     integer(c_int), value :: inputLocation
+    complex(c_double), dimension(*), intent(out) :: output
+    integer(c_int), value :: scaling
+  end function
+
+  integer(c_int) function spfft_transform_forward_ptr(transform, input, &
+                                  output, scaling) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: transform
+    real(c_double), dimension(*), intent(in) :: input
     complex(c_double), dimension(*), intent(out) :: output
     integer(c_int), value :: scaling
   end function
@@ -395,6 +463,16 @@ interface
     type(c_ptr), value :: scalingTypes
   end function
 
+  integer(c_int) function spfft_multi_transform_forward_ptr(numTransforms, transforms,&
+      inputPointers, outputPointers, scalingTypes) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputPointers
+    type(c_ptr), value :: outputPointers
+    type(c_ptr), value :: scalingTypes
+  end function
+
   integer(c_int) function spfft_multi_transform_backward(numTransforms, transforms,&
       inputPointers, outputLocations) bind(C)
     use iso_c_binding
@@ -402,6 +480,15 @@ interface
     type(c_ptr), value :: transforms
     type(c_ptr), value :: inputPointers
     type(c_ptr), value :: outputLocations
+  end function
+
+  integer(c_int) function spfft_multi_transform_backward_ptr(numTransforms, transforms,&
+      inputPointers, outputPointers) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputPointers
+    type(c_ptr), value :: outputPointers
   end function
 
   !--------------------------
@@ -412,6 +499,42 @@ interface
     use iso_c_binding
     type(c_ptr), intent(out) :: transform
     type(c_ptr), value :: grid
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: localZLength
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
+  integer(c_int) function spfft_float_transform_create_independent(transform, maxNumThreads, &
+      processingUnit, transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, &
+      indices) bind(C)
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: processingUnit
+    integer(c_int), value :: transformType
+    integer(c_int), value :: dimX
+    integer(c_int), value :: dimY
+    integer(c_int), value :: dimZ
+    integer(c_int), value :: numLocalElements
+    integer(c_int), value :: indexFormat
+    integer(c_int), dimension(*), intent(in) :: indices
+  end function
+
+  integer(c_int) function spfft_float_transform_create_independent_distributed(transform, &
+      maxNumThreads, comm, exchangeType, processingUnit, transformType, &
+      dimX, dimY, dimZ, localZLength, numLocalElements, indexFormat, indices) &
+      bind(C, name="spfft_float_transform_create_independent_distributed_fortran")
+    use iso_c_binding
+    type(c_ptr), intent(out) :: transform
+    integer(c_int), value :: maxNumThreads
+    integer(c_int), value :: comm
+    integer(c_int), value :: exchangeType
     integer(c_int), value :: processingUnit
     integer(c_int), value :: transformType
     integer(c_int), value :: dimX
@@ -438,8 +561,16 @@ interface
                                   outputLocation) bind(C)
     use iso_c_binding
     type(c_ptr), value :: transform
-    complex(c_double), dimension(*), intent(in) :: input
+    complex(c_float), dimension(*), intent(in) :: input
     integer(c_int), value :: outputLocation
+  end function
+
+  integer(c_int) function spfft_float_transform_backward_ptr(transform, input, &
+                                  output) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: transform
+    complex(c_float), dimension(*), intent(in) :: input
+    real(c_float), dimension(*), intent(out) :: output
   end function
 
   integer(c_int) function spfft_float_transform_forward(transform, inputLocation, &
@@ -447,7 +578,16 @@ interface
     use iso_c_binding
     type(c_ptr), value :: transform
     integer(c_int), value :: inputLocation
-    complex(c_double), dimension(*), intent(out) :: output
+    complex(c_float), dimension(*), intent(out) :: output
+    integer(c_int), value :: scaling
+  end function
+
+  integer(c_int) function spfft_float_transform_forward_ptr(transform, input, &
+                                  output, scaling) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: transform
+    real(c_float), dimension(*), intent(in) :: input
+    complex(c_float), dimension(*), intent(out) :: output
     integer(c_int), value :: scaling
   end function
 
@@ -525,6 +665,18 @@ interface
     integer(c_int), intent(out) :: numThreads
   end function
 
+  integer(c_int) function spfft_float_transform_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), intent(out) :: mode
+  end function
+
+  integer(c_int) function spfft_float_transform_set_execution_mode(grid, mode) bind(C)
+    use iso_c_binding
+    type(c_ptr), value :: grid
+    integer(c_int), value :: mode
+  end function
+
   integer(c_int) function spfft_float_transform_communicator(transform, comm) &
       bind(C, name="spfft_float_transform_communicator_fortran")
     use iso_c_binding
@@ -542,6 +694,16 @@ interface
     type(c_ptr), value :: scalingTypes
   end function
 
+  integer(c_int) function spfft_float_multi_transform_forward_ptr(numTransforms, transforms,&
+      inputPointers, outputPointers, scalingTypes) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputPointers
+    type(c_ptr), value :: outputPointers
+    type(c_ptr), value :: scalingTypes
+  end function
+
   integer(c_int) function spfft_float_multi_transform_backward(numTransforms, transforms,&
       inputPointers, outputLocations) bind(C)
     use iso_c_binding
@@ -549,6 +711,15 @@ interface
     type(c_ptr), value :: transforms
     type(c_ptr), value :: inputPointers
     type(c_ptr), value :: outputLocations
+  end function
+
+  integer(c_int) function spfft_float_multi_transform_backward_ptr(numTransforms, transforms,&
+      inputPointers, outputPointers) bind(C)
+    use iso_c_binding
+    integer(c_int), value :: numTransforms
+    type(c_ptr), value :: transforms
+    type(c_ptr), value :: inputPointers
+    type(c_ptr), value :: outputPointers
   end function
 
 end interface

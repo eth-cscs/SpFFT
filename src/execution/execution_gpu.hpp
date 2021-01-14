@@ -35,6 +35,7 @@
 #include "fft/transform_interface.hpp"
 #include "gpu_util/gpu_event_handle.hpp"
 #include "gpu_util/gpu_fft_api.hpp"
+#include "gpu_util/gpu_runtime_api.hpp"
 #include "gpu_util/gpu_stream_handle.hpp"
 #include "memory/gpu_array.hpp"
 #include "memory/gpu_array_view.hpp"
@@ -78,15 +79,15 @@ public:
   // The output is located on the GPU.
   auto forward_z(T* output, const SpfftScalingType scalingType) -> void;
   auto forward_exchange(const bool nonBlockingExchange) -> void;
-  auto forward_xy(const SpfftProcessingUnitType inputLocation) -> void;
+  auto forward_xy(const T* input) -> void;
 
   // transform backward into a given memory location (Host or GPU).
   // The input is taken from the GPU.
   auto backward_z(const T* input) -> void;
   auto backward_exchange(const bool nonBlockingExchange) -> void;
-  auto backward_xy(const SpfftProcessingUnitType outputLocation) -> void;
+  auto backward_xy(T* output) -> void;
 
-  auto synchronize() -> void;
+  auto synchronize(SpfftExecType mode) -> void;
 
   // The space domain data on Host
   auto space_domain_data_host() -> HostArrayView3D<T>;
@@ -94,9 +95,19 @@ public:
   // The space domain data on GPU
   auto space_domain_data_gpu() -> GPUArrayView3D<T>;
 
+  auto get_external_stream() -> gpu::StreamType {
+    return externalStream_;
+  }
+
+  auto set_external_stream(gpu::StreamType stream) -> void {
+    externalStream_ = stream;
+  }
+
 private:
   GPUStreamHandle stream_;
-  GPUEventHandle event_;
+  gpu::StreamType externalStream_;
+  GPUEventHandle startEvent_;
+  GPUEventHandle endEvent_;
   int numThreads_;
   T scalingFactor_;
   std::unique_ptr<TransformGPU> transformZ_;
@@ -113,6 +124,7 @@ private:
 
   GPUArrayView2D<typename gpu::fft::ComplexType<T>::type> freqDomainDataGPU_;
   GPUArrayView1D<T> freqDomainCompressedDataGPU_;
+  GPUArrayView3D<typename gpu::fft::ComplexType<T>::type> freqDomainXYGPU_;
 };
 }  // namespace spfft
 #endif

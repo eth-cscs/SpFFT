@@ -31,6 +31,10 @@
 #include "spfft/transform_float.h"
 #include "spfft/transform_internal.hpp"
 
+#ifdef SPFFT_MPI
+#include "mpi_util/mpi_communicator_handle.hpp"
+#endif
+
 #ifdef SPFFT_SINGLE_PRECISION
 namespace spfft {
 TransformFloat::TransformFloat(const std::shared_ptr<GridInternal<float>>& grid,
@@ -54,6 +58,43 @@ TransformFloat::TransformFloat(const std::shared_ptr<GridInternal<float>>& grid,
   transform_.reset(new TransformInternal<float>(processingUnit, grid, std::move(param)));
 }
 
+TransformFloat::TransformFloat(int maxNumThreads, SpfftProcessingUnitType processingUnit,
+          SpfftTransformType transformType, int dimX, int dimY, int dimZ, int numLocalElements,
+          SpfftIndexFormatType indexFormat, const int* indices) {
+  if (dimX < 0 || dimY < 0 || dimZ < 0 || numLocalElements < 0 ||
+      (!indices && numLocalElements > 0)) {
+    throw InvalidParameterError();
+  }
+
+  std::shared_ptr<Parameters> param (new Parameters(transformType, dimX, dimY, dimZ, numLocalElements, indexFormat, indices));
+  std::shared_ptr<GridInternal<float>> grid(new GridInternal<float>(dimX, dimY, dimZ, param->max_num_z_sticks(), processingUnit, maxNumThreads));
+
+  transform_.reset(
+      new TransformInternal<float>(processingUnit, std::move(grid), std::move(param)));
+}
+
+#ifdef SPFFT_MPI
+TransformFloat::TransformFloat(int maxNumThreads, MPI_Comm comm, SpfftExchangeType exchangeType,
+          SpfftProcessingUnitType processingUnit, SpfftTransformType transformType, int dimX,
+          int dimY, int dimZ, int localZLength, int numLocalElements,
+          SpfftIndexFormatType indexFormat, const int* indices) {
+  if (dimX < 0 || dimY < 0 || dimZ < 0 || numLocalElements < 0 ||
+      (!indices && numLocalElements > 0)) {
+    throw InvalidParameterError();
+  }
+
+  std::shared_ptr<Parameters> param(new Parameters(MPICommunicatorHandle(comm), transformType, dimX,
+                                                   dimY, dimZ, localZLength, numLocalElements,
+                                                   indexFormat, indices));
+  std::shared_ptr<GridInternal<float>> grid(
+      new GridInternal<float>(dimX, dimY, dimZ, param->max_num_z_sticks(), localZLength,
+                               processingUnit, maxNumThreads, comm, exchangeType));
+
+  transform_.reset(
+      new TransformInternal<float>(processingUnit, std::move(grid), std::move(param)));
+}
+#endif
+
 TransformFloat::TransformFloat(std::shared_ptr<TransformInternal<float>> transform)
     : transform_(std::move(transform)) {}
 
@@ -71,8 +112,17 @@ void TransformFloat::forward(SpfftProcessingUnitType inputLocation, float* outpu
   transform_->forward(inputLocation, output, scaling);
 }
 
+void TransformFloat::forward(const float* input, float* output,
+                             SpfftScalingType scaling) {
+  transform_->forward(input, output, scaling);
+}
+
 void TransformFloat::backward(const float* input, SpfftProcessingUnitType outputLocation) {
   transform_->backward(input, outputLocation);
+}
+
+void TransformFloat::backward(const float* input, float* ouput) {
+  transform_->backward(input, ouput);
 }
 
 SpfftTransformType TransformFloat::type() const { return transform_->type(); }
@@ -105,6 +155,10 @@ int TransformFloat::device_id() const { return transform_->device_id(); }
 
 int TransformFloat::num_threads() const { return transform_->num_threads(); }
 
+SpfftExecType TransformFloat::execution_mode() const {return transform_->execution_mode();}
+
+void TransformFloat::set_execution_mode(SpfftExecType mode) {return transform_->set_execution_mode(mode);}
+
 #ifdef SPFFT_MPI
 MPI_Comm TransformFloat::communicator() const { return transform_->communicator(); }
 #endif
@@ -134,6 +188,55 @@ SpfftError spfft_float_transform_create(SpfftFloatTransform* transform, SpfftFlo
   }
   return SpfftError::SPFFT_SUCCESS;
 }
+
+SpfftError spfft_float_transform_create_independent(
+    SpfftFloatTransform* transform, int maxNumThreads, SpfftProcessingUnitType processingUnit,
+    SpfftTransformType transformType, int dimX, int dimY, int dimZ, int numLocalElements,
+    SpfftIndexFormatType indexFormat, const int* indices) {
+  try {
+    *transform = new spfft::TransformFloat(maxNumThreads, processingUnit, transformType, dimX, dimY,
+                                           dimZ, numLocalElements, indexFormat, indices);
+
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+#ifdef SPFFT_MPI
+SpfftError spfft_float_transform_create_independent_distributed(
+    SpfftFloatTransform* transform, int maxNumThreads, MPI_Comm comm,
+    SpfftExchangeType exchangeType, SpfftProcessingUnitType processingUnit,
+    SpfftTransformType transformType, int dimX, int dimY, int dimZ, int localZLength,
+    int numLocalElements, SpfftIndexFormatType indexFormat, const int* indices) {
+  try {
+    *transform = new spfft::TransformFloat(maxNumThreads, comm, exchangeType, processingUnit,
+                                           transformType, dimX, dimY, dimZ, localZLength,
+                                           numLocalElements, indexFormat, indices);
+
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SPFFT_EXPORT SpfftError spfft_float_transform_create_independent_distributed_fortran(
+    SpfftFloatTransform* transform, int maxNumThreads, int commFortran,
+    SpfftExchangeType exchangeType, SpfftProcessingUnitType processingUnit,
+    SpfftTransformType transformType, int dimX, int dimY, int dimZ, int localZLength,
+    int numLocalElements, SpfftIndexFormatType indexFormat, const int* indices) {
+  MPI_Comm comm = MPI_Comm_f2c(commFortran);
+  return spfft_float_transform_create_independent_distributed(
+      transform, maxNumThreads, comm, exchangeType, processingUnit, transformType, dimX, dimY, dimZ,
+      localZLength, numLocalElements, indexFormat, indices);
+}
+#endif
+
+
 
 SpfftError spfft_float_transform_destroy(SpfftFloatTransform transform) {
   if (!transform) {
@@ -182,6 +285,21 @@ SpfftError spfft_float_transform_forward(SpfftFloatTransform transform,
   return SpfftError::SPFFT_SUCCESS;
 }
 
+SpfftError spfft_float_transform_forward_ptr(SpfftFloatTransform transform, const float* input,
+                                             float* output, SpfftScalingType scaling) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    reinterpret_cast<spfft::TransformFloat*>(transform)->forward(input, output, scaling);
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
 SpfftError spfft_float_transform_backward(SpfftFloatTransform transform, const float* input,
                                           SpfftProcessingUnitType outputLocation) {
   if (!transform) {
@@ -189,6 +307,21 @@ SpfftError spfft_float_transform_backward(SpfftFloatTransform transform, const f
   }
   try {
     reinterpret_cast<spfft::TransformFloat*>(transform)->backward(input, outputLocation);
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_float_transform_backward_ptr(SpfftFloatTransform transform, const float* input,
+                                              float* output) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    reinterpret_cast<spfft::TransformFloat*>(transform)->backward(input, output);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {
@@ -362,6 +495,36 @@ SpfftError spfft_float_transform_num_threads(SpfftFloatTransform transform, int*
   }
   try {
     *numThreads = reinterpret_cast<spfft::TransformFloat*>(transform)->num_threads();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_float_transform_execution_mode(SpfftFloatTransform transform,
+                                                SpfftExecType* mode) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    *mode = reinterpret_cast<spfft::TransformFloat*>(transform)->execution_mode();
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_float_transform_set_execution_mode(SpfftFloatTransform transform,
+                                                    SpfftExecType mode) {
+  if (!transform) {
+    return SpfftError::SPFFT_INVALID_HANDLE_ERROR;
+  }
+  try {
+    reinterpret_cast<spfft::TransformFloat*>(transform)->set_execution_mode(mode);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {

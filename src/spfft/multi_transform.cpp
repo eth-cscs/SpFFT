@@ -35,24 +35,39 @@
 namespace spfft {
 
 void multi_transform_forward(int numTransforms, Transform* transforms,
-                             SpfftProcessingUnitType* inputLocations, double** outputPointers,
-                             SpfftScalingType* scalingTypes) {
+                             const SpfftProcessingUnitType* inputLocations,
+                             double* const* outputPointers, const SpfftScalingType* scalingTypes) {
   MultiTransformInternal<Transform>::forward(numTransforms, transforms, inputLocations,
                                              outputPointers, scalingTypes);
 }
 
-void multi_transform_backward(int numTransforms, Transform* transforms, double** inputPointers,
-                              SpfftProcessingUnitType* outputLocations) {
+void multi_transform_backward(int numTransforms, Transform* transforms,
+                              const double* const* inputPointers,
+                              const SpfftProcessingUnitType* outputLocations) {
   MultiTransformInternal<Transform>::backward(numTransforms, transforms, inputPointers,
                                               outputLocations);
+}
+
+void multi_transform_forward(int numTransforms, Transform* transforms,
+                             const double* const* inputPointers, double* const* outputPointers,
+                             const SpfftScalingType* scalingTypes) {
+  MultiTransformInternal<Transform>::forward(numTransforms, transforms, inputPointers,
+                                             outputPointers, scalingTypes);
+}
+
+void multi_transform_backward(int numTransforms, Transform* transforms,
+                              const double* const* inputPointers, double* const* outputPointers) {
+  MultiTransformInternal<Transform>::backward(numTransforms, transforms, inputPointers,
+                                              outputPointers);
 }
 }  // namespace spfft
 
 extern "C" {
 
 SpfftError spfft_multi_transform_forward(int numTransforms, SpfftTransform* transforms,
-                                         SpfftProcessingUnitType* inputLocations,
-                                         double** outputPointers, SpfftScalingType* scalingTypes) {
+                                         const SpfftProcessingUnitType* inputLocations,
+                                         double* const* outputPointers,
+                                         const SpfftScalingType* scalingTypes) {
   try {
     multi_transform_forward(numTransforms, reinterpret_cast<spfft::Transform*>(transforms),
                             inputLocations, outputPointers, scalingTypes);
@@ -64,12 +79,41 @@ SpfftError spfft_multi_transform_forward(int numTransforms, SpfftTransform* tran
   return SpfftError::SPFFT_SUCCESS;
 }
 
+SpfftError spfft_multi_transform_forward_ptr(int numTransforms, SpfftTransform* transforms,
+                                             const double* const* inputPointers,
+                                             double* const* outputPointers,
+                                             const SpfftScalingType* scalingTypes) {
+  try {
+    multi_transform_forward(numTransforms, reinterpret_cast<spfft::Transform*>(transforms),
+                            inputPointers, outputPointers, scalingTypes);
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
 SpfftError spfft_multi_transform_backward(int numTransforms, SpfftTransform* transforms,
-                                          double** inputPointers,
-                                          SpfftProcessingUnitType* outputLocations) {
+                                          const double* const* inputPointers,
+                                          const SpfftProcessingUnitType* outputLocations) {
   try {
     multi_transform_backward(numTransforms, reinterpret_cast<spfft::Transform*>(transforms),
                              inputPointers, outputLocations);
+  } catch (const spfft::GenericError& e) {
+    return e.error_code();
+  } catch (...) {
+    return SpfftError::SPFFT_UNKNOWN_ERROR;
+  }
+  return SpfftError::SPFFT_SUCCESS;
+}
+
+SpfftError spfft_multi_transform_backward_ptr(int numTransforms, SpfftTransform* transforms,
+                                              const double* const* inputPointers,
+                                              double* const* outputPointers) {
+  try {
+    multi_transform_backward(numTransforms, reinterpret_cast<spfft::Transform*>(transforms),
+                             inputPointers, outputPointers);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {

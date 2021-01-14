@@ -47,7 +47,7 @@ template <typename T>
 class Transform2DGPU : public TransformGPU {
 public:
   using ValueType = T;
-  using ComplexType = gpu::fft::ComplexType<T>;
+  using ComplexType = typename gpu::fft::ComplexType<T>::type;
 
   Transform2DGPU(GPUArrayView3D<typename gpu::fft::ComplexType<T>::type>& data,
                  GPUStreamHandle stream, std::shared_ptr<GPUArray<char>> workBuffer)
@@ -118,10 +118,24 @@ public:
         gpu::fft::execute(plan_, dataPtr_, dataPtr_, gpu::fft::TransformDirection::Forward));
   }
 
+  auto forward(const void* input, void* output) -> void override {
+    gpu::fft::check_result(gpu::fft::set_work_area(plan_, workBuffer_->data()));
+    gpu::fft::check_result(gpu::fft::execute(plan_, reinterpret_cast<const ComplexType*>(input),
+                                             reinterpret_cast<ComplexType*>(output),
+                                             gpu::fft::TransformDirection::Forward));
+  }
+
   auto backward() -> void override {
     gpu::fft::check_result(gpu::fft::set_work_area(plan_, workBuffer_->data()));
     gpu::fft::check_result(
         gpu::fft::execute(plan_, dataPtr_, dataPtr_, gpu::fft::TransformDirection::Backward));
+  }
+
+  auto backward(const void* input, void* output) -> void override {
+    gpu::fft::check_result(gpu::fft::set_work_area(plan_, workBuffer_->data()));
+    gpu::fft::check_result(gpu::fft::execute(plan_, reinterpret_cast<const ComplexType*>(input),
+                                             reinterpret_cast<ComplexType*>(output),
+                                             gpu::fft::TransformDirection::Backward));
   }
 
 private:

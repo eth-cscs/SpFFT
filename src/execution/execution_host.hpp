@@ -70,12 +70,12 @@ public:
   // Transform forward
   auto forward_z(T* output, const SpfftScalingType scalingType) -> void;
   auto forward_exchange(const bool nonBlockingExchange) -> void;
-  auto forward_xy() -> void;
+  auto forward_xy(const T* input) -> void;
 
   // Transform backward
   auto backward_z(const T* input) -> void;
   auto backward_exchange(const bool nonBlockingExchange) -> void;
-  auto backward_xy() -> void;
+  auto backward_xy(T* output) -> void;
 
   // Access the space domain data
   auto space_domain_data() -> HostArrayView3D<T>;
@@ -83,12 +83,12 @@ public:
 private:
   int numThreads_;
   T scalingFactor_;
-  std::unique_ptr<TransformHost> transformZBackward_;
-  std::unique_ptr<TransformHost> transformZForward_;
-  std::unique_ptr<TransformHost> transformYBackward_;
-  std::unique_ptr<TransformHost> transformYForward_;
-  std::unique_ptr<TransformHost> transformXBackward_;
-  std::unique_ptr<TransformHost> transformXForward_;
+  std::unique_ptr<TransformHost<T>> transformZBackward_;
+  std::unique_ptr<TransformHost<T>> transformZForward_;
+  std::unique_ptr<TransformHost<T>> transformYBackward_;
+  std::unique_ptr<TransformHost<T>> transformYForward_;
+  std::unique_ptr<TransformHost<T>> transformXBackward_;
+  std::unique_ptr<TransformHost<T>> transformXForward_;
 
   std::unique_ptr<Transpose> transpose_;
 
@@ -99,6 +99,7 @@ private:
 
   HostArrayView3D<T> spaceDomainDataExternal_;
   HostArrayView2D<std::complex<T>> freqDomainData_;
+  HostArrayView3D<std::complex<T>> freqDomainXY_;
 };
 }  // namespace spfft
 #endif

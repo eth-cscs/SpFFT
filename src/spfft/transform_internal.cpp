@@ -45,7 +45,7 @@ template <typename T>
 TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
                                         std::shared_ptr<GridInternal<T>> grid,
                                         std::shared_ptr<Parameters> param)
-    : executionUnit_(executionUnit), param_(std::move(param)), grid_(std::move(grid)) {
+    : executionUnit_(executionUnit), execMode_(SPFFT_EXEC_SYNCHRONOUS), param_(std::move(param)), grid_(std::move(grid)) {
   // ----------------------
   // Input Check
   // ----------------------
@@ -136,16 +136,24 @@ TransformInternal<T>::TransformInternal(SpfftProcessingUnitType executionUnit,
   }
 }
 
+
 template <typename T>
 auto TransformInternal<T>::forward(const SpfftProcessingUnitType inputLocation, T* output,
+                                   SpfftScalingType scaling) -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST &&
+      inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    throw InvalidParameterError();
+  }
+  this->forward(this->space_domain_data(inputLocation), output, scaling);
+}
+
+template <typename T>
+auto TransformInternal<T>::forward(const T* input, T* output,
                                    SpfftScalingType scaling) -> void {
   HOST_TIMING_SCOPED("forward")
   if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
     assert(execHost_);
-    if (inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      throw InvalidParameterError();
-    }
-    execHost_->forward_xy();
+    execHost_->forward_xy(input);
     execHost_->forward_exchange(false);
     execHost_->forward_z(output, scaling);
   } else {
@@ -154,10 +162,10 @@ auto TransformInternal<T>::forward(const SpfftProcessingUnitType inputLocation, 
     // set device for current thread
     GPUDeviceGuard(grid_->device_id());
 
-    execGPU_->forward_xy(inputLocation);
+    execGPU_->forward_xy(input);
     execGPU_->forward_exchange(false);
     execGPU_->forward_z(output, scaling);
-    execGPU_->synchronize();
+    execGPU_->synchronize(execMode_);
 #else
     throw GPUSupportError();
 #endif
@@ -172,19 +180,24 @@ auto TransformInternal<T>::clone() const -> TransformInternal<T> {
 
 template <typename T>
 auto TransformInternal<T>::forward_xy(const SpfftProcessingUnitType inputLocation) -> void {
-  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
-    assert(execHost_);
-    if (inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST && inputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
       throw InvalidParameterError();
     }
-    execHost_->forward_xy();
+    this->forward_xy(this->space_domain_data(inputLocation));
+}
+
+template <typename T>
+auto TransformInternal<T>::forward_xy(const T* input) -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    assert(execHost_);
+    execHost_->forward_xy(input);
   } else {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
     assert(execGPU_);
     // set device for current thread
     GPUDeviceGuard(grid_->device_id());
 
-    execGPU_->forward_xy(inputLocation);
+    execGPU_->forward_xy(input);
 #else
     throw GPUSupportError();
 #endif
@@ -226,29 +239,35 @@ auto TransformInternal<T>::forward_z(T* output, SpfftScalingType scaling) -> voi
 #endif
   }
 }
-
 template <typename T>
 auto TransformInternal<T>::backward(const T* input, const SpfftProcessingUnitType outputLocation)
+    -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST &&
+      outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    throw InvalidParameterError();
+  }
+  this->backward(input, this->space_domain_data(outputLocation));
+}
+
+template <typename T>
+auto TransformInternal<T>::backward(const T* input, T* output)
     -> void {
   HOST_TIMING_SCOPED("backward")
   // check if input is can be accessed from gpu
   if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
     assert(execHost_);
-    if (outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      throw InvalidParameterError();
-    }
 
     execHost_->backward_z(input);
     execHost_->backward_exchange(false);
-    execHost_->backward_xy();
+    execHost_->backward_xy(output);
   } else {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
     // set device for current thread
     GPUDeviceGuard(grid_->device_id());
     execGPU_->backward_z(input);
     execGPU_->backward_exchange(false);
-    execGPU_->backward_xy(outputLocation);
-    execGPU_->synchronize();
+    execGPU_->backward_xy(output);
+    execGPU_->synchronize(execMode_);
 #else
     throw GPUSupportError();
 #endif
@@ -293,19 +312,25 @@ auto TransformInternal<T>::backward_exchange() -> void {
 
 template <typename T>
 auto TransformInternal<T>::backward_xy(const SpfftProcessingUnitType outputLocation) -> void {
+  if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST &&
+      outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
+    throw InvalidParameterError();
+  }
+  this->backward_xy(this->space_domain_data(outputLocation));
+}
+
+template <typename T>
+auto TransformInternal<T>::backward_xy(T* output) -> void {
   // check if input is can be accessed from gpu
   if (executionUnit_ == SpfftProcessingUnitType::SPFFT_PU_HOST) {
     assert(execHost_);
-    if (outputLocation != SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      throw InvalidParameterError();
-    }
 
-    execHost_->backward_xy();
+    execHost_->backward_xy(output);
   } else {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
     // set device for current thread
     GPUDeviceGuard(grid_->device_id());
-    execGPU_->backward_xy(outputLocation);
+    execGPU_->backward_xy(output);
 #else
     throw GPUSupportError();
 #endif
@@ -333,7 +358,7 @@ auto TransformInternal<T>::space_domain_data(SpfftProcessingUnitType location) -
 template <typename T>
 auto TransformInternal<T>::synchronize() -> void {
 #if (defined(SPFFT_CUDA) || defined(SPFFT_ROCM))
-  if (execGPU_) execGPU_->synchronize();
+  if (execGPU_) execGPU_->synchronize(execMode_);
 #endif
 }
 

@@ -26,7 +26,12 @@ To allow for pre-allocation and reuse of memory, the design is based on two clas
 - **Grid**: Provides memory for transforms up to a given size.
 - **Transform**: Created with information on sparse input data and is associated with a *Grid*. Maximum size is limited by *Grid* dimensions. Internal reference counting to *Grid* objects guarantee a valid state until *Transform* object destruction.
 
-The user provides memory for storing sparse frequency domain data, while a *Transform* provides memory for space domain data. This implies, that executing a *Transform* will override the space domain data of all other *Transforms* associated with the same *Grid*.
+A transform can be computed in-place and out-of-place. Addtionally, an internally allocated work buffer can optionally be used for input / output of space domain data.
+
+### New Features in v1.0
+- Support for externally allocated memory for space domain data including in-place and out-of-place transforms
+- Optional asynchronous computation when using GPUs
+- Simplified / direct transform handle creation if no resource reuse through grid handles is required
 
 ## Documentation
 Documentation can be found [here](https://spfft.readthedocs.io/en/latest/).
@@ -41,7 +46,7 @@ Documentation can be found [here](https://spfft.readthedocs.io/en/latest/).
 - For multi-threading: OpenMP support by the compiler
 - For compilation with GPU support:
   - CUDA 9.0 and later for Nvidia hardware
-  - ROCm 2.6 and later for AMD hardware
+  - ROCm 3.5 and later for AMD hardware
 
 ## Installation
 The build system follows the standard CMake workflow. Example:
@@ -53,19 +58,18 @@ make -j8 install
 ```
 
 ### CMake options
-| Option                 | Default | Description                                      |
-|------------------------|---------|--------------------------------------------------|
-| SPFFT_MPI              | ON      | Enable MPI support                               |
-| SPFFT_OMP              | ON      | Enable multi-threading with OpenMP               |
-| SPFFT_GPU_BACKEND      | OFF     | Select GPU backend. Can be OFF, CUDA or ROCM     |
-| SPFFT_GPU_DIRECT       | OFF     | Use GPU aware MPI with GPUDirect                 |
-| SPFFT_SINGLE_PRECISION | OFF     | Enable single precision support                  |
-| SPFFT_STATIC           | OFF     | Build as static library                          |
-| SPFFT_BUILD_TESTS      | OFF     | Build test executables for developement purposes |
-| SPFFT_INSTALL          | ON      | Add library to install target                    |
-| SPFFT_FORTRAN          | OFF     | Build Fortran interface module                   |
-
-
+| Option                 | Default | Description                                                  |
+|------------------------|---------|--------------------------------------------------------------|
+| SPFFT_MPI              | ON      | Enable MPI support                                           |
+| SPFFT_OMP              | ON      | Enable multi-threading with OpenMP                           |
+| SPFFT_GPU_BACKEND      | OFF     | Select GPU backend. Can be OFF, CUDA or ROCM                 |
+| SPFFT_GPU_DIRECT       | OFF     | Use GPU aware MPI with GPUDirect                             |
+| SPFFT_SINGLE_PRECISION | OFF     | Enable single precision support                              |
+| SPFFT_STATIC           | OFF     | Build as static library                                      |
+| SPFFT_FFTW_LIB         | AUTO    | Library providing a FFTW interface. Can be AUTO, MKL or FFTW |
+| SPFFT_BUILD_TESTS      | OFF     | Build test executables for developement purposes             |
+| SPFFT_INSTALL          | ON      | Add library to install target                                |
+| SPFFT_FORTRAN          | OFF     | Build Fortran interface module                               |
 
 
 ## Examples
@@ -88,21 +92,21 @@ int main(int argc, char** argv) {
   // Use default OpenMP value
   const int numThreads = -1;
 
-  // use all elements in this example.
+  // Use all elements in this example.
   const int numFrequencyElements = dimX * dimY * dimZ;
 
   // Slice length in space domain. Equivalent to dimZ for non-distributed case.
   const int localZLength = dimZ;
 
-  // interleaved complex numbers
+  // Interleaved complex numbers
   std::vector<double> frequencyElements;
   frequencyElements.reserve(2 * numFrequencyElements);
 
-  // indices of frequency elements
+  // Indices of frequency elements
   std::vector<int> indices;
   indices.reserve(dimX * dimY * dimZ * 3);
 
-  // initialize frequency domain values and indices
+  // Initialize frequency domain values and indices
   double initValue = 0.0;
   for (int xIndex = 0; xIndex < dimX; ++xIndex) {
     for (int yIndex = 0; yIndex < dimY; ++yIndex) {
@@ -126,31 +130,48 @@ int main(int argc, char** argv) {
     std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
   }
 
-  // create local Grid. For distributed computations, a MPI Communicator has to be provided
+  // Create local Grid. For distributed computations, a MPI Communicator has to be provided
   spfft::Grid grid(dimX, dimY, dimZ, dimX * dimY, SPFFT_PU_HOST, numThreads);
 
-  // create transform
+  // Create transform.
+  // Note: A transform handle can be created without a grid if no resource sharing is desired.
   spfft::Transform transform =
       grid.create_transform(SPFFT_PU_HOST, SPFFT_TRANS_C2C, dimX, dimY, dimZ, localZLength,
                             numFrequencyElements, SPFFT_INDEX_TRIPLETS, indices.data());
 
-  // Get pointer to space domain data. Alignment fullfills requirements for std::complex.
-  // Can also be read as std::complex elements (guaranteed by the standard to be binary compatible
-  // since C++11).
-  double* spaceDomain = transform.space_domain_data(SPFFT_PU_HOST);
 
-  // transform backward
+  ///////////////////////////////////////////////////
+  // Option A: Reuse internal buffer for space domain
+  ///////////////////////////////////////////////////
+
+  // Transform backward
   transform.backward(frequencyElements.data(), SPFFT_PU_HOST);
+
+  // Get pointer to buffer with space domain data. Is guaranteed to be castable to a valid
+  // std::complex pointer. Using the internal working buffer as input / output can help reduce
+  // memory usage.
+  double* spaceDomainPtr = transform.space_domain_data(SPFFT_PU_HOST);
 
   std::cout << std::endl << "After backward transform:" << std::endl;
   for (int i = 0; i < transform.local_slice_size(); ++i) {
-    std::cout << spaceDomain[2 * i] << ", " << spaceDomain[2 * i + 1] << std::endl;
+    std::cout << spaceDomainPtr[2 * i] << ", " << spaceDomainPtr[2 * i + 1] << std::endl;
   }
 
-  // transform forward
-  transform.forward(SPFFT_PU_HOST, frequencyElements.data(), SPFFT_NO_SCALING);
+  /////////////////////////////////////////////////
+  // Option B: Use external buffer for space domain
+  /////////////////////////////////////////////////
 
-  std::cout << std::endl << "After forward transform (without scaling):" << std::endl;
+  std::vector<double> spaceDomainVec(2 * transform.local_slice_size());
+
+  // Transform backward
+  transform.backward(frequencyElements.data(), spaceDomainVec.data());
+
+  // Transform forward
+  transform.forward(spaceDomainVec.data(), frequencyElements.data(), SPFFT_NO_SCALING);
+
+  // Note: In-place transforms are also supported by passing the same pointer for input and output.
+
+  std::cout << std::endl << "After forward transform (without normalization):" << std::endl;
   for (int i = 0; i < numFrequencyElements; ++i) {
     std::cout << frequencyElements[2 * i] << ", " << frequencyElements[2 * i + 1] << std::endl;
   }

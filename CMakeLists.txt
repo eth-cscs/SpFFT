@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
-project(SpFFT LANGUAGES CXX VERSION 0.9.13)
-set(SPFFT_SO_VERSION 0)
+project(SpFFT LANGUAGES CXX VERSION 1.0.0)
+set(SPFFT_SO_VERSION 1)
 set(SPFFT_VERSION ${PROJECT_VERSION})
 
 # allow {module}_ROOT variables to be set
@@ -8,9 +8,9 @@ if(POLICY CMP0074)
 	cmake_policy(SET CMP0074 NEW)
 endif()
 
-# use INTERFACE_LINK_LIBRARIES property if available
-if(POLICY CMP0022)
-	cmake_policy(SET CMP0022 NEW)
+# Initialize CMAKE_CUDA_ARCHITECTURES through nvcc if possible
+if(POLICY CMP0104)
+	cmake_policy(SET CMP0104 NEW)
 endif()
 
 # set default build type to RELEASE
@@ -42,6 +42,11 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 	"OFF" "CUDA" "ROCM"
 	)
 
+set(SPFFT_FFTW_LIB "AUTO" CACHE STRING "Library providing a FFTW interface")
+set_property(CACHE SPFFT_FFTW_LIB PROPERTY STRINGS
+	"AUTO" "FFTW" "MKL"
+	)
+
 # Get GNU standard install prefixes
 include(GNUInstallDirs)
 
@@ -63,7 +68,6 @@ set(SPFFT_DEFINITIONS)
 set(SPFFT_EXTERNAL_COMPILE_OPTIONS)
 set(SPFFT_LIBS)
 set(SPFFT_EXTERNAL_LIBS)
-set(SPFFT_INTERFACE_LIBS)
 set(SPFFT_INTERFACE_INCLUDE_DIRS)
 set(SPFFT_INCLUDE_DIRS)
 set(SPFFT_EXTERNAL_INCLUDE_DIRS)
@@ -102,42 +106,50 @@ endif()
 # CUDA
 if(SPFFT_CUDA)
 	enable_language(CUDA)
-	find_library(CUDA_CUDART_LIBRARY cudart PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
-	find_library(CUDA_CUFFT_LIBRARY cufft PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
-	list(APPEND SPFFT_EXTERNAL_LIBS ${CUDA_CUDART_LIBRARY} ${CUDA_CUFFT_LIBRARY})
-	list(APPEND SPFFT_EXTERNAL_INCLUDE_DIRS ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+
+	if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.0") 
+		find_package(CUDAToolkit REQUIRED)
+	else()
+		find_library(CUDA_CUDART_LIBRARY cudart PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+		find_library(CUDA_CUFFT_LIBRARY cufft PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+		if(NOT TARGET CUDA::cudart)
+			add_library(CUDA::cudart INTERFACE IMPORTED)
+		endif()
+		set_property(TARGET CUDA::cudart PROPERTY INTERFACE_LINK_LIBRARIES ${CUDA_CUDART_LIBRARY})
+		set_property(TARGET CUDA::cudart PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+		if(NOT TARGET CUDA::cufft)
+			add_library(CUDA::cufft INTERFACE IMPORTED)
+		endif()
+		set_property(TARGET CUDA::cufft PROPERTY INTERFACE_LINK_LIBRARIES ${CUDA_CUFFT_LIBRARY})
+		set_property(TARGET CUDA::cufft PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+	endif()
+
+	list(APPEND SPFFT_EXTERNAL_LIBS CUDA::cudart CUDA::cufft)
 endif()
 
 # ROCM
 if(SPFFT_ROCM)
+	find_package(hip CONFIG REQUIRED)
+	find_package(rocfft CONFIG REQUIRED)
+	list(APPEND SPFFT_EXTERNAL_LIBS hip::host roc::rocfft)
+
+	# FindHIP module provides compilation command for GPU code
+	find_package(HIP MODULE REQUIRED)
 	if(NOT HIP_HCC_FLAGS)
 		message(STATUS "Using default AMD gpu targets: gfx803, gfx900, gfx906. Set HIP_HCC_FLAGS to override.")
 		set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906)
 	endif()
-	find_package(HIP REQUIRED)
-	find_package(HIPLIBS REQUIRED)
-	find_package(ROCFFT REQUIRED)
-	list(APPEND SPFFT_EXTERNAL_LIBS HIPLIBS::hiplibs ROCFFT::rocfft)
-	list(APPEND SPFFT_EXTERNAL_COMPILE_OPTIONS -D__HIP_PLATFORM_HCC__) # required for parsing HIP headers with another compiler
 endif()
-
 
 if(SPFFT_MPI)
 	find_package(MPI COMPONENTS CXX REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS MPI::MPI_CXX)
-	# always add MPI to interface libraries, because mpi.h is included in public header files
-	if(SPFFT_STATIC)
-		list(APPEND SPFFT_INTERFACE_LIBS ${MPI_CXX_LIBRARIES})
-	endif()
 	list(APPEND SPFFT_INTERFACE_INCLUDE_DIRS ${MPI_CXX_INCLUDE_DIRS})
 endif()
 
 if(SPFFT_OMP)
 	find_package(OpenMP COMPONENTS CXX REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS OpenMP::OpenMP_CXX)
-	if(SPFFT_STATIC)
-		list(APPEND SPFFT_INTERFACE_LIBS ${OpenMP_CXX_LIBRARIES})
-	endif()
 endif()
 
 if(SPFFT_GPU_DIRECT)
@@ -145,38 +157,43 @@ if(SPFFT_GPU_DIRECT)
 endif()
 
 
-
-# Use MKL if available, otherwise require FFTW3
-if(UNIX AND NOT APPLE)
-	# prefer static MKL in Linux. Together with "-Wl,--exclude-libs,ALL",
-	# symbols are not visible for linking afterwards and no conflicts with other MKL versions of other libraries should exist.
-	set(_TMP_SAVE ${CMAKE_FIND_LIBRARY_SUFFIXES})
-	set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
-endif()
-find_package(MKLSequential)
-if(UNIX AND NOT APPLE)
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ${_TMP_SAVE})
-	unset(_TMP_SAVE)
+# FFTW library must be found if not set to AUTO
+set(_SPFFT_FIND_FFTW_LIB_OPTION)
+if(NOT ${SPFFT_FFTW_LIB} STREQUAL "AUTO")
+	set(_SPFFT_FIND_FFTW_LIB_OPTION REQUIRED)
 endif()
 
-if(MKLSequential_FOUND)
-	list(APPEND SPFFT_EXTERNAL_LIBS MKL::Sequential)
-	if(SPFFT_STATIC)
-		list(APPEND SPFFT_INTERFACE_LIBS ${MKLSequential_LIBRARIES})
+set(SPFFT_MKL OFF)
+# Look for MKL first
+if(${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "MKL")
+	# Use MKL if available, otherwise require FFTW3
+	if(UNIX AND NOT APPLE)
+		# prefer static MKL in Linux. Together with "-Wl,--exclude-libs,ALL",
+		# symbols are not visible for linking afterwards and no conflicts with other MKL versions of other libraries should exist.
+		set(_TMP_SAVE ${CMAKE_FIND_LIBRARY_SUFFIXES})
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
 	endif()
-	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES mkl-dynamic-lp64-seq)
-else()
+	find_package(MKLSequential ${_SPFFT_FIND_FFTW_LIB_OPTION})
+	if(UNIX AND NOT APPLE)
+		set(CMAKE_FIND_LIBRARY_SUFFIXES ${_TMP_SAVE})
+		unset(_TMP_SAVE)
+	endif()
+	if(TARGET MKL::Sequential)
+		list(APPEND SPFFT_EXTERNAL_LIBS MKL::Sequential)
+		list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES mkl-dynamic-lp64-seq)
+		set(SPFFT_MKL ON)
+	endif()
+endif()
+
+# Look for FFTW library if required
+if(NOT TARGET MKL::Sequential)
 	find_package(FFTW REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS FFTW::FFTW)
-	if(SPFFT_STATIC)
-		list(APPEND SPFFT_INTERFACE_LIBS ${FFTW_LIBRARIES})
-	endif()
 	if(SPFFT_SINGLE_PRECISION AND NOT FFTW_FLOAT_FOUND)
 		message(FATAL_ERROR "FFTW library with single precision support NOT FOUND. Disable SPFFT_SINGLE_PRECISION or provide path to library.")
 	endif()
 	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES fftw3)
 endif()
-
 
 if(SPFFT_BUILD_TESTS)
 	# enable timing with testing

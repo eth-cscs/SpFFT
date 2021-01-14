@@ -46,7 +46,7 @@ extern "C" {
 typedef void* SpfftFloatTransform;
 
 /**
- * Creates a single precision transform from a single precision grid handle.
+ * Create a single precision transform from a single precision grid handle.
  * Thread-safe if no FFTW calls are executed concurrently.
  *
  * @param[out] transform Handle to the transform.
@@ -69,6 +69,61 @@ SPFFT_EXPORT SpfftError spfft_float_transform_create(
     SpfftFloatTransform* transform, SpfftFloatGrid grid, SpfftProcessingUnitType processingUnit,
     SpfftTransformType transformType, int dimX, int dimY, int dimZ, int localZLength,
     int numLocalElements, SpfftIndexFormatType indexFormat, const int* indices);
+
+
+/**
+ * Create a transform without a grid handle.
+ * Thread-safe if no FFTW calls are executed concurrently.
+ *
+ * @param[out] transform Handle to the transform.
+ * @param[in] maxNumThreads The maximum number of threads to use.
+ * @param[in] processingUnit The processing unit type to use. Must be either SPFFT_PU_HOST or
+ * SPFFT_PU_GPU.
+ * @param[in] transformType The transform type (complex to complex or real to complex). Can be
+ * SPFFT_TRANS_C2C or SPFFT_TRANS_R2C.
+ * @param[in] dimX The dimension in x.
+ * @param[in] dimY The dimension in y.
+ * @param[in] dimZ The dimension in z.
+ * @param[in] numLocalElements The number of elements in frequency domain.
+ * @param[in] indexFormat The index format. Only SPFFT_INDEX_TRIPLETS currently supported.
+ * @param[in] indices Pointer to frequency indices. Centered indexing is allowed.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_create_independent(
+    SpfftFloatTransform* transform, int maxNumThreads, SpfftProcessingUnitType processingUnit,
+    SpfftTransformType transformType, int dimX, int dimY, int dimZ, int numLocalElements,
+    SpfftIndexFormatType indexFormat, const int* indices);
+
+#ifdef SPFFT_MPI
+/**
+ * Create a distributed transform without a grid handle.
+ * Thread-safe if no FFTW calls are executed concurrently.
+ *
+ * @param[out] transform Handle to the transform.
+ * @param[in] maxNumThreads The maximum number of threads to use.
+ * @param[in] comm The MPI communicator to use. Will be duplicated for internal use.
+ * @param[in] exchangeType The type of MPI exchange to use. Possible values are
+ * SPFFT_EXCH_DEFAULT, SPFFT_EXCH_BUFFERED, SPFFT_EXCH_COMPACT_BUFFERED and SPFFT_EXCH_UNBUFFERED.
+ * @param[in] processingUnit The processing unit type to use. Must be either SPFFT_PU_HOST or
+ * SPFFT_PU_GPU.
+ * @param[in] transformType The transform type (complex to complex or real to complex). Can be
+ * SPFFT_TRANS_C2C or SPFFT_TRANS_R2C.
+ * @param[in] dimX The dimension in x.
+ * @param[in] dimY The dimension in y.
+ * @param[in] dimZ The dimension in z.
+ * @param[in] localZLength The length in z in space domain of the local MPI rank.
+ * @param[in] numLocalElements The number of elements in frequency domain of the local MPI
+ * rank.
+ * @param[in] indexFormat The index format. Only SPFFT_INDEX_TRIPLETS currently supported.
+ * @param[in] indices Pointer to frequency indices. Centered indexing is allowed.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_create_independent_distributed(
+    SpfftFloatTransform* transform, int maxNumThreads, MPI_Comm comm,
+    SpfftExchangeType exchangeType, SpfftProcessingUnitType processingUnit,
+    SpfftTransformType transformType, int dimX, int dimY, int dimZ, int localZLength,
+    int numLocalElements, SpfftIndexFormatType indexFormat, const int* indices);
+#endif
 
 /**
  * Destroy a transform.
@@ -106,6 +161,22 @@ SPFFT_EXPORT SpfftError spfft_float_transform_forward(SpfftFloatTransform transf
                                                       float* output, SpfftScalingType scaling);
 
 /**
+ * Execute a forward transform from space domain to frequency domain.
+ *
+ * @param[in] transform Handle to the transform.
+ * @param[in] input Pointer to memory, to read space domain data from. Can
+ * be located at Host or GPU memory (if GPU is set as processing unit).
+ * @param[out] output Pointer to memory, where the frequency domain elements are written to. Can
+ * be located at Host or GPU memory (if GPU is set as processing unit).
+ * @param[in] scaling Controls scaling of output. SPFFT_NO_SCALING to disable or
+ * SPFFT_FULL_SCALING to scale by factor 1 / (dim_x() * dim_y() * dim_z()).
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_forward_ptr(SpfftFloatTransform transform,
+                                                          const float* input, float* output,
+                                                          SpfftScalingType scaling);
+
+/**
  * Execute a backward transform from frequency domain to space domain.
  *
  * @param[in] transform Handle to the transform.
@@ -118,6 +189,20 @@ SPFFT_EXPORT SpfftError spfft_float_transform_forward(SpfftFloatTransform transf
 SPFFT_EXPORT SpfftError spfft_float_transform_backward(SpfftFloatTransform transform,
                                                        const float* input,
                                                        SpfftProcessingUnitType outputLocation);
+
+/**
+ * Execute a backward transform from frequency domain to space domain.
+ *
+ * @param[in] transform Handle to the transform.
+ * @param[in] input Input data in frequency domain. Must match the indices provided at transform
+ * @param[out] output Pointer to memory to write output in frequency domain to. Can be located at
+ * Host or GPU memory, if GPU is set as processing unit.
+ * creation. Can be located at Host or GPU memory, if GPU is set as processing unit.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_backward_ptr(SpfftFloatTransform transform,
+                                                           const float* input, float* output);
+
 /**
  * Provides access to the space domain data.
  *
@@ -231,6 +316,26 @@ SPFFT_EXPORT SpfftError spfft_float_transform_device_id(SpfftFloatTransform tran
  */
 SPFFT_EXPORT SpfftError spfft_float_transform_num_threads(SpfftFloatTransform transform,
                                                           int* numThreads);
+
+/**
+ * Access a transform parameter.
+ * @param[in] transform Handle to the transform.
+ * @param[out] mode The execution mode. Only affects execution on GPU.
+ * Defaults to SPFFT_EXEC_SYNCHRONOUS.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_execution_mode(SpfftFloatTransform transform,
+                                                             SpfftExecType* mode);
+
+/**
+ * Set a transform parameter.
+ * @param[in] transform Handle to the transform.
+ * @param[int] mode The execution mode to change to. Only affects execution on GPU.
+ * Defaults to SPFFT_EXEC_SYNCHRONOUS.
+ * @return Error code or SPFFT_SUCCESS.
+ */
+SPFFT_EXPORT SpfftError spfft_float_transform_set_execution_mode(SpfftFloatTransform transform,
+                                                                 SpfftExecType mode);
 
 #ifdef SPFFT_MPI
 /**

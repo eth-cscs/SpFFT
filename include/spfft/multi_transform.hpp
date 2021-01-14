@@ -46,8 +46,25 @@ namespace spfft {
  * @throw std::exception Error from standard library calls. Can be a derived type.
  */
 SPFFT_EXPORT void multi_transform_forward(int numTransforms, Transform* transforms,
-                                          SpfftProcessingUnitType* inputLocations,
-                                          double** outputPointers, SpfftScalingType* scalingTypes);
+                                          const SpfftProcessingUnitType* inputLocations,
+                                          double* const* outputPointers,
+                                          const SpfftScalingType* scalingTypes);
+
+/**
+ * Execute multiple independent forward transforms at once by internal pipelining.
+ *
+ * @param[in] numTransforms Number of transforms to execute.
+ * @param[in] transforms Transforms to execute.
+ * @param[in] inputPointers Input pointers for each transform.
+ * @param[out] outputPointers Output pointers for each transform.
+ * @param[in] scalingTypes Scaling types for each transform.
+ * @throw GenericError SpFFT error. Can be a derived type.
+ * @throw std::exception Error from standard library calls. Can be a derived type.
+ */
+SPFFT_EXPORT void multi_transform_forward(int numTransforms, Transform* transforms,
+                                          const double* const* inputPointers,
+                                          double*const* outputPointers,
+                                          const SpfftScalingType* scalingTypes);
 
 /**
  * Execute multiple independent backward transforms at once by internal pipelining.
@@ -60,8 +77,22 @@ SPFFT_EXPORT void multi_transform_forward(int numTransforms, Transform* transfor
  * @throw std::exception Error from standard library calls. Can be a derived type.
  */
 SPFFT_EXPORT void multi_transform_backward(int numTransforms, Transform* transforms,
-                                           double** inputPointers,
-                                           SpfftProcessingUnitType* outputLocations);
+                                           const double* const* inputPointers,
+                                           const SpfftProcessingUnitType* outputLocations);
+
+/**
+ * Execute multiple independent backward transforms at once by internal pipelining.
+ *
+ * @param[in] numTransforms Number of transforms to execute.
+ * @param[in] transforms Transforms to execute.
+ * @param[in] inputPointers Input pointers for each transform.
+ * @param[in] outputPointers Output pointers for each transform.
+ * @throw GenericError SpFFT error. Can be a derived type.
+ * @throw std::exception Error from standard library calls. Can be a derived type.
+ */
+SPFFT_EXPORT void multi_transform_backward(int numTransforms, Transform* transforms,
+                                           const double* const* inputPointers,
+                                           double* const* outputPointers);
 
 }  // namespace spfft
 

@@ -30,6 +30,7 @@
 #include "fft/transform_2d_gpu.hpp"
 #include "fft/transform_real_2d_gpu.hpp"
 #include "gpu_util/gpu_pointer_translation.hpp"
+#include "gpu_util/gpu_runtime_api.hpp"
 #include "gpu_util/gpu_transfer.hpp"
 #include "memory/array_view_utility.hpp"
 #include "parameters/parameters.hpp"
@@ -50,7 +51,9 @@ ExecutionGPU<T>::ExecutionGPU(const int numThreads, std::shared_ptr<Parameters> 
                               GPUArray<typename gpu::fft::ComplexType<T>::type>& gpuArray2,
                               const std::shared_ptr<GPUArray<char>>& fftWorkBuffer)
     : stream_(false),
-      event_(false),
+      externalStream_(nullptr),
+      startEvent_(false),
+      endEvent_(false),
       numThreads_(numThreads),
       scalingFactor_(static_cast<T>(
           1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))),
@@ -82,14 +85,14 @@ ExecutionGPU<T>::ExecutionGPU(const int numThreads, std::shared_ptr<Parameters> 
   }
 
   // Transpose
-  auto freqDomainXYGPU = create_3d_view(gpuArray2, 0, param->dim_z(), param->dim_y(),
-                                        param->dim_x_freq());  // must not overlap with z-sticks
-  transpose_.reset(new TransposeGPU<T>(param, stream_, freqDomainXYGPU, freqDomainDataGPU_));
+  freqDomainXYGPU_ = create_3d_view(gpuArray2, 0, param->dim_z(), param->dim_y(),
+                                    param->dim_x_freq());  // must not overlap with z-sticks
+  transpose_.reset(new TransposeGPU<T>(param, stream_, freqDomainXYGPU_, freqDomainDataGPU_));
 
   // XY
   if (param->num_xy_planes(0) > 0) {
     if (param->transform_type() == SPFFT_TRANS_R2C) {
-      planeSymmetry_.reset(new PlaneSymmetryGPU<T>(stream_, freqDomainXYGPU));
+      planeSymmetry_.reset(new PlaneSymmetryGPU<T>(stream_, freqDomainXYGPU_));
       // NOTE: param->dim_x() != param->dim_x_freq()
       spaceDomainDataExternalHost_ =
           create_new_type_3d_view<T>(array1, param->dim_z(), param->dim_y(), param->dim_x());
@@ -97,16 +100,16 @@ ExecutionGPU<T>::ExecutionGPU(const int numThreads, std::shared_ptr<Parameters> 
           create_new_type_3d_view<T>(gpuArray1, param->dim_z(), param->dim_y(), param->dim_x());
 
       transformXY_ = std::unique_ptr<TransformGPU>(new TransformReal2DGPU<T>(
-          spaceDomainDataExternalGPU_, freqDomainXYGPU, stream_, fftWorkBuffer));
+          spaceDomainDataExternalGPU_, freqDomainXYGPU_, stream_, fftWorkBuffer));
 
     } else {
       spaceDomainDataExternalHost_ = create_new_type_3d_view<T>(
           array1, param->dim_z(), param->dim_y(), 2 * param->dim_x_freq());
       spaceDomainDataExternalGPU_ = create_new_type_3d_view<T>(
-          freqDomainXYGPU, param->dim_z(), param->dim_y(), 2 * param->dim_x_freq());
+          freqDomainXYGPU_, param->dim_z(), param->dim_y(), 2 * param->dim_x_freq());
 
       transformXY_ = std::unique_ptr<TransformGPU>(
-          new Transform2DGPU<T>(freqDomainXYGPU, stream_, fftWorkBuffer));
+          new Transform2DGPU<T>(freqDomainXYGPU_, stream_, fftWorkBuffer));
     }
   }
 }
@@ -121,7 +124,9 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
                               GPUArray<typename gpu::fft::ComplexType<T>::type>& gpuArray2,
                               const std::shared_ptr<GPUArray<char>>& fftWorkBuffer)
     : stream_(false),
-      event_(false),
+      externalStream_(nullptr),
+      startEvent_(false),
+      endEvent_(false),
       numThreads_(numThreads),
       scalingFactor_(static_cast<T>(
           1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))),
@@ -139,8 +144,8 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
       GPUArrayView1D<T>(reinterpret_cast<T*>(gpuArray2.data()),
                         param->local_value_indices().size() * 2, gpuArray2.device_id());
 
-  auto freqDomainXYGPU = create_3d_view(gpuArray2, 0, numLocalXYPlanes, param->dim_y(),
-                                        param->dim_x_freq());  // must not overlap with z-sticks
+  freqDomainXYGPU_ = create_3d_view(gpuArray2, 0, numLocalXYPlanes, param->dim_y(),
+                                    param->dim_x_freq());  // must not overlap with z-sticks
 
   // Z
   if (numLocalZSticks > 0) {
@@ -171,18 +176,18 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
           create_new_type_3d_view<T>(gpuArray1, numLocalXYPlanes, param->dim_y(), param->dim_x());
 
       transformXY_ = std::unique_ptr<TransformGPU>(new TransformReal2DGPU<T>(
-          spaceDomainDataExternalGPU_, freqDomainXYGPU, stream_, fftWorkBuffer));
+          spaceDomainDataExternalGPU_, freqDomainXYGPU_, stream_, fftWorkBuffer));
 
-      planeSymmetry_.reset(new PlaneSymmetryGPU<T>(stream_, freqDomainXYGPU));
+      planeSymmetry_.reset(new PlaneSymmetryGPU<T>(stream_, freqDomainXYGPU_));
 
     } else {
       spaceDomainDataExternalHost_ = create_new_type_3d_view<T>(
           array1, numLocalXYPlanes, param->dim_y(), 2 * param->dim_x_freq());
       spaceDomainDataExternalGPU_ = create_new_type_3d_view<T>(
-          freqDomainXYGPU, numLocalXYPlanes, param->dim_y(), 2 * param->dim_x_freq());
+          freqDomainXYGPU_, numLocalXYPlanes, param->dim_y(), 2 * param->dim_x_freq());
 
       transformXY_ = std::unique_ptr<TransformGPU>(
-          new Transform2DGPU<T>(freqDomainXYGPU, stream_, fftWorkBuffer));
+          new Transform2DGPU<T>(freqDomainXYGPU_, stream_, fftWorkBuffer));
     }
   }
 
@@ -192,7 +197,7 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
       auto freqDomainXYHost =
           create_3d_view(array2, 0, numLocalXYPlanes, param->dim_y(), param->dim_x_freq());
       transpose_.reset(
-          new TransposeMPIUnbufferedGPU<T>(param, comm, freqDomainXYHost, freqDomainXYGPU, stream_,
+          new TransposeMPIUnbufferedGPU<T>(param, comm, freqDomainXYHost, freqDomainXYGPU_, stream_,
                                            freqDomainDataHost, freqDomainDataGPU_, stream_));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_COMPACT_BUFFERED: {
@@ -203,7 +208,7 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
       auto transposeBufferXY = create_1d_view(array1, 0, bufferXYSize);
       auto transposeBufferXYGPU = create_1d_view(gpuArray1, 0, bufferXYSize);
       transpose_.reset(new TransposeMPICompactBufferedGPU<T, T>(
-          param, comm, transposeBufferXY, freqDomainXYGPU, transposeBufferXYGPU, stream_,
+          param, comm, transposeBufferXY, freqDomainXYGPU_, transposeBufferXYGPU, stream_,
           transposeBufferZ, freqDomainDataGPU_, transposeBufferZGPU, stream_));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_COMPACT_BUFFERED_FLOAT: {
@@ -214,7 +219,7 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
       auto transposeBufferXY = create_1d_view(array1, 0, bufferXYSize);
       auto transposeBufferXYGPU = create_1d_view(gpuArray1, 0, bufferXYSize);
       transpose_.reset(new TransposeMPICompactBufferedGPU<T, float>(
-          param, comm, transposeBufferXY, freqDomainXYGPU, transposeBufferXYGPU, stream_,
+          param, comm, transposeBufferXY, freqDomainXYGPU_, transposeBufferXYGPU, stream_,
           transposeBufferZ, freqDomainDataGPU_, transposeBufferZGPU, stream_));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_BUFFERED: {
@@ -224,7 +229,7 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
       auto transposeBufferXY = create_1d_view(array1, 0, bufferSize);
       auto transposeBufferXYGPU = create_1d_view(gpuArray1, 0, bufferSize);
       transpose_.reset(new TransposeMPIBufferedGPU<T, T>(
-          param, comm, transposeBufferXY, freqDomainXYGPU, transposeBufferXYGPU, stream_,
+          param, comm, transposeBufferXY, freqDomainXYGPU_, transposeBufferXYGPU, stream_,
           transposeBufferZ, freqDomainDataGPU_, transposeBufferZGPU, stream_));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_BUFFERED_FLOAT: {
@@ -234,7 +239,7 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
       auto transposeBufferXY = create_1d_view(array1, 0, bufferSize);
       auto transposeBufferXYGPU = create_1d_view(gpuArray1, 0, bufferSize);
       transpose_.reset(new TransposeMPIBufferedGPU<T, float>(
-          param, comm, transposeBufferXY, freqDomainXYGPU, transposeBufferXYGPU, stream_,
+          param, comm, transposeBufferXY, freqDomainXYGPU_, transposeBufferXYGPU, stream_,
           transposeBufferZ, freqDomainDataGPU_, transposeBufferZGPU, stream_));
     } break;
     default:
@@ -246,22 +251,30 @@ ExecutionGPU<T>::ExecutionGPU(MPICommunicatorHandle comm, const SpfftExchangeTyp
 #endif
 
 template <typename T>
-auto ExecutionGPU<T>::forward_xy(const SpfftProcessingUnitType inputLocation) -> void {
+auto ExecutionGPU<T>::forward_xy(const T* input) -> void {
   // Check for any preceding errors before starting execution
   if (gpu::get_last_error() != gpu::status::Success) {
     throw GPUPrecedingError();
   }
 
+  startEvent_.record(externalStream_);
+  startEvent_.stream_wait(stream_.get());
+
+  const T* inputPtrHost = nullptr;
+  const T* inputPtrGPU = nullptr;
+  std::tie(inputPtrHost, inputPtrGPU) = translate_gpu_pointer(input);
+  if (!inputPtrGPU) inputPtrGPU = spaceDomainDataExternalGPU_.data();
+
   // XY
   if (transformXY_) {
-    // Add explicit default stream synchronization
-    event_.record(nullptr);
-    event_.stream_wait(stream_.get());
 
-    if (inputLocation == SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      copy_to_gpu_async(stream_, spaceDomainDataExternalHost_, spaceDomainDataExternalGPU_);
+    if (inputPtrHost) {
+      gpu::check_status(gpu::memcpy_async(static_cast<void*>(spaceDomainDataExternalGPU_.data()),
+                                          static_cast<const void*>(inputPtrHost),
+                                          spaceDomainDataExternalGPU_.size() * sizeof(T),
+                                          gpu::flag::MemcpyDeviceToHost, stream_.get()));
     }
-    transformXY_->forward();
+    transformXY_->forward(inputPtrGPU, freqDomainXYGPU_.data());
   }
 
   // transpose
@@ -317,6 +330,9 @@ auto ExecutionGPU<T>::backward_z(const T* input) -> void {
     throw GPUPrecedingError();
   }
 
+  startEvent_.record(externalStream_);
+  startEvent_.stream_wait(stream_.get());
+
   // decompress
   if (compression_) {
     const T* inputPtrHost = nullptr;
@@ -324,8 +340,8 @@ auto ExecutionGPU<T>::backward_z(const T* input) -> void {
     std::tie(inputPtrHost, inputPtrGPU) = translate_gpu_pointer(input);
 
     // Add explicit default stream synchronization
-    event_.record(nullptr);
-    event_.stream_wait(stream_.get());
+    startEvent_.record(nullptr);
+    startEvent_.stream_wait(stream_.get());
 
     if (inputPtrGPU == nullptr) {
       // input on HOST
@@ -358,26 +374,39 @@ auto ExecutionGPU<T>::backward_exchange(const bool nonBlockingExchange) -> void 
 }
 
 template <typename T>
-auto ExecutionGPU<T>::backward_xy(const SpfftProcessingUnitType outputLocation) -> void {
+auto ExecutionGPU<T>::backward_xy(T* output) -> void {
   HOST_TIMING_START("exechange_fininalize");
   transpose_->exchange_backward_finalize();
   HOST_TIMING_STOP("exechange_fininalize");
 
-  if (transformXY_) transpose_->unpack_backward();
+  T* outputPtrHost = nullptr;
+  T* outputPtrGPU = nullptr;
+  std::tie(outputPtrHost, outputPtrGPU) = translate_gpu_pointer(output);
+  if (!outputPtrGPU) outputPtrGPU = spaceDomainDataExternalGPU_.data();
 
-  // XY
   if (transformXY_) {
+    transpose_->unpack_backward();
     planeSymmetry_->apply();
-    transformXY_->backward();
-    if (outputLocation & SpfftProcessingUnitType::SPFFT_PU_HOST) {
-      copy_from_gpu_async(stream_, spaceDomainDataExternalGPU_, spaceDomainDataExternalHost_);
+    transformXY_->backward(freqDomainXYGPU_.data(), outputPtrGPU);
+    if (outputPtrHost) {
+      gpu::check_status(
+          gpu::memcpy_async(static_cast<void*>(outputPtrHost),
+                            static_cast<const void*>(spaceDomainDataExternalGPU_.data()),
+                            spaceDomainDataExternalGPU_.size() * sizeof(T),
+                            gpu::flag::MemcpyDeviceToHost, stream_.get()));
     }
   }
+
 }
 
 template <typename T>
-auto ExecutionGPU<T>::synchronize() -> void {
-  gpu::stream_synchronize(stream_.get());
+auto ExecutionGPU<T>::synchronize(SpfftExecType mode) -> void {
+  if (mode == SPFFT_EXEC_ASYNCHRONOUS) {
+    endEvent_.record(stream_.get());
+    endEvent_.stream_wait(externalStream_);
+  } else {
+    gpu::stream_synchronize(stream_.get());
+  }
 }
 
 template <typename T>

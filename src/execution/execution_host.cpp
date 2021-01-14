@@ -63,10 +63,9 @@ ExecutionHost<T>::ExecutionHost(const int numThreads, std::shared_ptr<Parameters
 
   auto freqDomainZ3D = create_3d_view(array1, 0, 1, numLocalZSticks, param->dim_z());
   freqDomainData_ = create_2d_view(freqDomainZ3D, 0, numLocalZSticks, param->dim_z());
-  auto freqDomainXY =
-      create_3d_view(array2, 0, param->dim_z(), param->dim_x_freq(), param->dim_y());
+  freqDomainXY_ = create_3d_view(array2, 0, param->dim_z(), param->dim_x_freq(), param->dim_y());
 
-  transpose_.reset(new TransposeHost<T>(param, freqDomainXY, freqDomainData_));
+  transpose_.reset(new TransposeHost<T>(param, freqDomainXY_, freqDomainData_));
 
   if (param->local_value_indices().size() > 0) {
     compression_.reset(new CompressionHost(param));
@@ -82,9 +81,9 @@ ExecutionHost<T>::ExecutionHost(const int numThreads, std::shared_ptr<Parameters
 
   if (numLocalXYPlanes > 0) {
     // Y
-    transformYBackward_.reset(new Transform1DVerticalHost<T>(freqDomainXY, freqDomainXY, false,
+    transformYBackward_.reset(new Transform1DVerticalHost<T>(freqDomainXY_, freqDomainXY_, false,
                                                              false, FFTW_BACKWARD, uniqueXIndices));
-    transformYForward_.reset(new Transform1DVerticalHost<T>(freqDomainXY, freqDomainXY, false,
+    transformYForward_.reset(new Transform1DVerticalHost<T>(freqDomainXY_, freqDomainXY_, false,
                                                             false, FFTW_FORWARD, uniqueXIndices));
 
     // X
@@ -95,14 +94,14 @@ ExecutionHost<T>::ExecutionHost(const int numThreads, std::shared_ptr<Parameters
             freqDomainData_.pinned())));
       }
 
-      planeSymmetry_.reset(new PlaneSymmetryHost<T>(freqDomainXY));
+      planeSymmetry_.reset(new PlaneSymmetryHost<T>(freqDomainXY_));
 
       spaceDomainDataExternal_ =
           create_new_type_3d_view<T>(array1, param->dim_z(), param->dim_y(), param->dim_x());
-      transformXBackward_.reset(new TransformReal1DPlanesHost<T>(
-          freqDomainXY, spaceDomainDataExternal_, true, false, numThreads));
-      transformXForward_.reset(new TransformReal1DPlanesHost<T>(
-          spaceDomainDataExternal_, freqDomainXY, false, true, numThreads));
+      transformXBackward_.reset(new C2RTransform1DPlanesHost<T>(
+          freqDomainXY_, spaceDomainDataExternal_, true, false, numThreads));
+      transformXForward_.reset(new R2CTransform1DPlanesHost<T>(
+          spaceDomainDataExternal_, freqDomainXY_, false, true, numThreads));
     } else {
       zStickSymmetry_.reset(new Symmetry());
       planeSymmetry_.reset(new Symmetry());
@@ -111,10 +110,10 @@ ExecutionHost<T>::ExecutionHost(const int numThreads, std::shared_ptr<Parameters
           create_3d_view(array1, 0, param->dim_z(), param->dim_y(), param->dim_x_freq());
       spaceDomainDataExternal_ =
           create_new_type_3d_view<T>(array1, param->dim_z(), param->dim_y(), 2 * param->dim_x());
-      transformXBackward_.reset(new Transform1DPlanesHost<T>(freqDomainXY, spaceDomainData, true,
+      transformXBackward_.reset(new Transform1DPlanesHost<T>(freqDomainXY_, spaceDomainData, true,
                                                              false, FFTW_BACKWARD, numThreads));
 
-      transformXForward_.reset(new Transform1DPlanesHost<T>(spaceDomainData, freqDomainXY, false,
+      transformXForward_.reset(new Transform1DPlanesHost<T>(spaceDomainData, freqDomainXY_, false,
                                                             true, FFTW_FORWARD, numThreads));
     }
   }
@@ -147,8 +146,7 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
   auto freqDomainZ3D = create_3d_view(array1, 0, 1, numLocalZSticks, param->dim_z());
   freqDomainData_ = create_2d_view(freqDomainZ3D, 0, numLocalZSticks, param->dim_z());
 
-  auto freqDomainXY =
-      create_3d_view(array2, 0, numLocalXYPlanes, param->dim_x_freq(), param->dim_y());
+  freqDomainXY_ = create_3d_view(array2, 0, numLocalXYPlanes, param->dim_x_freq(), param->dim_y());
 
   auto& spaceDomainArray = array1;
   // create external view with
@@ -172,32 +170,32 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
           HostArrayView1D<std::complex<T>>(&freqDomainData_(param->zero_zero_stick_index(), 0),
                                            freqDomainData_.dim_inner(), freqDomainData_.pinned())));
     }
-    transformZForward_ = std::unique_ptr<TransformHost>(new Transform1DPlanesHost<T>(
+    transformZForward_ = std::unique_ptr<TransformHost<T>>(new Transform1DPlanesHost<T>(
         freqDomainZ3D, freqDomainZ3D, false, false, FFTW_FORWARD, numThreads));
-    transformZBackward_ = std::unique_ptr<TransformHost>(new Transform1DPlanesHost<T>(
+    transformZBackward_ = std::unique_ptr<TransformHost<T>>(new Transform1DPlanesHost<T>(
         freqDomainZ3D, freqDomainZ3D, false, false, FFTW_BACKWARD, numThreads));
   }
 
   if (numLocalXYPlanes > 0) {
-    transformYBackward_.reset(new Transform1DVerticalHost<T>(freqDomainXY, freqDomainXY, false,
+    transformYBackward_.reset(new Transform1DVerticalHost<T>(freqDomainXY_, freqDomainXY_, false,
                                                              false, FFTW_BACKWARD, uniqueXIndices));
-    transformYForward_.reset(new Transform1DVerticalHost<T>(freqDomainXY, freqDomainXY, false,
+    transformYForward_.reset(new Transform1DVerticalHost<T>(freqDomainXY_, freqDomainXY_, false,
                                                             false, FFTW_FORWARD, uniqueXIndices));
 
     if (param->transform_type() == SPFFT_TRANS_R2C) {
-      transformXBackward_.reset(new TransformReal1DPlanesHost<T>(
-          freqDomainXY, spaceDomainDataExternal_, true, false, numThreads));
-      transformXForward_.reset(new TransformReal1DPlanesHost<T>(
-          spaceDomainDataExternal_, freqDomainXY, false, true, numThreads));
+      transformXBackward_.reset(new C2RTransform1DPlanesHost<T>(
+          freqDomainXY_, spaceDomainDataExternal_, true, false, numThreads));
+      transformXForward_.reset(new R2CTransform1DPlanesHost<T>(
+          spaceDomainDataExternal_, freqDomainXY_, false, true, numThreads));
 
-      planeSymmetry_.reset(new PlaneSymmetryHost<T>(freqDomainXY));
+      planeSymmetry_.reset(new PlaneSymmetryHost<T>(freqDomainXY_));
 
     } else {
       auto spaceDomainData =
           create_3d_view(spaceDomainArray, 0, numLocalXYPlanes, param->dim_y(), param->dim_x());
-      transformXBackward_.reset(new Transform1DPlanesHost<T>(freqDomainXY, spaceDomainData, true,
+      transformXBackward_.reset(new Transform1DPlanesHost<T>(freqDomainXY_, spaceDomainData, true,
                                                              false, FFTW_BACKWARD, numThreads));
-      transformXForward_.reset(new Transform1DPlanesHost<T>(spaceDomainData, freqDomainXY, false,
+      transformXForward_.reset(new Transform1DPlanesHost<T>(spaceDomainData, freqDomainXY_, false,
                                                             true, FFTW_FORWARD, numThreads));
     }
   }
@@ -205,7 +203,7 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
   switch (exchangeType) {
     case SpfftExchangeType::SPFFT_EXCH_UNBUFFERED: {
       transpose_.reset(
-          new TransposeMPIUnbufferedHost<T>(param, comm, freqDomainXY, freqDomainData_));
+          new TransposeMPIUnbufferedHost<T>(param, comm, freqDomainXY_, freqDomainData_));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_COMPACT_BUFFERED: {
       auto transposeBufferZ = create_1d_view(
@@ -213,7 +211,7 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
       auto transposeBufferXY = create_1d_view(
           array1, 0, param->total_num_z_sticks() * param->num_xy_planes(comm.rank()));
       transpose_.reset(new TransposeMPICompactBufferedHost<T, T>(
-          param, comm, freqDomainXY, freqDomainData_, transposeBufferXY, transposeBufferZ));
+          param, comm, freqDomainXY_, freqDomainData_, transposeBufferXY, transposeBufferZ));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_COMPACT_BUFFERED_FLOAT: {
       auto transposeBufferZ = create_1d_view(
@@ -221,7 +219,7 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
       auto transposeBufferXY = create_1d_view(
           array1, 0, param->total_num_z_sticks() * param->num_xy_planes(comm.rank()));
       transpose_.reset(new TransposeMPICompactBufferedHost<T, float>(
-          param, comm, freqDomainXY, freqDomainData_, transposeBufferXY, transposeBufferZ));
+          param, comm, freqDomainXY_, freqDomainData_, transposeBufferXY, transposeBufferZ));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_BUFFERED: {
       auto transposeBufferZ = create_1d_view(
@@ -229,7 +227,7 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
       auto transposeBufferXY = create_1d_view(
           array1, 0, param->max_num_z_sticks() * param->max_num_xy_planes() * comm.size());
       transpose_.reset(new TransposeMPIBufferedHost<T, T>(
-          param, comm, freqDomainXY, freqDomainData_, transposeBufferXY, transposeBufferZ));
+          param, comm, freqDomainXY_, freqDomainData_, transposeBufferXY, transposeBufferZ));
     } break;
     case SpfftExchangeType::SPFFT_EXCH_BUFFERED_FLOAT: {
       auto transposeBufferZ = create_1d_view(
@@ -237,7 +235,7 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
       auto transposeBufferXY = create_1d_view(
           array1, 0, param->max_num_z_sticks() * param->max_num_xy_planes() * comm.size());
       transpose_.reset(new TransposeMPIBufferedHost<T, float>(
-          param, comm, freqDomainXY, freqDomainData_, transposeBufferXY, transposeBufferZ));
+          param, comm, freqDomainXY_, freqDomainData_, transposeBufferXY, transposeBufferZ));
     } break;
     default:
       throw InvalidParameterError();
@@ -246,10 +244,10 @@ ExecutionHost<T>::ExecutionHost(MPICommunicatorHandle comm, const SpfftExchangeT
 #endif
 
 template <typename T>
-auto ExecutionHost<T>::forward_xy() -> void {
+auto ExecutionHost<T>::forward_xy(const T* input) -> void {
   SPFFT_OMP_PRAGMA("omp parallel num_threads(numThreads_)") {
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_START("x transform"); }
-    if (transformXForward_) transformXForward_->execute();
+    if (transformXForward_) transformXForward_->execute(input, reinterpret_cast<T*>(freqDomainXY_.data()));
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_STOP("x transform"); }
 
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_START("y transform"); }
@@ -325,7 +323,7 @@ auto ExecutionHost<T>::backward_exchange(const bool nonBlockingExchange) -> void
 }
 
 template <typename T>
-auto ExecutionHost<T>::backward_xy() -> void {
+auto ExecutionHost<T>::backward_xy(T* output) -> void {
   // must be called outside omp parallel region (MPI restriction on thread id)
   HOST_TIMING_START("exechange_fininalize");
   transpose_->exchange_forward_finalize();
@@ -342,11 +340,13 @@ auto ExecutionHost<T>::backward_xy() -> void {
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_STOP("xy symmetrization"); }
 
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_START("y transform"); }
-    if (transformYBackward_) transformYBackward_->execute();
+    if (transformYBackward_)
+      transformYBackward_->execute();
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_STOP("y transform"); }
 
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_START("x transform"); }
-    if (transformXBackward_) transformXBackward_->execute();
+    if (transformXBackward_)
+      transformXBackward_->execute(reinterpret_cast<T*>(freqDomainXY_.data()), output);
     SPFFT_OMP_PRAGMA("omp master") { HOST_TIMING_STOP("x transform"); }
   }
 }

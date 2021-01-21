@@ -272,7 +272,7 @@ auto ExecutionGPU<T>::forward_xy(const T* input) -> void {
       gpu::check_status(gpu::memcpy_async(static_cast<void*>(spaceDomainDataExternalGPU_.data()),
                                           static_cast<const void*>(inputPtrHost),
                                           spaceDomainDataExternalGPU_.size() * sizeof(T),
-                                          gpu::flag::MemcpyDeviceToHost, stream_.get()));
+                                          gpu::flag::MemcpyHostToDevice, stream_.get()));
     }
     transformXY_->forward(inputPtrGPU, freqDomainXYGPU_.data());
   }

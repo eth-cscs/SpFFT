@@ -109,8 +109,8 @@ static void check_space_domain(const HostArrayView3D<std::complex<double>>& real
   for (SizeType z = 0; z < numLocalXYPlanes; ++z) {
     for (SizeType x = 0; x < fullView.dim_outer(); ++x) {
       for (SizeType y = 0; y < fullView.dim_mid(); ++y) {
-        EXPECT_EQ(realView(z, x, y).real(), fullView(x, y, z + planeOffset).real());
-        EXPECT_EQ(realView(z, x, y).imag(), fullView(x, y, z + planeOffset).imag());
+        EXPECT_EQ(realView(z, y, x).real(), fullView(x, y, z + planeOffset).real());
+        EXPECT_EQ(realView(z, y, x).imag(), fullView(x, y, z + planeOffset).imag());
       }
     }
   }

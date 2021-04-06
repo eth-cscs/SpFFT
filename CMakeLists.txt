@@ -131,6 +131,17 @@ endif()
 if(SPFFT_ROCM)
 	find_package(hip CONFIG REQUIRED)
 	find_package(rocfft CONFIG REQUIRED)
+	find_package(hipfft CONFIG) # hipfft within rocfft is deprecated. Use separate hipfft if available (not required).
+
+	if(hipfft_FOUND)
+		# Issue with rocm 4.1.0: Symlink to rocfft provided hipfft.h in /opt/rocm/include.
+		# Workaround: Only use hipfft include directory with hipfft target and place before other hip targets in lib list
+		if(HIPFFT_INCLUDE_DIRS)
+			set_property(TARGET hip::hipfft PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${HIPFFT_INCLUDE_DIRS})
+		endif()
+		list(APPEND SPFFT_EXTERNAL_LIBS hip::hipfft)
+	endif()
+
 	list(APPEND SPFFT_EXTERNAL_LIBS hip::host roc::rocfft)
 
 	# FindHIP module provides compilation command for GPU code

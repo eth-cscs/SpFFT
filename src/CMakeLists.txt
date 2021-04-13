@@ -104,6 +104,10 @@ target_link_libraries(spfft PRIVATE ${SPFFT_EXTERNAL_LIBS})
 target_include_directories(spfft INTERFACE ${SPFFT_INTERFACE_INCLUDE_DIRS})
 target_include_directories(spfft INTERFACE $<INSTALL_INTERFACE:include>) # for install(EXPORT ...)
 target_include_directories(spfft INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>) # for export(...)
+if(${SPFFT_FORTRAN}) # Add include directory for fortran module
+	target_include_directories(spfft INTERFACE $<INSTALL_INTERFACE:include/spfft>)
+	target_include_directories(spfft INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
+endif()
 
 # set packge config names
 if(SPFFT_STATIC)

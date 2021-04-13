@@ -56,6 +56,7 @@ endif()
 if(SPFFT_ROCM)
 	find_dependency(hip CONFIG)
 	find_dependency(rocfft CONFIG)
+	find_dependency(hipfft CONFIG)
 endif()
 
 set(CMAKE_MODULE_PATH ${_CMAKE_MODULE_PATH_SAVE}) # restore module path

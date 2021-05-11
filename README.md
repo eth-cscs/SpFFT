@@ -1,4 +1,5 @@
 [![CI](https://github.com/eth-cscs/SpFFT/workflows/CI/badge.svg)](https://github.com/eth-cscs/SpFFT/actions?query=workflow%3ACI)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/spfft.svg?style=flat)](https://anaconda.org/conda-forge/spfft)
 [![Documentation](https://readthedocs.org/projects/spfft/badge/?version=latest)](https://spfft.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://raw.githubusercontent.com/eth-cscs/SpFFT/master/LICENSE)
 

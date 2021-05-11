@@ -29,6 +29,7 @@
 
 #include <complex>
 #include <memory>
+#include <limits>
 #include "spfft/grid_internal.hpp"
 
 #ifdef SPFFT_MPI

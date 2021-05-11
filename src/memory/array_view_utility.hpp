@@ -34,6 +34,7 @@
 #include <complex>
 #include <cstdint>
 #include <utility>
+#include <limits>
 #include "memory/gpu_array_view.hpp"
 #include "memory/host_array_view.hpp"
 #include "memory/memory_type_trait.hpp"

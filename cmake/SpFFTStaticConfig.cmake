@@ -1,3 +1,12 @@
+include(CMakeFindDependencyMacro)
+macro(find_dependency_components)
+	if(${ARGV0}_FOUND AND ${CMAKE_VERSION} VERSION_LESS "3.15.0")
+		# find_dependency does not handle new components correctly before 3.15.0
+		set(${ARGV0}_FOUND FALSE)
+	endif()
+	find_dependency(${ARGV})
+endmacro()
+
 # options used for building library
 set(SPFFT_OMP @SPFFT_OMP@)
 set(SPFFT_MPI @SPFFT_MPI@)
@@ -10,9 +19,11 @@ set(SPFFT_CUDA @SPFFT_CUDA@)
 set(SPFFT_ROCM @SPFFT_ROCM@)
 set(SPFFT_MKL @SPFFT_MKL@)
 
-
-# find depencies
-include(CMakeFindDependencyMacro)
+# make sure CXX is enabled
+get_property(_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+if(SpFFT_FIND_REQUIRED AND NOT "CXX" IN_LIST _LANGUAGES)
+	message(FATAL_ERROR "SpFFT requires CXX language to be enabled for static linking.")
+endif()
 
 # Only look for modules we installed and save value
 set(_CMAKE_MODULE_PATH_SAVE ${CMAKE_MODULE_PATH})
@@ -24,14 +35,14 @@ else()
 	find_dependency(FFTW)
 endif()
 
-if(SPFFT_OMP)
-	find_dependency(OpenMP COMPONENTS CXX)
+if(SPFFT_OMP AND NOT TARGET OpenMP::OpenMP_CXX)
+	find_dependency_components(OpenMP COMPONENTS CXX)
 endif()
 
-if(SPFFT_MPI)
-	# MPI::MPI_CXX requires CXX Language enabled
-	find_dependency(MPI COMPONENTS CXX)
+if(SPFFT_MPI AND NOT TARGET MPI::MPI_CXX)
+	find_dependency_components(MPI COMPONENTS CXX)
 endif()
+
 
 if(SPFFT_CUDA)
 	if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.0") 
@@ -67,3 +78,16 @@ include("${CMAKE_CURRENT_LIST_DIR}/SpFFTStaticConfigVersion.cmake")
 # add library target
 include("${CMAKE_CURRENT_LIST_DIR}/SpFFTStaticTargets.cmake")
 
+# Make MPI dependency public to compile interface depending on enabled languages
+if(SPFFT_MPI)
+	if("CXX" IN_LIST _LANGUAGES)
+		target_link_libraries(SpFFT::spfft INTERFACE MPI::MPI_CXX)
+	endif()
+
+	if("C" IN_LIST _LANGUAGES)
+		if(NOT TARGET MPI::MPI_C)
+			find_dependency_components(MPI COMPONENTS C)
+		endif()
+		target_link_libraries(SpFFT::spfft INTERFACE MPI::MPI_C)
+	endif()
+endif()

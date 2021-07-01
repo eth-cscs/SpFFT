@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
-project(SpFFT LANGUAGES CXX VERSION 1.0.3)
+project(SpFFT LANGUAGES CXX VERSION 1.0.4)
 set(SPFFT_SO_VERSION 1)
 set(SPFFT_VERSION ${PROJECT_VERSION})
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
-project(SpFFT LANGUAGES CXX VERSION 1.0.3)
+project(SpFFT LANGUAGES CXX VERSION 1.0.4)
 set(SPFFT_SO_VERSION 1)
 set(SPFFT_VERSION ${PROJECT_VERSION})
 
@@ -200,8 +200,9 @@ endif()
 if(NOT TARGET MKL::Sequential)
 	find_package(FFTW REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS FFTW::FFTW)
-	if(SPFFT_SINGLE_PRECISION AND NOT FFTW_FLOAT_FOUND)
-		message(FATAL_ERROR "FFTW library with single precision support NOT FOUND. Disable SPFFT_SINGLE_PRECISION or provide path to library.")
+	if(SPFFT_SINGLE_PRECISION)
+		find_package(FFTWF REQUIRED)
+		list(APPEND SPFFT_EXTERNAL_LIBS FFTWF::FFTWF)
 	endif()
 	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES fftw3)
 endif()

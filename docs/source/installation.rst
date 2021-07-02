@@ -7,7 +7,7 @@ Requirements
 
   * GCC 6 and later
   * Clang 5 and later
-  * ICC 18.0 and later
+  * ICC 19.0 and later
 
 
 - CMake 3.11 and later

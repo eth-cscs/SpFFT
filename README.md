@@ -41,7 +41,7 @@ Documentation can be found [here](https://spfft.readthedocs.io/en/latest/).
 - C++ Compiler with C++11 support. Supported compilers are:
   - GCC 6 and later
   - Clang 5 and later
-  - ICC 18.0 and later
+  - ICC 19.0 and later
 - CMake 3.11 and later
 - Library providing a FFTW 3.x interface (FFTW3 or Intel MKL)
 - For multi-threading: OpenMP support by the compiler

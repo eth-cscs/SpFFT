@@ -31,12 +31,13 @@
 
 #include <gpu_util/gpu_runtime_api.hpp>
 #include <utility>
-#include "spfft/config.h"
 
+#include "spfft/config.h"
 
 namespace spfft {
 
-// Translate input pointer to host / device pointer pair. Managed memory is not considered for device pointer.
+// Translate input pointer to host / device pointer pair. Managed memory is not considered for
+// device pointer.
 template <typename T>
 auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T*> {
   gpu::PointerAttributes attr;
@@ -45,40 +46,36 @@ auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T
   auto status = gpu::pointer_get_attributes(&attr, static_cast<const void*>(inputPointer));
 
   if (status != gpu::status::Success) {
-    gpu::get_last_error(); // clear error from cache
-#ifndef SPLA_ROCM
+    gpu::get_last_error();  // clear error from cache
     // Invalid value is always indicated before CUDA 11 for valid host pointers, which have not been
     // registered. -> Don't throw error in this case.
-    if (status != gpu::status::ErrorInvalidValue)
-      gpu::check_status(status);
-#endif
+    if (status != gpu::status::ErrorInvalidValue) gpu::check_status(status);
   }
 
   std::pair<const T*, const T*> ptrPair{nullptr, nullptr};
 
-  // Workaround due to bug with HIP when parsing pointers with offset from allocated memory start
-  // and memoryType of attributes
-#ifdef SPLA_ROCM
-  if(!attr.devicePointer) {
-    // host
-    ptrPair.first = inputPointer;
-  } else {
-    //device
-    ptrPair.second = inputPointer;
-  }
-#else
-
   // get memory type - cuda 10 changed attribute name
-#if defined(SPFFT_CUDA) && (CUDART_VERSION >= 10000)
+#if defined(SPLA_CUDA) && (CUDART_VERSION >= 10000)
   auto memoryType = attr.type;
 #else
   auto memoryType = attr.memoryType;
 #endif
 
-  if(memoryType != gpu::flag::MemoryTypeDevice) {
+#if defined(SPLA_ROCM) && (HIP_VERSION < 310)
+  // Workaround due to bug with HIP when parsing pointers with offset from allocated memory start.
+  // Fixed in ROCm 3.10.
+  if (memoryType != gpu::flag::MemoryTypeDevice) {
+    ptrPair.first = inputPointer;
+  } else {
+    ptrPair.second = inputPointer;
+  }
+
+#else
+
+  if (memoryType != gpu::flag::MemoryTypeDevice) {
     ptrPair.first = attr.hostPointer ? static_cast<const T*>(attr.hostPointer) : inputPointer;
   } else {
-    ptrPair.second =  static_cast<const T*>(attr.devicePointer);
+    ptrPair.second = static_cast<const T*>(attr.devicePointer);
   }
 #endif
 

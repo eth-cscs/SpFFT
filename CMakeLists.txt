@@ -64,11 +64,7 @@ else()
 	set(SPFFT_LIBRARY_TYPE SHARED)
 endif()
 
-set(SPFFT_DEFINITIONS)
-set(SPFFT_EXTERNAL_COMPILE_OPTIONS)
-set(SPFFT_LIBS)
 set(SPFFT_EXTERNAL_LIBS)
-set(SPFFT_INTERFACE_INCLUDE_DIRS)
 set(SPFFT_INCLUDE_DIRS)
 set(SPFFT_EXTERNAL_INCLUDE_DIRS)
 set(SPFFT_EXTERNAL_PKG_PACKAGES)
@@ -86,17 +82,6 @@ if(SPFFT_GPU_BACKEND)
 	endif()
 endif()
 mark_as_advanced(SPFFT_CUDA SPFFT_ROCM)
-
-# Hide symbols by default if tests are not build
-if(NOT SPFFT_BUILD_TESTS)
-	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-	set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-else()
-	# disable visibility macros if tests are build
-	list(APPEND SPFFT_DEFINITIONS -DSPFFT_STATIC_DEFINE)
-	set(CMAKE_CXX_VISIBILITY_PRESET default)
-	set(CMAKE_VISIBILITY_INLINES_HIDDEN 0)
-endif()
 
 # Fortran
 if(SPFFT_FORTRAN)
@@ -155,7 +140,6 @@ endif()
 if(SPFFT_MPI)
 	find_package(MPI COMPONENTS CXX REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS MPI::MPI_CXX)
-	list(APPEND SPFFT_INTERFACE_INCLUDE_DIRS ${MPI_CXX_INCLUDE_DIRS})
 endif()
 
 if(SPFFT_OMP)
@@ -207,10 +191,6 @@ if(NOT TARGET MKL::Sequential)
 	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES fftw3)
 endif()
 
-if(SPFFT_BUILD_TESTS)
-	# enable timing with testing
-	set(SPFFT_TIMING ON)
-endif()
 
 # generate config.h
 configure_file(include/spfft/config.h.in ${PROJECT_BINARY_DIR}/spfft/config.h)
@@ -224,8 +204,6 @@ list(APPEND SPFFT_EXTERNAL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/ext)
 # All include dirs and definitions must be set before sub-directory is added!
 #############################################################################
 add_subdirectory(src)
-
-list(APPEND SPFFT_LIBS spfft)
 
 # add tests for developement
 if(SPFFT_BUILD_TESTS)

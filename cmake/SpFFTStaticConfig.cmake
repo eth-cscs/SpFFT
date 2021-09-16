@@ -18,6 +18,8 @@ set(SPFFT_GPU_BACKEND @SPFFT_GPU_BACKEND@)
 set(SPFFT_CUDA @SPFFT_CUDA@)
 set(SPFFT_ROCM @SPFFT_ROCM@)
 set(SPFFT_MKL @SPFFT_MKL@)
+set(SPFFT_ARMPL @SPFFT_ARMPL@)
+set(SPFFT_FFTW @SPFFT_FFTW@)
 
 # make sure CXX is enabled
 get_property(_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
@@ -31,7 +33,11 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/modules")
 
 if(SPFFT_MKL)
 	find_dependency(MKLSequential)
-else()
+endif()
+if(SPFFT_ARMPL)
+	find_dependency(ARMPL)
+endif()
+if(SPFFT_FFTW)
 	find_dependency(FFTW)
 endif()
 

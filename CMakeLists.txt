@@ -44,7 +44,7 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 
 set(SPFFT_FFTW_LIB "AUTO" CACHE STRING "Library providing a FFTW interface")
 set_property(CACHE SPFFT_FFTW_LIB PROPERTY STRINGS
-	"AUTO" "FFTW" "MKL"
+	"AUTO" "FFTW" "MKL" "ARMPL"
 	)
 
 # Get GNU standard install prefixes
@@ -159,6 +159,9 @@ if(NOT ${SPFFT_FFTW_LIB} STREQUAL "AUTO")
 endif()
 
 set(SPFFT_MKL OFF)
+set(SPFFT_ARMPL OFF)
+set(SPFFT_FFTW OFF)
+
 # Look for MKL first
 if(${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "MKL")
 	# Use MKL if available, otherwise require FFTW3
@@ -180,8 +183,18 @@ if(${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "MKL")
 	endif()
 endif()
 
+
+# Look for ARM PL
+if(NOT SPFFT_MKL AND ${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "ARMPL")
+	find_package(ARMPL ${_SPFFT_FIND_FFTW_LIB_OPTION})
+	if(TARGET ARM::pl)
+		list(APPEND SPFFT_EXTERNAL_LIBS ARM::pl)
+		set(SPFFT_ARMPL ON)
+	endif()
+endif()
+
 # Look for FFTW library if required
-if(NOT TARGET MKL::Sequential)
+if(NOT SPFFT_MKL AND NOT SPFFT_ARMPL)
 	find_package(FFTW REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS FFTW::FFTW)
 	if(SPFFT_SINGLE_PRECISION)
@@ -189,6 +202,7 @@ if(NOT TARGET MKL::Sequential)
 		list(APPEND SPFFT_EXTERNAL_LIBS FFTWF::FFTWF)
 	endif()
 	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES fftw3)
+	set(SPFFT_FFTW ON)
 endif()
 
 

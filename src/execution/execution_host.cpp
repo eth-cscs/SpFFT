@@ -52,7 +52,9 @@ ExecutionHost<T>::ExecutionHost(const int numThreads, std::shared_ptr<Parameters
                                 HostArray<std::complex<T>>& array2)
     : numThreads_(numThreads),
       scalingFactor_(static_cast<T>(
-          1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))) {
+          1.0 / static_cast<double>(param->dim_x() * param->dim_y() * param->dim_z()))),
+      zStickSymmetry_(new Symmetry()),
+      planeSymmetry_(new Symmetry()) {
   HOST_TIMING_SCOPED("Execution init");
   const SizeType numLocalZSticks = param->num_z_sticks(0);
   const SizeType numLocalXYPlanes = param->num_xy_planes(0);
@@ -103,8 +105,6 @@ ExecutionHost<T>::ExecutionHost(const int numThreads, std::shared_ptr<Parameters
       transformXForward_.reset(new R2CTransform1DPlanesHost<T>(
           spaceDomainDataExternal_, freqDomainXY_, false, true, numThreads));
     } else {
-      zStickSymmetry_.reset(new Symmetry());
-      planeSymmetry_.reset(new Symmetry());
 
       auto spaceDomainData =
           create_3d_view(array1, 0, param->dim_z(), param->dim_y(), param->dim_x_freq());

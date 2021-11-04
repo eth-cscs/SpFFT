@@ -66,13 +66,8 @@ if(SPFFT_BUILD_TESTS)
 
 	# benchmark executable
 	add_executable(benchmark programs/benchmark.cpp)
-	target_link_libraries(benchmark PRIVATE ${SPFFT_LIBS} ${SPFFT_EXTERNAL_LIBS})
-	target_compile_options(benchmark PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
+	target_link_libraries(benchmark PRIVATE spfft_test ${SPFFT_EXTERNAL_LIBS})
 	target_include_directories(benchmark PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
-
-	# if(SPFFT_CUDA)
-	#     set_property(TARGET main PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-	# endif()
 
 	# test executables
 	add_executable(run_local_tests
@@ -82,8 +77,7 @@ if(SPFFT_BUILD_TESTS)
 		local_tests/test_local_transform.cpp
 		)
 	target_link_libraries(run_local_tests PRIVATE gtest_main gtest_mpi)
-	target_link_libraries(run_local_tests PRIVATE ${SPFFT_LIBS} ${SPFFT_EXTERNAL_LIBS})
-	target_compile_options(run_local_tests PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
+	target_link_libraries(run_local_tests PRIVATE spfft_test ${SPFFT_EXTERNAL_LIBS})
 	target_include_directories(run_local_tests PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 
 	if(SPFFT_MPI)
@@ -95,8 +89,7 @@ if(SPFFT_BUILD_TESTS)
 			mpi_tests/test_transpose_gpu.cpp
 			)
 		target_link_libraries(run_mpi_tests PRIVATE gtest_main gtest_mpi)
-		target_link_libraries(run_mpi_tests PRIVATE ${SPFFT_LIBS} ${SPFFT_EXTERNAL_LIBS})
-		target_compile_options(run_mpi_tests PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
+		target_link_libraries(run_mpi_tests PRIVATE spfft_test ${SPFFT_EXTERNAL_LIBS})
 		target_include_directories(run_mpi_tests PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 	endif()
 

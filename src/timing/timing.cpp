@@ -33,6 +33,8 @@ namespace timing {
 
 #ifdef SPFFT_TIMING
 ::rt_graph::Timer GlobalTimer;
+#else
+int dummySymbol = 0; // prevent warnings of no symbols in object file
 #endif
 
 }  // namespace timing

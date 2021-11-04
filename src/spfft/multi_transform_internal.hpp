@@ -29,14 +29,16 @@
 #define SPFFT_MULTI_TRANSFORM_INTERNAL_HPP
 
 #include <vector>
+
 #include "spfft/exceptions.hpp"
 #include "spfft/transform.hpp"
-#include "spfft/transform_internal.hpp"
-#include "timing/timing.hpp"
-
 #ifdef SPFFT_SINGLE_PRECISION
 #include "spfft/transform_float.hpp"
 #endif
+
+#include "spfft/transform_internal.hpp"
+#include "timing/timing.hpp"
+
 
 namespace spfft {
 

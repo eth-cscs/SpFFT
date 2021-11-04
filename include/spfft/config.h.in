@@ -37,7 +37,6 @@
 #cmakedefine SPFFT_ROCM
 #cmakedefine SPFFT_MPI
 #cmakedefine SPFFT_OMP
-#cmakedefine SPFFT_TIMING
 #cmakedefine SPFFT_SINGLE_PRECISION
 #cmakedefine SPFFT_GPU_DIRECT
 

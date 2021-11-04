@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
-project(SpFFT LANGUAGES CXX VERSION 1.0.4)
+project(SpFFT LANGUAGES CXX VERSION 1.0.5)
 set(SPFFT_SO_VERSION 1)
 set(SPFFT_VERSION ${PROJECT_VERSION})
 
@@ -23,6 +23,21 @@ endif()
 
 # set language and standard
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CUDA_STANDARD 11)
+
+# set CUDA flags
+if(NOT CMAKE_CUDA_FLAGS_RELEASE)
+	set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
+if(NOT CMAKE_CUDA_FLAGS_RELWITHDEBINFO)
+	set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
+if(NOT CMAKE_CUDA_FLAGS_MINSIZEREL)
+	set(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
+if(NOT CMAKE_CUDA_FLAGS_DEBUG)
+	set(CMAKE_CUDA_FLAGS_DEBUG "-g" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
 
 #add local module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
@@ -44,7 +59,7 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 
 set(SPFFT_FFTW_LIB "AUTO" CACHE STRING "Library providing a FFTW interface")
 set_property(CACHE SPFFT_FFTW_LIB PROPERTY STRINGS
-	"AUTO" "FFTW" "MKL"
+	"AUTO" "FFTW" "MKL" "ARMPL"
 	)
 
 # Get GNU standard install prefixes
@@ -64,11 +79,7 @@ else()
 	set(SPFFT_LIBRARY_TYPE SHARED)
 endif()
 
-set(SPFFT_DEFINITIONS)
-set(SPFFT_EXTERNAL_COMPILE_OPTIONS)
-set(SPFFT_LIBS)
 set(SPFFT_EXTERNAL_LIBS)
-set(SPFFT_INTERFACE_INCLUDE_DIRS)
 set(SPFFT_INCLUDE_DIRS)
 set(SPFFT_EXTERNAL_INCLUDE_DIRS)
 set(SPFFT_EXTERNAL_PKG_PACKAGES)
@@ -86,17 +97,6 @@ if(SPFFT_GPU_BACKEND)
 	endif()
 endif()
 mark_as_advanced(SPFFT_CUDA SPFFT_ROCM)
-
-# Hide symbols by default if tests are not build
-if(NOT SPFFT_BUILD_TESTS)
-	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-	set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-else()
-	# disable visibility macros if tests are build
-	list(APPEND SPFFT_DEFINITIONS -DSPFFT_STATIC_DEFINE)
-	set(CMAKE_CXX_VISIBILITY_PRESET default)
-	set(CMAKE_VISIBILITY_INLINES_HIDDEN 0)
-endif()
 
 # Fortran
 if(SPFFT_FORTRAN)
@@ -155,7 +155,6 @@ endif()
 if(SPFFT_MPI)
 	find_package(MPI COMPONENTS CXX REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS MPI::MPI_CXX)
-	list(APPEND SPFFT_INTERFACE_INCLUDE_DIRS ${MPI_CXX_INCLUDE_DIRS})
 endif()
 
 if(SPFFT_OMP)
@@ -175,6 +174,9 @@ if(NOT ${SPFFT_FFTW_LIB} STREQUAL "AUTO")
 endif()
 
 set(SPFFT_MKL OFF)
+set(SPFFT_ARMPL OFF)
+set(SPFFT_FFTW OFF)
+
 # Look for MKL first
 if(${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "MKL")
 	# Use MKL if available, otherwise require FFTW3
@@ -196,8 +198,18 @@ if(${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "MKL")
 	endif()
 endif()
 
+
+# Look for ARM PL
+if(NOT SPFFT_MKL AND ${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "ARMPL")
+	find_package(ARMPL ${_SPFFT_FIND_FFTW_LIB_OPTION})
+	if(TARGET ARM::pl)
+		list(APPEND SPFFT_EXTERNAL_LIBS ARM::pl)
+		set(SPFFT_ARMPL ON)
+	endif()
+endif()
+
 # Look for FFTW library if required
-if(NOT TARGET MKL::Sequential)
+if(NOT SPFFT_MKL AND NOT SPFFT_ARMPL)
 	find_package(FFTW REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS FFTW::FFTW)
 	if(SPFFT_SINGLE_PRECISION)
@@ -205,12 +217,9 @@ if(NOT TARGET MKL::Sequential)
 		list(APPEND SPFFT_EXTERNAL_LIBS FFTWF::FFTWF)
 	endif()
 	list(APPEND SPFFT_EXTERNAL_PKG_PACKAGES fftw3)
+	set(SPFFT_FFTW ON)
 endif()
 
-if(SPFFT_BUILD_TESTS)
-	# enable timing with testing
-	set(SPFFT_TIMING ON)
-endif()
 
 # generate config.h
 configure_file(include/spfft/config.h.in ${PROJECT_BINARY_DIR}/spfft/config.h)
@@ -224,8 +233,6 @@ list(APPEND SPFFT_EXTERNAL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/ext)
 # All include dirs and definitions must be set before sub-directory is added!
 #############################################################################
 add_subdirectory(src)
-
-list(APPEND SPFFT_LIBS spfft)
 
 # add tests for developement
 if(SPFFT_BUILD_TESTS)

@@ -57,33 +57,66 @@ if(SPFFT_ROCM)
 	if(CMAKE_CXX_STANDARD)
 		set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} -std=gnu++${CMAKE_CXX_STANDARD})
 	endif()
-			
-	# macro from FindHIP package, which compiles all .cu files with hipcc and cpp files with the set c++ compiler
-	HIP_ADD_LIBRARY(spfft ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
-else()
-	add_library(spfft ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
 endif()
 
-set_property(TARGET spfft PROPERTY VERSION ${SPFFT_VERSION})
-set_property(TARGET spfft PROPERTY SOVERSION ${SPFFT_SO_VERSION})
-# All .cu files are self-contained. Device linking can have issues with propageted linker flags of other targets like MPI.
-if(SPFFT_CUDA)
-	set_property(TARGET spfft PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS OFF)
-	set_property(TARGET spfft PROPERTY CUDA_SEPARABLE_COMPILATION OFF)
+
+# Creates library with given name. All common target modifications should be done here.
+macro(spfft_create_library _TARGET_NAME)
+	# create target
+	if(SPFFT_ROCM)
+		# macro from FindHIP package, which compiles all .cu files with hipcc and cpp files with the set c++ compiler
+		HIP_ADD_LIBRARY(${_TARGET_NAME} ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
+	else()
+		add_library(${_TARGET_NAME} ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
+	endif()
+
+	# set version
+	set_property(TARGET ${_TARGET_NAME} PROPERTY VERSION ${SPFFT_VERSION})
+	set_property(TARGET ${_TARGET_NAME} PROPERTY SOVERSION ${SPFFT_SO_VERSION})
+
+	# All .cu files are self-contained. Device linking can have issues with propageted linker flags of other targets like MPI.
+	if(SPFFT_CUDA)
+		set_property(TARGET ${_TARGET_NAME} PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS OFF)
+		set_property(TARGET ${_TARGET_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION OFF)
+	endif()
+
+	# Don't export any symbols of external static libaries. Only works on linux.
+	if(UNIX AND NOT APPLE)
+		if(${CMAKE_VERSION} VERSION_LESS "3.13.5") 
+			target_link_libraries(${_TARGET_NAME} PRIVATE "-Wl,--exclude-libs,ALL")
+		else()
+			target_link_options(${_TARGET_NAME} PRIVATE "-Wl,--exclude-libs,ALL")
+		endif()
+	endif()
+
+	target_include_directories(${_TARGET_NAME} PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
+	target_link_libraries(${_TARGET_NAME} PRIVATE ${SPFFT_EXTERNAL_LIBS})
+
+	target_include_directories(${_TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:include>) # for install(EXPORT ...)
+	target_include_directories(${_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>) # for export(...)
+	if(${SPFFT_FORTRAN}) # Add include directory for fortran module
+		target_include_directories(${_TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:include/spfft>)
+		target_include_directories(${_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>)
+	endif()
+
+endmacro()
+
+# Create library
+spfft_create_library(spfft)
+set_target_properties(spfft PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE CXX_VISIBILITY_PRESET hidden)
+
+# Create library for testing, which allows linking to internal symbols and has timings enabled.
+if(SPFFT_BUILD_TESTS)
+	spfft_create_library(spfft_test)
+	set_target_properties(spfft_test PROPERTIES VISIBILITY_INLINES_HIDDEN FALSE CXX_VISIBILITY_PRESET default)
+	target_compile_options(spfft_test PUBLIC -DSPFFT_STATIC_DEFINE) # disable properties of export header
+	# enable internal timings
+	target_compile_options(spfft_test PUBLIC -DSPFFT_TIMING)
 endif()
 
 # build fortran module
 if(SPFFT_FORTRAN)
 	add_library(spfft_fortran OBJECT ${PROJECT_SOURCE_DIR}/include/spfft/spfft.f90)
-endif()
-
-# Don't export any symbols of external static libaries. Only works on linux.
-if(UNIX AND NOT APPLE)
-	if(${CMAKE_VERSION} VERSION_LESS "3.13.5") 
-		set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} "-Wl,--exclude-libs,ALL")
-	else()
-		target_link_options(spfft PRIVATE "-Wl,--exclude-libs,ALL")
-	endif()
 endif()
 
 # generate export header to control symbol visibility
@@ -94,23 +127,9 @@ configure_file("${CMAKE_CURRENT_BINARY_DIR}/spfft_export.h"
 	COPYONLY
 )
 
-target_compile_options(spfft PRIVATE ${SPFFT_DEFINITIONS} ${SPFFT_EXTERNAL_COMPILE_OPTIONS})
-target_include_directories(spfft PRIVATE ${SPFFT_EXTERNAL_INCLUDE_DIRS})
-target_include_directories(spfft PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(spfft PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(spfft PRIVATE ${PROJECT_BINARY_DIR})
-target_link_libraries(spfft PRIVATE ${SPFFT_EXTERNAL_LIBS})
-
-target_include_directories(spfft INTERFACE ${SPFFT_INTERFACE_INCLUDE_DIRS})
-target_include_directories(spfft INTERFACE $<INSTALL_INTERFACE:include>) # for install(EXPORT ...)
-target_include_directories(spfft INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>) # for export(...)
-if(${SPFFT_FORTRAN}) # Add include directory for fortran module
-	target_include_directories(spfft INTERFACE $<INSTALL_INTERFACE:include/spfft>)
-	target_include_directories(spfft INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
-endif()
-
 # set packge config names
-if(SPFFT_STATIC)
+get_target_property(_LIB_TYPE spfft TYPE)
+if(_LIB_TYPE STREQUAL "STATIC_LIBRARY")
 	set(SPFFT_VERSION_FILE "SpFFTStaticConfigVersion.cmake")
 	set(SPFFT_CONFIG_FILE "SpFFTStaticConfig.cmake")
 	set(SPFFT_TARGETS_FILE "SpFFTStaticTargets.cmake")

@@ -49,7 +49,8 @@ struct FFTWPropHash {
     assert(std::get<1>(tuple) < (1 << (sizeof(int) * 4 - 1)));
     assert(std::get<2>(tuple) < (1 << (sizeof(int) * 4 - 1)));
     const int sign = 2 * static_cast<int>(std::get<0>(tuple)) - 1;
-    return std::hash<int>()((sign * (std::get<1>(tuple)<< (sizeof(int) * 4 - 1)) + std::get<2>(tuple)));
+    return std::hash<int>()(
+        sign * ((std::get<1>(tuple) << (sizeof(int) * 4 - 1)) + std::get<2>(tuple) + 1));
   }
 };
 
@@ -81,9 +82,6 @@ public:
     int inembed[] = {n[0]};
     int onembed[] = {n[0]};
     auto flags = FFTW_ESTIMATE;
-    if (input != output) {
-      flags = flags | FFTW_DESTROY_INPUT;  // allow input override for out-of-place transform
-    }
 
     plan_ = FFTW<T>::plan_many_dft(
         rank, n, (int)howmany,
@@ -110,7 +108,7 @@ public:
     int n[] = {(int)size};
     int inembed[] = {n[0]};
     int onembed[] = {n[0]};
-    auto flags = FFTW_ESTIMATE | FFTW_DESTROY_INPUT;
+    auto flags = FFTW_ESTIMATE;
     plan_ = FFTW<T>::plan_many_dft_c2r(
         rank, n, (int)howmany,
         reinterpret_cast<typename FFTW<T>::ComplexType*>(const_cast<ComplexType*>(input)), inembed,
@@ -134,7 +132,7 @@ public:
     int n[] = {(int)size};
     int inembed[] = {n[0]};
     int onembed[] = {n[0]};
-    auto flags = FFTW_ESTIMATE | FFTW_DESTROY_INPUT;
+    auto flags = FFTW_ESTIMATE;
     plan_ = FFTW<T>::plan_many_dft_r2c(rank, n, (int)howmany, const_cast<T*>(input), inembed,
                                        (int)istride, (int)idist,
                                        reinterpret_cast<typename FFTW<T>::ComplexType*>(output),

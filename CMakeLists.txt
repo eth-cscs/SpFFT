@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
-project(SpFFT LANGUAGES CXX VERSION 1.0.4)
+project(SpFFT LANGUAGES CXX VERSION 1.0.5)
 set(SPFFT_SO_VERSION 1)
 set(SPFFT_VERSION ${PROJECT_VERSION})
 
@@ -23,6 +23,21 @@ endif()
 
 # set language and standard
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CUDA_STANDARD 11)
+
+# set CUDA flags
+if(NOT CMAKE_CUDA_FLAGS_RELEASE)
+	set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
+if(NOT CMAKE_CUDA_FLAGS_RELWITHDEBINFO)
+	set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
+if(NOT CMAKE_CUDA_FLAGS_MINSIZEREL)
+	set(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
+if(NOT CMAKE_CUDA_FLAGS_DEBUG)
+	set(CMAKE_CUDA_FLAGS_DEBUG "-g" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
+endif()
 
 #add local module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)

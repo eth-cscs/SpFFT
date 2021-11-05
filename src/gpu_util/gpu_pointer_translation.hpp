@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2019 ETH Zurich, Simon Frasch
  *
@@ -55,13 +54,13 @@ auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T
   std::pair<const T*, const T*> ptrPair{nullptr, nullptr};
 
   // get memory type - cuda 10 changed attribute name
-#if defined(SPLA_CUDA) && (CUDART_VERSION >= 10000)
+#if defined(SPFFT_CUDA) && (CUDART_VERSION >= 10000)
   auto memoryType = attr.type;
 #else
   auto memoryType = attr.memoryType;
 #endif
 
-#if defined(SPLA_ROCM) && (HIP_VERSION < 310)
+#if defined(SPFFT_ROCM) && (HIP_VERSION < 310)
   // Workaround due to bug with HIP when parsing pointers with offset from allocated memory start.
   // Fixed in ROCm 3.10.
   if (memoryType != gpu::flag::MemoryTypeDevice) {

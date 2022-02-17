@@ -27,10 +27,10 @@
  */
 #include <algorithm>
 #include <cassert>
+
 #include "gpu_util/gpu_fft_api.hpp"
 #include "gpu_util/gpu_kernel_parameter.hpp"
 #include "gpu_util/gpu_runtime.hpp"
-#include "memory/array_view_utility.hpp"
 #include "memory/gpu_array_const_view.hpp"
 #include "memory/gpu_array_view.hpp"
 
@@ -60,7 +60,8 @@ auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& ind
       static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
   // const dim3 threadGrid(indices.size() < 4 ? 1 : indices.size() / 4);
   launch_kernel(decompress_kernel<double>, threadGrid, threadBlock, 0, stream, indices, input,
-                create_1d_view(output, 0, output.size()));
+                GPUArrayView1D<typename gpu::fft::ComplexType<double>::type>(
+                    output.data(), output.size(), output.device_id()));
 }
 
 auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indices,
@@ -71,7 +72,8 @@ auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& ind
   const dim3 threadGrid(std::min(
       static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
   launch_kernel(decompress_kernel<float>, threadGrid, threadBlock, 0, stream, indices, input,
-                create_1d_view(output, 0, output.size()));
+                GPUArrayView1D<typename gpu::fft::ComplexType<float>::type>(
+                    output.data(), output.size(), output.device_id()));
 }
 
 template <typename T>
@@ -109,11 +111,17 @@ auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indic
       static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
 
   if (useScaling) {
-    launch_kernel(compress_kernel_scaled<double>, threadGrid, threadBlock, 0, stream, indices,
-                  create_1d_view(input, 0, input.size()), output, scalingFactor);
+    launch_kernel(compress_kernel_scaled<double>, threadGrid, threadBlock, 0, stream,
+                  GPUArrayConstView1D<int>(indices),
+                  GPUArrayConstView1D<typename gpu::fft::ComplexType<double>::type>(
+                      input.data(), input.size(), input.device_id()),
+                  output, scalingFactor);
   } else {
-    launch_kernel(compress_kernel<double>, threadGrid, threadBlock, 0, stream, indices,
-                  create_1d_view(input, 0, input.size()), output);
+    launch_kernel(compress_kernel<double>, threadGrid, threadBlock, 0, stream,
+                  GPUArrayConstView1D<int>(indices),
+                  GPUArrayConstView1D<typename gpu::fft::ComplexType<double>::type>(
+                      input.data(), input.size(), input.device_id()),
+                  output);
   }
 }
 
@@ -123,12 +131,20 @@ auto compress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& indic
   const dim3 threadBlock(gpu::BlockSizeMedium);
   const dim3 threadGrid(std::min(
       static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
+
   if (useScaling) {
-    launch_kernel(compress_kernel_scaled<float>, threadGrid, threadBlock, 0, stream, indices,
-                  create_1d_view(input, 0, input.size()), output, scalingFactor);
+    launch_kernel(compress_kernel_scaled<float>, threadGrid, threadBlock, 0, stream,
+                  GPUArrayConstView1D<int>(indices),
+                  GPUArrayConstView1D<typename gpu::fft::ComplexType<float>::type>(
+                      input.data(), input.size(), input.device_id()),
+                  output, scalingFactor);
   } else {
-    launch_kernel(compress_kernel<float>, threadGrid, threadBlock, 0, stream, indices,
-                  create_1d_view(input, 0, input.size()), output);
+    launch_kernel(compress_kernel<float>, threadGrid, threadBlock, 0, stream,
+                  GPUArrayConstView1D<int>(indices),
+                  GPUArrayConstView1D<typename gpu::fft::ComplexType<float>::type>(
+                      input.data(), input.size(), input.device_id()),
+                  output);
   }
 }
+
 }  // namespace spfft

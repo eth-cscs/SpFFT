@@ -59,7 +59,8 @@ auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& ind
   const dim3 threadGrid(std::min(
       static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
   // const dim3 threadGrid(indices.size() < 4 ? 1 : indices.size() / 4);
-  launch_kernel(decompress_kernel<double>, threadGrid, threadBlock, 0, stream, indices, input,
+  launch_kernel(decompress_kernel<double>, threadGrid, threadBlock, 0, stream,
+                GPUArrayConstView1D<int>(indices), input,
                 GPUArrayView1D<typename gpu::fft::ComplexType<double>::type>(
                     output.data(), output.size(), output.device_id()));
 }
@@ -71,7 +72,8 @@ auto decompress_gpu(const gpu::StreamType stream, const GPUArrayView1D<int>& ind
   const dim3 threadBlock(gpu::BlockSizeMedium);
   const dim3 threadGrid(std::min(
       static_cast<int>((indices.size() + threadBlock.x - 1) / threadBlock.x), gpu::GridSizeMedium));
-  launch_kernel(decompress_kernel<float>, threadGrid, threadBlock, 0, stream, indices, input,
+  launch_kernel(decompress_kernel<float>, threadGrid, threadBlock, 0, stream,
+                GPUArrayConstView1D<int>(indices), input,
                 GPUArrayView1D<typename gpu::fft::ComplexType<float>::type>(
                     output.data(), output.size(), output.device_id()));
 }

@@ -74,6 +74,7 @@ if(SPFFT_BUILD_TESTS)
 		run_local_tests.cpp
 		local_tests/test_host_array.cpp
 		local_tests/test_disjoint.cpp
+		local_tests/test_fftw_prop_hash.cpp
 		local_tests/test_local_transform.cpp
 		)
 	target_link_libraries(run_local_tests PRIVATE gtest_main gtest_mpi)

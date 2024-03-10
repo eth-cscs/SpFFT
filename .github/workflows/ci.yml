@@ -98,7 +98,7 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get update
-        apt-get install -y libfftw3-dev make g++ mpi-default-dev wget git make
+        DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libfftw3-dev make g++ mpi-default-dev wget git make
         cd ${HOME} && wget https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0-Linux-x86_64.tar.gz && tar -xzvf cmake-3.18.0-Linux-x86_64.tar.gz
 
     - name: Build
@@ -130,7 +130,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mkdir -p build
         cd build
-        ${HOME}/cmake-3.21.0-linux-x86_64.tar.gz .. -DSPFFT_BUILD_TESTS=ON -DSPFFT_GPU_BACKEND=ROCM -DCMAKE_PREFIX_PATH=/opt/rocm
+        ${HOME}/cmake-3.21.0-linux-x86_64/bin/cmake .. -DSPFFT_BUILD_TESTS=ON -DSPFFT_GPU_BACKEND=ROCM -DCMAKE_PREFIX_PATH=/opt/rocm
         make -j2
 
 

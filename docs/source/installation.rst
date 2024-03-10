@@ -3,20 +3,20 @@ Installation
 
 Requirements
 ------------
-* C++ Compiler with C++11 support. Supported compilers are:
+* C++ Compiler with C++17 support. Supported compilers are:
 
-  * GCC 6 and later
+  * GCC 7 and later
   * Clang 5 and later
   * ICC 19.0 and later
 
 
-- CMake 3.11 and later
-- Library providing a FFTW 3.x interface (FFTW3 or Intel MKL)
-- For multi-threading: OpenMP support by the compiler
-- For compilation with GPU support:
+* CMake 3.18 and later (3.21 for ROCm)
+* Library providing a FFTW 3.x interface (FFTW3 or Intel MKL)
+* For multi-threading: OpenMP support by the compiler
+* For compilation with GPU support:
 
-  * CUDA 9.0 and later for Nvidia hardware
-  * ROCm 3.5 and later for AMD hardware
+  * CUDA 11.0 and later for Nvidia hardware
+  * ROCm 5.0 and later for AMD hardware
 
 
 Build

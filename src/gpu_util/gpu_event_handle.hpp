@@ -31,6 +31,7 @@
 #include "spfft/config.h"
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
 #include <memory>
+#include <tuple>
 #include "gpu_util/gpu_runtime_api.hpp"
 #include "spfft/exceptions.hpp"
 
@@ -45,7 +46,7 @@ public:
     gpu::check_status(gpu::event_create_with_flags(&event, flag));
 
     event_ = std::shared_ptr<gpu::EventType>(new gpu::EventType(event), [](gpu::EventType* ptr) {
-      gpu::event_destroy(*ptr);
+        std::ignore = gpu::event_destroy(*ptr);
       delete ptr;
     });
   };

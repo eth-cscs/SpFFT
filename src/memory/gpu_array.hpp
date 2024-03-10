@@ -30,6 +30,7 @@
 #define SPFFT_GPU_ARRAY_HPP
 
 #include <cassert>
+#include <tuple>
 #include "gpu_util/gpu_runtime_api.hpp"
 #include "spfft/config.h"
 #include "util/common_types.hpp"
@@ -88,7 +89,7 @@ template <typename T>
 GPUArray<T>::~GPUArray() {
   if (data_) {
     // don't check error to avoid throwing exception in destructor
-    gpu::free(data_);
+    std::ignore = gpu::free(data_);
     data_ = nullptr;
     size_ = 0;
   }
@@ -104,7 +105,7 @@ GPUArray<T>::GPUArray(GPUArray&& array) noexcept
 template <typename T>
 auto GPUArray<T>::operator=(GPUArray&& array) noexcept -> GPUArray& {
   if (data_) {
-    gpu::free(data_);
+    std::ignore = gpu::free(data_);
   }
   data_ = array.data_;
   size_ = array.size_;

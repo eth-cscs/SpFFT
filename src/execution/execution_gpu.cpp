@@ -405,7 +405,7 @@ auto ExecutionGPU<T>::synchronize(SpfftExecType mode) -> void {
     endEvent_.record(stream_.get());
     endEvent_.stream_wait(externalStream_);
   } else {
-    gpu::stream_synchronize(stream_.get());
+    gpu::check_status(gpu::stream_synchronize(stream_.get()));
   }
 }
 

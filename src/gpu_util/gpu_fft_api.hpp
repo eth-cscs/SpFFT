@@ -35,7 +35,13 @@
 #define GPU_FFT_PREFIX(val) cufft##val
 
 #elif defined(SPFFT_ROCM)
+
+#if __has_include(<hipfft/hipfft.h>)
+#include <hipfft/hipfft.h>
+#else
 #include <hipfft.h>
+#endif
+
 #define GPU_FFT_PREFIX(val) hipfft##val
 #endif
 

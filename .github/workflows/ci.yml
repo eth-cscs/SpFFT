@@ -115,7 +115,7 @@ jobs:
   #################
   ROCM:
     runs-on: ubuntu-22.04
-    container: adhocman/master:ubuntu18.04_rocm
+    container: rocm/dev-ubuntu-22.04:5.3-complete
 
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE
@@ -123,6 +123,8 @@ jobs:
 
     - name: Install dependencies
       run: |
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y libfftw3-dev make g++ mpi-default-dev wget git make
         cd ${HOME} && wget https://github.com/Kitware/CMake/releases/download/v3.21.0/cmake-3.21.0-linux-x86_64.tar.gz && tar -xzvf cmake-3.21.0-linux-x86_64.tar.gz
 
     - name: Build

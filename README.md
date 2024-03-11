@@ -72,6 +72,7 @@ make -j8 install
 | SPFFT_INSTALL          | ON      | Add library to install target                                |
 | SPFFT_FORTRAN          | OFF     | Build Fortran interface module                               |
 
+**_NOTE:_**  When compiling with CUDA or ROCM (HIP), the standard `CMAKE_CUDA_ARCHITECTURES` and `CMAKE_HIP_ARCHITECTURES` options should be defined as well. `HIP_HCC_FLAGS` is no longer in use.
 
 ## Examples
 Further exmples for C++, C and Fortran can be found in the "examples" folder.

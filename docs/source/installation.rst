@@ -3,19 +3,25 @@ Installation
 
 Requirements
 ------------
+
 * C++ Compiler with C++17 support. Supported compilers are:
 
   * GCC 7 and later
+
   * Clang 5 and later
+
   * ICC 19.0 and later
 
-
 * CMake 3.18 and later (3.21 for ROCm)
+
 * Library providing a FFTW 3.x interface (FFTW3 or Intel MKL)
+
 * For multi-threading: OpenMP support by the compiler
+
 * For compilation with GPU support:
 
   * CUDA 11.0 and later for Nvidia hardware
+
   * ROCm 5.0 and later for AMD hardware
 
 
@@ -31,6 +37,10 @@ Example:
 	cd build
 	cmake .. -DSPFFT_OMP=ON -DSPFFT_MPI=ON -DSPFFT_GPU_BACKEND=CUDA -DSPFFT_SINGLE_PRECISION=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
 	make -j8 install
+
+
+NOTE: When compiling with CUDA or ROCM (HIP), the standard `CMAKE_CUDA_ARCHITECTURES` and `CMAKE_HIP_ARCHITECTURES` options should be defined as well. `HIP_HCC_FLAGS` is no longer in use.
+
 
 CMake options
 -------------

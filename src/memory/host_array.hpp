@@ -33,6 +33,7 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <tuple>
 #include "gpu_util/gpu_runtime_api.hpp"
 #include "memory/aligned_allocation.hpp"
 #include "spfft/config.h"
@@ -226,7 +227,7 @@ template <typename T>
 auto HostArray<T>::unpin_memory() noexcept -> void {
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
   if (pinned_) {
-    gpu::host_unregister((void*)data_);
+    std::ignore = gpu::host_unregister((void*)data_);
     pinned_ = false;
   }
 #endif

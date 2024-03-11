@@ -31,6 +31,7 @@
 #include "spfft/config.h"
 #if defined(SPFFT_CUDA) || defined(SPFFT_ROCM)
 #include <memory>
+#include <tuple>
 #include "gpu_util/gpu_runtime_api.hpp"
 #include "spfft/exceptions.hpp"
 namespace spfft {
@@ -51,7 +52,8 @@ public:
 
   ~GPUDeviceGuard() {
     if (targetDeviceId_ != originalDeviceId_) {
-      gpu::set_device(originalDeviceId_);  // no check to avoid throw exeception in destructor
+      std::ignore =
+          gpu::set_device(originalDeviceId_);  // no check to avoid throw exeception in destructor
     }
   }
 

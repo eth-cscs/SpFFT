@@ -30,6 +30,7 @@
 
 #include <gpu_util/gpu_runtime_api.hpp>
 #include <utility>
+#include <tuple>
 
 #include "spfft/config.h"
 
@@ -45,7 +46,7 @@ auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T
   auto status = gpu::pointer_get_attributes(&attr, static_cast<const void*>(inputPointer));
 
   if (status != gpu::status::Success) {
-    gpu::get_last_error();  // clear error from cache
+    std::ignore = gpu::get_last_error();  // clear error from cache
     // Invalid value is always indicated before CUDA 11 for valid host pointers, which have not been
     // registered. -> Don't throw error in this case.
     if (status != gpu::status::ErrorInvalidValue) gpu::check_status(status);
@@ -54,29 +55,17 @@ auto translate_gpu_pointer(const T* inputPointer) -> std::pair<const T*, const T
   std::pair<const T*, const T*> ptrPair{nullptr, nullptr};
 
   // get memory type - cuda 10 changed attribute name
-#if defined(SPFFT_CUDA) && (CUDART_VERSION >= 10000)
+#if (defined(SPFFT_CUDA) && (CUDART_VERSION >= 10000)) || (defined(SPFFT_ROCM) && (HIP_VERSION_MAJOR >= 6))
   auto memoryType = attr.type;
 #else
   auto memoryType = attr.memoryType;
 #endif
-
-#if defined(SPFFT_ROCM) && (HIP_VERSION < 310)
-  // Workaround due to bug with HIP when parsing pointers with offset from allocated memory start.
-  // Fixed in ROCm 3.10.
-  if (memoryType != gpu::flag::MemoryTypeDevice) {
-    ptrPair.first = inputPointer;
-  } else {
-    ptrPair.second = inputPointer;
-  }
-
-#else
 
   if (memoryType != gpu::flag::MemoryTypeDevice) {
     ptrPair.first = attr.hostPointer ? static_cast<const T*>(attr.hostPointer) : inputPointer;
   } else {
     ptrPair.second = static_cast<const T*>(attr.devicePointer);
   }
-#endif
 
   return ptrPair;
 }

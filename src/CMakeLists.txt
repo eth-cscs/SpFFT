@@ -40,6 +40,11 @@ if(SPFFT_CUDA OR SPFFT_ROCM)
 			transpose/transpose_mpi_unbuffered_gpu.cpp
 			)
 	endif()
+
+	if(SPFFT_ROCM)
+		set_source_files_properties(${SPFFT_GPU_KERNELS} PROPERTIES LANGUAGE HIP)
+	endif()
+
 	list(APPEND SPFFT_SOURCE_FILES ${SPFFT_GPU_KERNELS})
 endif()
 
@@ -51,24 +56,10 @@ if(SPFFT_MPI)
 		)
 endif()
 
-if(SPFFT_ROCM)
-	set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} -fno-gpu-rdc)
-	set(HIP_HCC_FLAGS_RELEASE ${HIP_HCC_FLAGS_RELEASE} -Wno-everything)
-	if(CMAKE_CXX_STANDARD)
-		set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} -std=gnu++${CMAKE_CXX_STANDARD})
-	endif()
-endif()
-
-
 # Creates library with given name. All common target modifications should be done here.
 macro(spfft_create_library _TARGET_NAME)
 	# create target
-	if(SPFFT_ROCM)
-		# macro from FindHIP package, which compiles all .cu files with hipcc and cpp files with the set c++ compiler
-		HIP_ADD_LIBRARY(${_TARGET_NAME} ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
-	else()
-		add_library(${_TARGET_NAME} ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
-	endif()
+	add_library(${_TARGET_NAME} ${SPFFT_LIBRARY_TYPE} ${SPFFT_SOURCE_FILES})
 
 	# set version
 	set_property(TARGET ${_TARGET_NAME} PROPERTY VERSION ${SPFFT_VERSION})
@@ -78,6 +69,9 @@ macro(spfft_create_library _TARGET_NAME)
 	if(SPFFT_CUDA)
 		set_property(TARGET ${_TARGET_NAME} PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS OFF)
 		set_property(TARGET ${_TARGET_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION OFF)
+	endif()
+	if(SPFFT_ROCM)
+		target_compile_options(${_TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:HIP>:-fno-gpu-rdc>)
 	endif()
 
 	# Don't export any symbols of external static libaries. Only works on linux.

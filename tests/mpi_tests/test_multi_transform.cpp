@@ -1,11 +1,14 @@
 #include <fftw3.h>
+
 #include <algorithm>
 #include <memory>
 #include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
+
 #include "gtest/gtest.h"
+#include "gtest_mpi.hpp"
 #include "memory/array_view_utility.hpp"
 #include "memory/host_array.hpp"
 #include "memory/host_array_view.hpp"
@@ -17,6 +20,7 @@
 #include "util/common_types.hpp"
 
 TEST(MPIMultiTransformTest, BackwardsForwards) {
+  GTEST_MPI_GUARD
   try {
     MPICommunicatorHandle comm(MPI_COMM_WORLD);
     const std::vector<double> zStickDistribution(comm.size(), 1.0);

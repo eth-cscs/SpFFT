@@ -141,17 +141,16 @@ int main(int argc, char** argv) {
   app.add_option("-o", outputFileName, "Output file name")->required();
   app.add_option("-m", numTransforms, "Multiple transform number")->default_val("1");
   app.add_option("-s", sparsity, "Sparsity");
-  app.add_set("-t", transformTypeName,
-              std::set<std::string>{"c2c", "r2c"},
-              "Transform type")
+  app.add_option("-t", transformTypeName, "Transform type")
+      ->check(CLI::IsMember({"c2c", "r2c"}))
       ->default_val("c2c");
-  app.add_set("-e", exchName,
-              std::set<std::string>{"all", "compact", "compactFloat", "buffered", "bufferedFloat",
-                                    "unbuffered"},
-              "Exchange type")
+  app.add_option("-e", exchName, "Exchange type")
+      ->check(CLI::IsMember(
+          {"all", "compact", "compactFloat", "buffered", "bufferedFloat", "unbuffered"}))
       ->required();
-  app.add_set("-p", procName, std::set<std::string>{"cpu", "gpu", "gpu-gpu"},
-              "Processing unit. With gpu-gpu, device memory is used as input and output.")
+  app.add_option("-p", procName,
+                 "Processing unit. With gpu-gpu, device memory is used as input and output.")
+      ->check(CLI::IsMember({"cpu", "gpu", "gpu-gpu"}))
       ->required();
   CLI11_PARSE(app, argc, argv);
 

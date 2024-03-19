@@ -29,6 +29,8 @@ set(CMAKE_HIP_STANDARD 17)
 #add local module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
 
+include(CMakeDependentOption)
+
 # Options
 option(SPFFT_STATIC "Compile as static library" OFF)
 option(SPFFT_OMP "Compile with OpenMP support" ON)
@@ -38,6 +40,11 @@ option(SPFFT_BUILD_TESTS "Build tests" OFF)
 option(SPFFT_SINGLE_PRECISION "Enable single precision support" OFF)
 option(SPFFT_INSTALL "Enable CMake install commands" ON)
 option(SPFFT_FORTRAN "Compile fortran module" OFF)
+option(SPFFT_BUNDLED_LIBS "Use bundled libraries for building tests" ON)
+
+cmake_dependent_option(SPFFT_BUNDLED_GOOGLETEST "Use bundled googletest lib" ON "SPFFT_BUNDLED_LIBS" OFF)
+cmake_dependent_option(SPFFT_BUNDLED_JSON "Use bundled json lib" ON "SPFFT_BUNDLED_LIBS" OFF)
+cmake_dependent_option(SPFFT_BUNDLED_CLI11 "Use bundled CLI11 lib" ON "SPFFT_BUNDLED_LIBS" OFF)
 
 set(SPFFT_GPU_BACKEND "OFF" CACHE STRING "GPU backend")
 set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS

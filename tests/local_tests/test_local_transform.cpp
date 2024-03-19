@@ -92,7 +92,7 @@ static auto param_type_names(
 #define TEST_PROCESSING_UNITS SpfftProcessingUnitType::SPFFT_PU_HOST
 #endif
 
-INSTANTIATE_TEST_CASE_P(FullTest, TestLocalTransform,
+INSTANTIATE_TEST_SUITE_P(FullTest, TestLocalTransform,
                         ::testing::Combine(::testing::Values(SpfftExchangeType::SPFFT_EXCH_DEFAULT),
                                            ::testing::Values(TEST_PROCESSING_UNITS),
                                            ::testing::Values(1, 2, 11, 12, 13, 100),
@@ -101,7 +101,7 @@ INSTANTIATE_TEST_CASE_P(FullTest, TestLocalTransform,
                                            ::testing::Values(false)),
                         param_type_names);
 
-INSTANTIATE_TEST_CASE_P(CenteredIndicesTest, TestLocalTransform,
+INSTANTIATE_TEST_SUITE_P(CenteredIndicesTest, TestLocalTransform,
                         ::testing::Combine(::testing::Values(SpfftExchangeType::SPFFT_EXCH_DEFAULT),
                                            ::testing::Values(TEST_PROCESSING_UNITS),
                                            ::testing::Values(1, 2, 11, 100),

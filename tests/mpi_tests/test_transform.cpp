@@ -1,12 +1,16 @@
 #include "test_util/test_transform.hpp"
+
 #include <fftw3.h>
+
 #include <algorithm>
 #include <memory>
 #include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
+
 #include "gtest/gtest.h"
+#include "gtest_mpi.hpp"
 #include "memory/array_view_utility.hpp"
 #include "memory/host_array.hpp"
 #include "memory/host_array_view.hpp"
@@ -36,6 +40,7 @@ protected:
   Grid grid_;
 };
 TEST_P(MPITransformTest, ForwardUniformDistribution) {
+  GTEST_MPI_GUARD
   try {
     std::vector<double> zStickDistribution(comm_size(), 1.0);
     std::vector<double> xyPlaneDistribution(comm_size(), 1.0);
@@ -47,6 +52,7 @@ TEST_P(MPITransformTest, ForwardUniformDistribution) {
 }
 
 TEST_P(MPITransformTest, BackwardAllOneRank) {
+  GTEST_MPI_GUARD
   try {
     std::vector<double> zStickDistribution(comm_size(), 0.0);
     zStickDistribution[0] = 1.0;
@@ -61,6 +67,7 @@ TEST_P(MPITransformTest, BackwardAllOneRank) {
 }
 
 TEST_P(MPITransformTest, ForwardAllOneRank) {
+  GTEST_MPI_GUARD
   try {
     std::vector<double> zStickDistribution(comm_size(), 0.0);
     zStickDistribution[0] = 1.0;
@@ -75,6 +82,7 @@ TEST_P(MPITransformTest, ForwardAllOneRank) {
 }
 
 TEST_P(MPITransformTest, BackwardAllOneRankPerSide) {
+  GTEST_MPI_GUARD
   try {
     std::vector<double> zStickDistribution(comm_size(), 0.0);
     zStickDistribution[0] = 1.0;
@@ -89,6 +97,7 @@ TEST_P(MPITransformTest, BackwardAllOneRankPerSide) {
 }
 
 TEST_P(MPITransformTest, ForwardAllOneRankPerSide) {
+  GTEST_MPI_GUARD
   try {
     std::vector<double> zStickDistribution(comm_size(), 0.0);
     zStickDistribution[0] = 1.0;
@@ -103,6 +112,7 @@ TEST_P(MPITransformTest, ForwardAllOneRankPerSide) {
 }
 
 TEST_P(MPITransformTest, R2CUniformDistribution) {
+  GTEST_MPI_GUARD
   try {
     std::vector<double> xyPlaneDistribution(comm_size(), 1.0);
     test_r2c(xyPlaneDistribution);
@@ -113,6 +123,7 @@ TEST_P(MPITransformTest, R2CUniformDistribution) {
 }
 
 TEST_P(MPITransformTest, R2COneRankAllPlanes) {
+  GTEST_MPI_GUARD
   try {
     std::vector<double> xyPlaneDistribution(comm_size(), 0.0);
     xyPlaneDistribution[0] = 1.0;
@@ -170,7 +181,7 @@ static auto param_type_names(
 #define TEST_PROCESSING_UNITS SpfftProcessingUnitType::SPFFT_PU_HOST
 #endif
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     FullTest, MPITransformTest,
     ::testing::Combine(::testing::Values(SpfftExchangeType::SPFFT_EXCH_BUFFERED,
                                          SpfftExchangeType::SPFFT_EXCH_COMPACT_BUFFERED,
@@ -182,7 +193,7 @@ INSTANTIATE_TEST_CASE_P(
                        ::testing::Values(1, 2, 11, 12, 13, 100), ::testing::Values(false)),
     param_type_names);
 
-INSTANTIATE_TEST_CASE_P(CenteredIndicesTest, MPITransformTest,
+INSTANTIATE_TEST_SUITE_P(CenteredIndicesTest, MPITransformTest,
                         ::testing::Combine(::testing::Values(SpfftExchangeType::SPFFT_EXCH_DEFAULT),
                                            ::testing::Values(TEST_PROCESSING_UNITS),
                                            ::testing::Values(1, 2, 11, 100),

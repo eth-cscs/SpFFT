@@ -1,9 +1,12 @@
 #include <fftw3.h>
+
 #include <algorithm>
 #include <memory>
 #include <random>
 #include <vector>
+
 #include "gtest/gtest.h"
+#include "gtest_mpi.hpp"
 #include "memory/array_view_utility.hpp"
 #include "memory/host_array.hpp"
 #include "memory/host_array_view.hpp"
@@ -130,6 +133,7 @@ static void check_freq_domain(const HostArrayView2D<std::complex<double>>& freqV
 }
 
 TEST_F(TransposeGPUTest, Buffered) {
+  GTEST_MPI_GUARD
   auto freqXYView = create_3d_view(array2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
                                    paramPtr_->dim_y(), paramPtr_->dim_x());
   auto freqXYViewGPU = create_3d_view(gpuArray2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
@@ -170,6 +174,7 @@ TEST_F(TransposeGPUTest, Buffered) {
 }
 
 TEST_F(TransposeGPUTest, CompactBuffered) {
+  GTEST_MPI_GUARD
   auto freqXYView = create_3d_view(array2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
                                    paramPtr_->dim_y(), paramPtr_->dim_x());
   auto freqXYViewGPU = create_3d_view(gpuArray2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
@@ -212,6 +217,7 @@ TEST_F(TransposeGPUTest, CompactBuffered) {
 }
 
 TEST_F(TransposeGPUTest, Unbuffered) {
+  GTEST_MPI_GUARD
   auto freqXYView = create_3d_view(array2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
                                    paramPtr_->dim_y(), paramPtr_->dim_x());
   auto freqXYViewGPU = create_3d_view(gpuArray2_, 0, paramPtr_->num_xy_planes(comm_.rank()),

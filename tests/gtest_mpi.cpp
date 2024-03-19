@@ -19,7 +19,7 @@ public:
   using TestSuite = testing::TestSuite;
 
   MPIListener(testing::TestEventListener *listener)
-      : listener_(listener), comm_(MPI_COMM_WORLD), forward_calls_(false) {
+      : listener_(listener), comm_(MPI_COMM_WORLD), gather_called_(false) {
     MPI_Comm_dup(MPI_COMM_WORLD, &comm_);
     int rank;
     MPI_Comm_rank(comm_, &rank);
@@ -38,6 +38,7 @@ public:
   }
 
   void OnTestStart(const TestInfo &test_info) override {
+    gather_called_ = false;
     if (listener_)
       listener_->OnTestStart(test_info);
   }
@@ -63,7 +64,7 @@ public:
   }
 
   void OnTestEnd(const TestInfo &test_info) override {
-    if(infos_.size()){
+    if(!gather_called_){
       std::cerr << "Missing GTEST_MPI_GUARD in test case!" << std::endl;
       throw std::runtime_error("Missing GTEST_MPI_GUARD in test case!");
     }
@@ -117,6 +118,7 @@ public:
   }
 
   void GatherPartResults() {
+    gather_called_ = true;
     int rank, n_proc;
     MPI_Comm_rank(comm_, &rank);
     MPI_Comm_size(comm_, &n_proc);
@@ -185,7 +187,7 @@ private:
 
   std::unique_ptr<testing::TestEventListener> listener_;
   MPI_Comm comm_;
-  bool forward_calls_;
+  bool gather_called_;
 
   std::vector<ResultInfo> infos_;
   std::string strings_;

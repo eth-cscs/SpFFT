@@ -15,7 +15,7 @@ Transform Definition
 
 Complex Number Format
 ---------------------
-SpFFT always assumes an interleaved format in double or single precision. The alignment of memory provided for space domain data is guaranteed to fulfill to the requirements for std::complex (for C++11), C complex types and GPU complex types of CUDA or ROCm.
+SpFFT always assumes an interleaved format in double or single precision. The alignment of memory provided for space domain data is guaranteed to fulfill to the requirements for std::complex (for C++17), C complex types and GPU complex types of CUDA or ROCm.
 
 Indexing
 --------

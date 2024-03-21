@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR) # 3.11 to avoid issues with OpenMP + CUDA
-project(SpFFT LANGUAGES CXX VERSION 1.0.6)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR) # 3.18 for C++17
+project(SpFFT LANGUAGES CXX VERSION 1.1.0)
 set(SPFFT_SO_VERSION 1)
 set(SPFFT_VERSION ${PROJECT_VERSION})
 
@@ -22,25 +22,14 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # set language and standard
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CUDA_STANDARD 11)
-
-# set CUDA flags
-if(NOT CMAKE_CUDA_FLAGS_RELEASE)
-	set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
-endif()
-if(NOT CMAKE_CUDA_FLAGS_RELWITHDEBINFO)
-	set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
-endif()
-if(NOT CMAKE_CUDA_FLAGS_MINSIZEREL)
-	set(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os -DNDEBUG" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
-endif()
-if(NOT CMAKE_CUDA_FLAGS_DEBUG)
-	set(CMAKE_CUDA_FLAGS_DEBUG "-g" CACHE STRING "Flags used by CUDA compiler at given build type." FORCE)
-endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_HIP_STANDARD 17)
 
 #add local module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
+
+include(CMakeDependentOption)
 
 # Options
 option(SPFFT_STATIC "Compile as static library" OFF)
@@ -51,6 +40,11 @@ option(SPFFT_BUILD_TESTS "Build tests" OFF)
 option(SPFFT_SINGLE_PRECISION "Enable single precision support" OFF)
 option(SPFFT_INSTALL "Enable CMake install commands" ON)
 option(SPFFT_FORTRAN "Compile fortran module" OFF)
+option(SPFFT_BUNDLED_LIBS "Use bundled libraries for building tests" ON)
+
+cmake_dependent_option(SPFFT_BUNDLED_GOOGLETEST "Use bundled googletest lib" ON "SPFFT_BUNDLED_LIBS" OFF)
+cmake_dependent_option(SPFFT_BUNDLED_JSON "Use bundled json lib" ON "SPFFT_BUNDLED_LIBS" OFF)
+cmake_dependent_option(SPFFT_BUNDLED_CLI11 "Use bundled CLI11 lib" ON "SPFFT_BUNDLED_LIBS" OFF)
 
 set(SPFFT_GPU_BACKEND "OFF" CACHE STRING "GPU backend")
 set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
@@ -129,6 +123,10 @@ endif()
 
 # ROCM
 if(SPFFT_ROCM)
+	cmake_minimum_required(VERSION 3.21 FATAL_ERROR) # hip support only added in 3.21
+
+	enable_language(HIP)
+
 	find_package(hip CONFIG REQUIRED)
 	find_package(rocfft CONFIG REQUIRED)
 	find_package(hipfft CONFIG) # hipfft within rocfft is deprecated. Use separate hipfft if available (not required).
@@ -144,11 +142,9 @@ if(SPFFT_ROCM)
 
 	list(APPEND SPFFT_EXTERNAL_LIBS hip::host roc::rocfft)
 
-	# FindHIP module provides compilation command for GPU code
-	find_package(HIP MODULE REQUIRED)
-	if(NOT HIP_HCC_FLAGS)
-		message(STATUS "Using default AMD gpu targets: gfx803, gfx900, gfx906. Set HIP_HCC_FLAGS to override.")
-		set(HIP_HCC_FLAGS ${HIP_HCC_FLAGS} --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906)
+	# Previously used option for flags.
+	if(HIP_HCC_FLAGS)
+		message(WARNING "HIP_HCC_FLAGS has no effect. Use CMAKE_HIP_FLAGS for flags and CMAKE_HIP_ARCHITECTURES for arch instead.")
 	endif()
 endif()
 

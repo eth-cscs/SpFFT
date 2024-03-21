@@ -38,16 +38,16 @@ A transform can be computed in-place and out-of-place. Addtionally, an internall
 Documentation can be found [here](https://spfft.readthedocs.io/en/latest/).
 
 ## Requirements
-- C++ Compiler with C++11 support. Supported compilers are:
-  - GCC 6 and later
+- C++ Compiler with C++17 support. Supported compilers are:
+  - GCC 7 and later
   - Clang 5 and later
   - ICC 19.0 and later
-- CMake 3.11 and later
+- CMake 3.18 and later (3.21 for ROCm)
 - Library providing a FFTW 3.x interface (FFTW3 or Intel MKL)
 - For multi-threading: OpenMP support by the compiler
 - For compilation with GPU support:
-  - CUDA 9.0 and later for Nvidia hardware
-  - ROCm 3.5 and later for AMD hardware
+  - CUDA 11.0 and later for Nvidia hardware
+  - ROCm 5.0 and later for AMD hardware
 
 ## Installation
 The build system follows the standard CMake workflow. Example:
@@ -71,7 +71,9 @@ make -j8 install
 | SPFFT_BUILD_TESTS      | OFF     | Build test executables for developement purposes             |
 | SPFFT_INSTALL          | ON      | Add library to install target                                |
 | SPFFT_FORTRAN          | OFF     | Build Fortran interface module                               |
+| SPFFT_BUNDLED_LIBS     | ON      | Download required libraries for building tests               |
 
+**_NOTE:_**  When compiling with CUDA or ROCM (HIP), the standard `CMAKE_CUDA_ARCHITECTURES` and `CMAKE_HIP_ARCHITECTURES` options should be defined as well. `HIP_HCC_FLAGS` is no longer in use.
 
 ## Examples
 Further exmples for C++, C and Fortran can be found in the "examples" folder.

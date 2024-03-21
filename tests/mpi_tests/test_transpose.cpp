@@ -1,9 +1,12 @@
 #include <fftw3.h>
+
 #include <algorithm>
 #include <memory>
 #include <random>
 #include <vector>
+
 #include "gtest/gtest.h"
+#include "gtest_mpi.hpp"
 #include "memory/array_view_utility.hpp"
 #include "memory/host_array.hpp"
 #include "memory/host_array_view.hpp"
@@ -120,6 +123,7 @@ static void check_freq_domain(const HostArrayView2D<std::complex<double>>& freqV
 }
 
 TEST_F(TransposeTest, Unbuffered) {
+  GTEST_MPI_GUARD
   auto freqXYView = create_3d_view(array2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
                                    paramPtr_->dim_x(), paramPtr_->dim_y());
   auto freqView =
@@ -138,6 +142,7 @@ TEST_F(TransposeTest, Unbuffered) {
 }
 
 TEST_F(TransposeTest, CompactBuffered) {
+  GTEST_MPI_GUARD
   auto freqXYView = create_3d_view(array2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
                                    paramPtr_->dim_x(), paramPtr_->dim_y());
   auto freqView =
@@ -161,6 +166,7 @@ TEST_F(TransposeTest, CompactBuffered) {
 }
 
 TEST_F(TransposeTest, Buffered) {
+  GTEST_MPI_GUARD
   auto freqXYView = create_3d_view(array2_, 0, paramPtr_->num_xy_planes(comm_.rank()),
                                    paramPtr_->dim_x(), paramPtr_->dim_y());
   auto freqView =

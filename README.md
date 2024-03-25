@@ -71,6 +71,7 @@ make -j8 install
 | SPFFT_BUILD_TESTS      | OFF     | Build test executables for developement purposes             |
 | SPFFT_INSTALL          | ON      | Add library to install target                                |
 | SPFFT_FORTRAN          | OFF     | Build Fortran interface module                               |
+| SPFFT_BUNDLED_LIBS     | ON      | Download required libraries for building tests               |
 
 **_NOTE:_**  When compiling with CUDA or ROCM (HIP), the standard `CMAKE_CUDA_ARCHITECTURES` and `CMAKE_HIP_ARCHITECTURES` options should be defined as well. `HIP_HCC_FLAGS` is no longer in use.
 

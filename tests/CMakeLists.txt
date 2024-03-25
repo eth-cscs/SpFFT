@@ -21,9 +21,9 @@ if(SPFFT_BUILD_TESTS)
 		)
 		FetchContent_MakeAvailable(googletest)
 	else()
-	  find_package(googletest CONFIG REQUIRED)
+	  find_package(GTest CONFIG REQUIRED)
 	endif()
-	list(APPEND SPFFT_TEST_LIBRARIES gtest_main)
+	list(APPEND SPFFT_TEST_LIBRARIES GTest::gtest_main)
 
 	# add command line parser
 	if(SPFFT_BUNDLED_CLI11)
@@ -65,7 +65,7 @@ if(SPFFT_BUILD_TESTS)
 		local_tests/test_fftw_prop_hash.cpp
 		local_tests/test_local_transform.cpp
 		)
-	target_link_libraries(run_local_tests PRIVATE gtest_main)
+	target_link_libraries(run_local_tests PRIVATE GTest::gtest_main)
 	target_link_libraries(run_local_tests PRIVATE spfft_test ${SPFFT_EXTERNAL_LIBS})
 	target_include_directories(run_local_tests PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 
@@ -78,7 +78,7 @@ if(SPFFT_BUILD_TESTS)
 			mpi_tests/test_transpose.cpp
 			mpi_tests/test_transpose_gpu.cpp
 			)
-		target_link_libraries(run_mpi_tests PRIVATE gtest_main)
+		target_link_libraries(run_mpi_tests PRIVATE GTest::gtest_main)
 		target_link_libraries(run_mpi_tests PRIVATE spfft_test ${SPFFT_EXTERNAL_LIBS})
 		target_include_directories(run_mpi_tests PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 	endif()

@@ -37,6 +37,8 @@
 #include <mpi.h>
 #endif
 
+#ifdef SPFFT_SINGLE_PRECISION
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -350,6 +352,8 @@ SPFFT_EXPORT SpfftError spfft_float_transform_communicator(SpfftFloatTransform t
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

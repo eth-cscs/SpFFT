@@ -16,14 +16,13 @@ if(SPFFT_BUILD_TESTS)
 	if(SPFFT_BUNDLED_GOOGLETEST)
 		FetchContent_Declare(
 			googletest
-			URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
-			URL_MD5 c8340a482851ef6a3fe618a082304cfc
+			URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+			URL_MD5 7e11f6cfcf6498324ac82d567dcb891e
 		)
 		FetchContent_MakeAvailable(googletest)
 	else()
 	  find_package(GTest CONFIG REQUIRED)
 	endif()
-	list(APPEND SPFFT_TEST_LIBRARIES GTest::gtest_main)
 
 	# add command line parser
 	if(SPFFT_BUNDLED_CLI11)
@@ -36,7 +35,6 @@ if(SPFFT_BUILD_TESTS)
 	else()
 		find_package(CLI11 CONFIG REQUIRED)
 	endif()
-	list(APPEND SPFFT_TEST_LIBRARIES CLI11::CLI11)
 
   # add json parser
 	if(SPFFT_BUNDLED_JSON)
@@ -65,7 +63,7 @@ if(SPFFT_BUILD_TESTS)
 		local_tests/test_fftw_prop_hash.cpp
 		local_tests/test_local_transform.cpp
 		)
-	target_link_libraries(run_local_tests PRIVATE GTest::gtest_main)
+	target_link_libraries(run_local_tests PRIVATE GTest::gtest)
 	target_link_libraries(run_local_tests PRIVATE spfft_test ${SPFFT_EXTERNAL_LIBS})
 	target_include_directories(run_local_tests PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 
@@ -78,7 +76,7 @@ if(SPFFT_BUILD_TESTS)
 			mpi_tests/test_transpose.cpp
 			mpi_tests/test_transpose_gpu.cpp
 			)
-		target_link_libraries(run_mpi_tests PRIVATE GTest::gtest_main)
+		target_link_libraries(run_mpi_tests PRIVATE GTest::gtest)
 		target_link_libraries(run_mpi_tests PRIVATE spfft_test ${SPFFT_EXTERNAL_LIBS})
 		target_include_directories(run_mpi_tests PRIVATE ${SPFFT_INCLUDE_DIRS} ${SPFFT_EXTERNAL_INCLUDE_DIRS})
 	endif()

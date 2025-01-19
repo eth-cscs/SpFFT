@@ -26,6 +26,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #include "spfft/multi_transform_float.h"
+
+#include <algorithm>
+#include <vector>
+
 #include "spfft/config.h"
 #include "spfft/multi_transform_float.hpp"
 #include "spfft/multi_transform_internal.hpp"
@@ -38,28 +42,44 @@ namespace spfft {
 void multi_transform_forward(int numTransforms, TransformFloat* transforms,
                              const SpfftProcessingUnitType* inputLocations,
                              float* const* outputPointers, const SpfftScalingType* scalingTypes) {
-  MultiTransformInternal<TransformFloat>::forward(numTransforms, transforms, inputLocations,
-                                             outputPointers, scalingTypes);
+  std::vector<TransformFloat*> transformPtrs(numTransforms);
+  std::transform(transforms, transforms + numTransforms, transformPtrs.begin(),
+                 [](TransformFloat& t) { return &t; });
+
+  MultiTransformInternal<TransformFloat>::forward(numTransforms, transformPtrs.data(),
+                                                  inputLocations, outputPointers, scalingTypes);
 }
 
 void multi_transform_backward(int numTransforms, TransformFloat* transforms,
                               const float* const* inputPointers,
                               const SpfftProcessingUnitType* outputLocations) {
-  MultiTransformInternal<TransformFloat>::backward(numTransforms, transforms, inputPointers,
-                                              outputLocations);
+  std::vector<TransformFloat*> transformPtrs(numTransforms);
+  std::transform(transforms, transforms + numTransforms, transformPtrs.begin(),
+                 [](TransformFloat& t) { return &t; });
+
+  MultiTransformInternal<TransformFloat>::backward(numTransforms, transformPtrs.data(),
+                                                   inputPointers, outputLocations);
 }
 
 void multi_transform_forward(int numTransforms, TransformFloat* transforms,
                              const float* const* inputPointers, float* const* outputPointers,
                              const SpfftScalingType* scalingTypes) {
-  MultiTransformInternal<TransformFloat>::forward(numTransforms, transforms, inputPointers,
-                                             outputPointers, scalingTypes);
+  std::vector<TransformFloat*> transformPtrs(numTransforms);
+  std::transform(transforms, transforms + numTransforms, transformPtrs.begin(),
+                 [](TransformFloat& t) { return &t; });
+
+  MultiTransformInternal<TransformFloat>::forward(numTransforms, transformPtrs.data(),
+                                                  inputPointers, outputPointers, scalingTypes);
 }
 
 void multi_transform_backward(int numTransforms, TransformFloat* transforms,
                               const float* const* inputPointers, float* const* outputPointers) {
-  MultiTransformInternal<TransformFloat>::backward(numTransforms, transforms, inputPointers,
-                                              outputPointers);
+  std::vector<TransformFloat*> transformPtrs(numTransforms);
+  std::transform(transforms, transforms + numTransforms, transformPtrs.begin(),
+                 [](TransformFloat& t) { return &t; });
+
+  MultiTransformInternal<TransformFloat>::backward(numTransforms, transformPtrs.data(),
+                                                   inputPointers, outputPointers);
 }
 
 #endif
@@ -73,8 +93,9 @@ SpfftError spfft_float_multi_transform_forward(int numTransforms, SpfftFloatTran
                                                float* const* outputPointers,
                                                const SpfftScalingType* scalingTypes) {
   try {
-    multi_transform_forward(numTransforms, reinterpret_cast<spfft::TransformFloat*>(transforms),
-                            inputLocations, outputPointers, scalingTypes);
+    spfft::MultiTransformInternal<spfft::TransformFloat>::forward(
+        numTransforms, reinterpret_cast<spfft::TransformFloat**>(transforms), inputLocations,
+        outputPointers, scalingTypes);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {
@@ -89,8 +110,9 @@ SpfftError spfft_float_multi_transform_forward_ptr(int numTransforms,
                                                    float* const* outputPointers,
                                                    const SpfftScalingType* scalingTypes) {
   try {
-    multi_transform_forward(numTransforms, reinterpret_cast<spfft::TransformFloat*>(transforms),
-                            inputPointers, outputPointers, scalingTypes);
+    spfft::MultiTransformInternal<spfft::TransformFloat>::forward(
+        numTransforms, reinterpret_cast<spfft::TransformFloat**>(transforms), inputPointers,
+        outputPointers, scalingTypes);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {
@@ -103,8 +125,9 @@ SpfftError spfft_float_multi_transform_backward(int numTransforms, SpfftFloatTra
                                                 const float* const* inputPointers,
                                                 const SpfftProcessingUnitType* outputLocations) {
   try {
-    multi_transform_backward(numTransforms, reinterpret_cast<spfft::TransformFloat*>(transforms),
-                             inputPointers, outputLocations);
+    spfft::MultiTransformInternal<spfft::TransformFloat>::backward(
+        numTransforms, reinterpret_cast<spfft::TransformFloat**>(transforms), inputPointers,
+        outputLocations);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {
@@ -118,8 +141,9 @@ SpfftError spfft_float_multi_transform_backward_ptr(int numTransforms,
                                                     const float* const* inputPointers,
                                                     float* const* outputPointers) {
   try {
-    multi_transform_backward(numTransforms, reinterpret_cast<spfft::TransformFloat*>(transforms),
-                             inputPointers, outputPointers);
+    spfft::MultiTransformInternal<spfft::TransformFloat>::backward(
+        numTransforms, reinterpret_cast<spfft::TransformFloat**>(transforms), inputPointers,
+        outputPointers);
   } catch (const spfft::GenericError& e) {
     return e.error_code();
   } catch (...) {

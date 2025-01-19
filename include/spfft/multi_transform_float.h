@@ -32,6 +32,8 @@
 #include "spfft/transform_float.h"
 #include "spfft/types.h"
 
+#ifdef SPFFT_SINGLE_PRECISION
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -96,6 +98,8 @@ SPFFT_EXPORT SpfftError spfft_float_multi_transform_backward_ptr(int numTransfor
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

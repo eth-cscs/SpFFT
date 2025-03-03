@@ -53,7 +53,7 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 
 set(SPFFT_FFTW_LIB "AUTO" CACHE STRING "Library providing a FFTW interface")
 set_property(CACHE SPFFT_FFTW_LIB PROPERTY STRINGS
-	"AUTO" "FFTW" "MKL" "ARMPL"
+	"AUTO" "FFTW" "MKL" "ARMPL" "NVPL"
 	)
 
 # Get GNU standard install prefixes
@@ -171,6 +171,7 @@ endif()
 
 set(SPFFT_MKL OFF)
 set(SPFFT_ARMPL OFF)
+set(SPFFT_NVPL OFF)
 set(SPFFT_FFTW OFF)
 
 # Look for MKL first
@@ -201,6 +202,15 @@ if(NOT SPFFT_MKL AND ${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STRE
 	if(TARGET ARM::pl)
 		list(APPEND SPFFT_EXTERNAL_LIBS ARM::pl)
 		set(SPFFT_ARMPL ON)
+	endif()
+endif()
+
+# Look for NVPL
+if(NOT SPFFT_MKL AND ${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "NVPL")
+	find_package("nvpl_fft" ${_SPFFT_FIND_FFTW_LIB_OPTION})
+	if(TARGET nvpl::fft)
+		list(APPEND SPFFT_EXTERNAL_LIBS nvpl::fft)
+		set(SPFFT_NVPL ON)
 	endif()
 endif()
 

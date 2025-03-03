@@ -207,7 +207,8 @@ endif()
 
 # Look for NVPL
 if(NOT SPFFT_MKL AND ${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "NVPL")
-	find_package("nvpl_fft" ${_SPFFT_FIND_FFTW_LIB_OPTION})
+	# 0.4.0 is the first version with the fftw3.h header
+	find_package("nvpl_fft" 0.4.0 ${_SPFFT_FIND_FFTW_LIB_OPTION})
 	if(TARGET nvpl::fftw)
 		list(APPEND SPFFT_EXTERNAL_LIBS nvpl::fftw)
 		set(SPFFT_NVPL ON)

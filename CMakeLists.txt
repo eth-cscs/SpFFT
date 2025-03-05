@@ -53,7 +53,7 @@ set_property(CACHE SPFFT_GPU_BACKEND PROPERTY STRINGS
 
 set(SPFFT_FFTW_LIB "AUTO" CACHE STRING "Library providing a FFTW interface")
 set_property(CACHE SPFFT_FFTW_LIB PROPERTY STRINGS
-	"AUTO" "FFTW" "MKL" "ARMPL"
+	"AUTO" "FFTW" "MKL" "ARMPL" "NVPL"
 	)
 
 # Get GNU standard install prefixes
@@ -171,6 +171,7 @@ endif()
 
 set(SPFFT_MKL OFF)
 set(SPFFT_ARMPL OFF)
+set(SPFFT_NVPL OFF)
 set(SPFFT_FFTW OFF)
 
 # Look for MKL first
@@ -204,8 +205,18 @@ if(NOT SPFFT_MKL AND ${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STRE
 	endif()
 endif()
 
+# Look for NVPL
+if(NOT SPFFT_MKL AND NOT SPFFT_ARMPL AND ${SPFFT_FFTW_LIB} STREQUAL "AUTO" OR ${SPFFT_FFTW_LIB} STREQUAL "NVPL")
+	# 0.4.0 is the first version with the fftw3.h header
+	find_package("nvpl_fft" 0.4.0 ${_SPFFT_FIND_FFTW_LIB_OPTION})
+	if(TARGET nvpl::fftw)
+		list(APPEND SPFFT_EXTERNAL_LIBS nvpl::fftw)
+		set(SPFFT_NVPL ON)
+	endif()
+endif()
+
 # Look for FFTW library if required
-if(NOT SPFFT_MKL AND NOT SPFFT_ARMPL)
+if(NOT SPFFT_MKL AND NOT SPFFT_ARMPL AND NOT SPFFT_NVPL)
 	find_package(FFTW REQUIRED)
 	list(APPEND SPFFT_EXTERNAL_LIBS FFTW::FFTW)
 	if(SPFFT_SINGLE_PRECISION)

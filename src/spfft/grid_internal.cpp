@@ -84,13 +84,13 @@ GridInternal<T>::GridInternal(int maxDimX, int maxDimY, int maxDimZ, int maxNumL
 
     if (arrayHost1_.empty()) {
       // not already created for CPU, which always requires at least as much memory
-      arrayHost1_ = HostArray<ComplexType>(static_cast<SizeType>(maxNumLocalZSticks * maxDimZ));
+      arrayHost1_ = HostArray<ComplexType>(static_cast<SizeType>(maxDimX * maxDimY * maxDimZ));
       arrayHost2_ = HostArray<ComplexType>(static_cast<SizeType>(maxDimX * maxDimY * maxDimZ));
     }
     arrayHost1_.pin_memory();
     arrayHost2_.pin_memory();
     arrayGPU1_ = GPUArray<typename gpu::fft::ComplexType<ValueType>::type>(
-        static_cast<SizeType>(maxNumLocalZSticks * maxDimZ));
+        static_cast<SizeType>(maxDimX * maxDimY * maxDimZ));
     arrayGPU2_ = GPUArray<typename gpu::fft::ComplexType<ValueType>::type>(
         static_cast<SizeType>(maxDimX * maxDimY * maxDimZ));
 
